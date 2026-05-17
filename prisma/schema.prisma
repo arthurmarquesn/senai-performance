@@ -1,0 +1,259 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model ClassRoom {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  grade     Int
+
+  students  Student[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Student {
+  id          String    @id @default(cuid())
+  name        String
+  number      Int?
+
+  classRoomId String
+  classRoom   ClassRoom @relation(fields: [classRoomId], references: [id])
+
+  results     ExamResult[]
+  essayCorrections EssayCorrection[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Exam {
+  id             String     @id @default(cuid())
+  title          String
+  totalQuestions Int
+  status         ExamStatus @default(DRAFT)
+
+  grade          Int        @default(2)
+
+  blocks         ExamBlock[]
+  answerKey      AnswerKey[]
+  results        ExamResult[]
+  essayCorrections EssayCorrection[]
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model ExamBlock {
+  id            String   @id @default(cuid())
+
+  subject       Subject
+  startQuestion Int
+  endQuestion   Int
+
+  examId        String
+  exam          Exam @relation(fields: [examId], references: [id])
+
+  createdAt     DateTime @default(now())
+}
+
+model AnswerKey {
+  id        String      @id @default(cuid())
+
+  question  Int
+  answer    Alternative
+  canceled  Boolean     @default(false)
+
+  examId    String
+  exam      Exam        @relation(fields: [examId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([examId, question])
+}
+
+model ExamResult {
+  id        String   @id @default(cuid())
+
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id])
+
+  examId    String
+  exam      Exam    @relation(fields: [examId], references: [id])
+
+  answers   StudentAnswer[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, examId])
+}
+
+model StudentAnswer {
+  id           String       @id @default(cuid())
+
+  question     Int
+  answer       Alternative?
+
+  examResultId String
+  examResult   ExamResult   @relation(fields: [examResultId], references: [id])
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([examResultId, question])
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(TEACHER)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum ExamStatus {
+  DRAFT
+  IN_PROGRESS
+  FINISHED
+}
+
+enum Alternative {
+  A
+  B
+  C
+  D
+  E
+}
+
+enum Subject {
+  MATEMATICA
+  FISICA
+  QUIMICA
+  BIOLOGIA
+  PORTUGUES
+  INGLES
+  ARTES
+  EDUCACAO_FISICA
+  SOCIOLOGIA
+  FILOSOFIA
+  GEOGRAFIA
+  HISTORIA
+}
+
+enum UserRole {
+  ADMIN
+  TEACHER
+}
+
+model LegacyAluno {
+  id      Int     @id @default(autoincrement())
+  nome    String  @db.VarChar(100)
+  tecnico String  @db.VarChar(100)
+  serie   String? @db.Char(14)
+
+  redacoes   LegacyRedacao[]
+  resultados LegacyResultado[]
+
+  @@map("alunos")
+}
+
+model LegacySimulado {
+  id          Int    @id @default(autoincrement())
+  jornada     String @db.VarChar(100)
+  numeroProva Int    @map("numero_prova")
+  serie       String @db.VarChar(45)
+
+  redacoes   LegacyRedacao[]
+  resultados LegacyResultado[]
+
+  @@unique([jornada, numeroProva, serie], map: "unique_simulado")
+  @@map("simulados")
+}
+
+model LegacyRedacao {
+  id           Int       @id @default(autoincrement())
+  alunoId      Int       @map("aluno_id")
+  simuladoId   Int?      @map("simulado_id")
+
+  competencia1 Int?      @default(0)
+  competencia2 Int?      @default(0)
+  competencia3 Int?      @default(0)
+  competencia4 Int?      @default(0)
+  competencia5 Int?      @default(0)
+  notaTotal    Int?      @default(0) @map("nota_total")
+  comentario   String?   @db.Text
+  dataEnvio    DateTime? @default(now()) @map("data_envio")
+
+  aluno      LegacyAluno     @relation(fields: [alunoId], references: [id])
+  simulado   LegacySimulado? @relation(fields: [simuladoId], references: [id])
+
+  @@index([alunoId], map: "aluno_id")
+  @@index([simuladoId], map: "simulado_id")
+  @@map("redacoes")
+}
+
+model LegacyResultado {
+  id          Int  @id @default(autoincrement())
+  alunoId     Int? @map("aluno_id")
+  simuladoId  Int? @map("simulado_id")
+
+  matematica       Int? @default(0)
+  portugues        Int? @default(0)
+  biologia         Int? @default(0)
+  fisica           Int? @default(0)
+  quimica          Int? @default(0)
+  ingles           Int? @default(0)
+  sociologia       Int? @default(0)
+  filosofia        Int? @default(0)
+  historia         Int? @default(0)
+  geografia        Int? @default(0)
+  educacaoFisica   Int? @default(0) @map("educacao_fisica")
+  artes            Int? @default(0)
+
+  totalAcertos  Int? @default(0) @map("total_acertos")
+  totalErros    Int? @default(0) @map("total_erros")
+  totalQuestoes Int? @default(0) @map("total_questoes")
+
+  aluno    LegacyAluno?     @relation(fields: [alunoId], references: [id])
+  simulado LegacySimulado?  @relation(fields: [simuladoId], references: [id])
+
+  @@unique([alunoId, simuladoId], map: "unique_aluno_simulado")
+  @@index([alunoId], map: "aluno_id")
+  @@index([simuladoId], map: "simulado_id")
+  @@map("resultados")
+}
+
+model EssayCorrection {
+  id String @id @default(cuid())
+
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id])
+
+  examId String?
+  exam   Exam? @relation(fields: [examId], references: [id])
+
+  competency1 Int @default(0)
+  competency2 Int @default(0)
+  competency3 Int @default(0)
+  competency4 Int @default(0)
+  competency5 Int @default(0)
+
+  totalScore Int @default(0)
+
+  comment String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, examId])
+}
