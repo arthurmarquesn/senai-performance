@@ -7,6 +7,7 @@ import {
   Home,
   LogOut,
   Users,
+  Bot,
 } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { logout } from "@/app/logout/actions";
@@ -40,6 +41,12 @@ const menuItems = [
   label: "Redações",
   href: "/redacoes",
   icon: BookText,
+},
+
+{
+  label: "Assistente",
+  href: "/assistente",
+  icon: Bot,
 },
 ];
 

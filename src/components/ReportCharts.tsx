@@ -163,7 +163,7 @@ export function ReportCharts({
       <YAxis allowDecimals={false} />
       <Tooltip />
       <Legend />
-      <Bar dataKey="acertos" name="Acertos" fill="#dc2626" />
+      <Bar dataKey="porcentagem" name="Acertos" fill="#dc2626" />
     </BarChart>
   </div>
 </section>

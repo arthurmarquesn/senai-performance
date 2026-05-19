@@ -181,7 +181,7 @@ export function StudentCharts({
               <YAxis allowDecimals={false} />
               <Tooltip />
               <Legend />
-              <Bar dataKey="acertos" name="Acertos" fill="#dc2626" />
+              <Bar dataKey="porcentagem" name="Acertos" fill="#dc2626" />
             </BarChart>
           </ResponsiveContainer>
         </div>
