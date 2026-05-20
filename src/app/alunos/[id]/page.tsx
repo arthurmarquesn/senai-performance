@@ -359,6 +359,13 @@ export default async function AlunoPage({
           <p className="mt-2 text-sm text-zinc-500">
             {aluno.classRoom.name} • Nº {aluno.number ?? "-"}
           </p>
+
+         <Link
+  href={`/alunos/${aluno.id}/leituras`}
+  className="rounded-xl border border-zinc-300 px-5 py-3 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100"
+>
+  Recomendações de leitura
+</Link>
         </div>
 
         <Link

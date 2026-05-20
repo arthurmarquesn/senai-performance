@@ -1,26 +1,79 @@
 import Link from "next/link";
 import {
+  AlertTriangle,
   ArrowRight,
   BarChart3,
   BookOpen,
+  Brain,
+  FileText,
   GraduationCap,
   Layers3,
+  Plus,
+  TrendingUp,
   Users,
 } from "lucide-react";
+
 import { prisma } from "@/lib/prisma";
 import { AppLayout } from "@/components/AppLayout";
 
 export default async function HomePage() {
-  const totalTurmas = await prisma.classRoom.count();
-  const totalAlunos = await prisma.student.count();
-  const totalSimulados = await prisma.exam.count();
+  const [
+    totalTurmas,
+    totalAlunos,
+    totalSimulados,
+    totalRedacoes,
+    totalObras,
+    totalLeiturasAtivas,
+    ultimosSimulados,
+    ultimasRedacoes,
+    leiturasRecentes,
+  ] = await Promise.all([
+    prisma.classRoom.count(),
+    prisma.student.count(),
+    prisma.exam.count(),
+    prisma.essayCorrection.count(),
+    prisma.book.count(),
+    prisma.bookProgress.count({
+      where: {
+        status: "READING",
+      },
+    }),
+    prisma.exam.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 5,
+    }),
+    prisma.essayCorrection.findMany({
+      include: {
+        student: {
+          include: {
+            classRoom: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 5,
+    }),
+    prisma.bookProgress.findMany({
+      include: {
+        book: true,
+        student: {
+          include: {
+            classRoom: true,
+          },
+        },
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+      take: 5,
+    }),
+  ]);
 
-  const ultimosSimulados = await prisma.exam.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-    take: 5,
-  });
+  const alunosSemLeitura = Math.max(totalAlunos - totalLeiturasAtivas, 0);
 
   return (
     <AppLayout>
@@ -32,74 +85,139 @@ export default async function HomePage() {
             </div>
 
             <h1 className="text-4xl font-bold tracking-tight">
-              Dashboard
+              Dashboard institucional
             </h1>
 
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-400">
-              Visão geral da plataforma de acompanhamento de desempenho
-              acadêmico, simulados, turmas e estudantes.
+              Visão estratégica do Alfred: desempenho acadêmico, redações,
+              simulados, leitura, repertório e acompanhamento pedagógico.
             </p>
           </div>
 
-          <Link
-            href="/simulados"
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-zinc-900 transition hover:bg-zinc-100"
-          >
-            Ver simulados
-            <ArrowRight size={16} />
-          </Link>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/simulados"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-zinc-900 transition hover:bg-zinc-100"
+            >
+              Ver simulados
+              <ArrowRight size={16} />
+            </Link>
+
+            <Link
+              href="/assistente"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-red-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-700"
+            >
+              Alfred IA
+              <Brain size={16} />
+            </Link>
+          </div>
         </div>
       </div>
 
-      <section className="mb-8 grid gap-6 md:grid-cols-3">
-        <div className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm transition hover:shadow-md">
-          <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-red-600">
-            <Users size={22} />
+      <section className="mb-8 grid gap-6 md:grid-cols-2 xl:grid-cols-6">
+        <DashboardCard
+          title="Turmas"
+          value={totalTurmas}
+          icon={<Users size={22} />}
+          highlight={false}
+        />
+
+        <DashboardCard
+          title="Alunos"
+          value={totalAlunos}
+          icon={<GraduationCap size={22} />}
+          highlight
+        />
+
+        <DashboardCard
+          title="Simulados"
+          value={totalSimulados}
+          icon={<BookOpen size={22} />}
+          highlight={false}
+        />
+
+        <DashboardCard
+          title="Redações"
+          value={totalRedacoes}
+          icon={<FileText size={22} />}
+          highlight={false}
+        />
+
+        <DashboardCard
+          title="Obras"
+          value={totalObras}
+          icon={<Layers3 size={22} />}
+          highlight={false}
+        />
+
+        <DashboardCard
+          title="Leituras ativas"
+          value={totalLeiturasAtivas}
+          icon={<TrendingUp size={22} />}
+          highlight
+        />
+      </section>
+
+      <section className="mb-8 grid gap-6 xl:grid-cols-[1fr_0.9fr]">
+        <div className="rounded-[32px] border border-red-200 bg-red-50 p-7">
+          <div className="mb-6 flex items-start gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-red-600 shadow-sm">
+              <AlertTriangle size={24} />
+            </div>
+
+            <div>
+              <h2 className="text-2xl font-bold text-red-700">
+                Alertas pedagógicos
+              </h2>
+
+              <p className="mt-1 text-sm text-red-600">
+                Pontos que merecem atenção da coordenação e professores.
+              </p>
+            </div>
           </div>
 
-          <p className="text-sm font-medium text-zinc-500">
-            Turmas cadastradas
-          </p>
+          <div className="grid gap-4">
+            <AlertItem
+              title="Alunos sem leitura ativa"
+              description={`${alunosSemLeitura} aluno(s) ainda não possuem leitura em andamento registrada.`}
+            />
 
-          <p className="mt-2 text-4xl font-bold tracking-tight text-zinc-900">
-            {totalTurmas}
-          </p>
+            <AlertItem
+              title="Acompanhamento de redação"
+              description={`${totalRedacoes} redação(ões) corrigidas até o momento. Verifique turmas com baixa cobertura.`}
+            />
+
+            <AlertItem
+              title="Simulados e análise"
+              description="Acompanhe rankings, questões críticas e desempenho por disciplina após cada simulado."
+            />
+          </div>
         </div>
 
-        <div className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm transition hover:shadow-md">
-          <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-red-600">
-            <GraduationCap size={22} />
+        <div className="rounded-[32px] border border-zinc-200 bg-white p-7 shadow-sm">
+          <h2 className="text-2xl font-bold text-zinc-900">
+            Ações rápidas
+          </h2>
+
+          <p className="mt-1 text-sm text-zinc-500">
+            Atalhos para os principais fluxos do sistema.
+          </p>
+
+          <div className="mt-6 grid gap-3">
+            <QuickAction href="/simulados" label="Criar ou acessar simulados" />
+            <QuickAction href="/redacoes" label="Corrigir redações ENEM" />
+            <QuickAction href="/leituras" label="Gerenciar + Leitura" />
+            <QuickAction href="/repertorio" label="Gerar repertório com IA" />
+            <QuickAction href="/alunos" label="Acessar perfis dos alunos" />
           </div>
-
-          <p className="text-sm font-medium text-zinc-500">
-            Alunos cadastrados
-          </p>
-
-          <p className="mt-2 text-4xl font-bold tracking-tight text-zinc-900">
-            {totalAlunos}
-          </p>
-        </div>
-
-        <div className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm transition hover:shadow-md">
-          <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-red-600">
-            <BookOpen size={22} />
-          </div>
-
-          <p className="text-sm font-medium text-zinc-500">
-            Simulados criados
-          </p>
-
-          <p className="mt-2 text-4xl font-bold tracking-tight text-red-600">
-            {totalSimulados}
-          </p>
         </div>
       </section>
 
-      <section className="grid gap-8 xl:grid-cols-[1.4fr_0.8fr]">
-        <div className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm">
+      <section className="grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
+        <div className="rounded-[32px] border border-zinc-200 bg-white p-7 shadow-sm">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-zinc-900">
+              <h2 className="text-2xl font-bold text-zinc-900">
                 Últimos simulados
               </h2>
 
@@ -130,8 +248,7 @@ export default async function HomePage() {
                     </h3>
 
                     <p className="mt-1 text-sm text-zinc-500">
-                      {simulado.grade}º ano • {simulado.totalQuestions}{" "}
-                      questões
+                      {simulado.grade}º ano • {simulado.totalQuestions} questões
                     </p>
                   </div>
 
@@ -142,54 +259,139 @@ export default async function HomePage() {
               </Link>
             ))}
 
-            {ultimosSimulados.length === 0 && (
-              <div className="rounded-2xl border border-dashed border-zinc-300 p-8 text-center">
-                <p className="text-sm text-zinc-500">
-                  Nenhum simulado cadastrado ainda.
-                </p>
-              </div>
-            )}
+            {ultimosSimulados.length === 0 && <EmptyState text="Nenhum simulado cadastrado ainda." />}
           </div>
         </div>
 
-        <div className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm">
-          <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-100 text-zinc-700">
-            <Layers3 size={22} />
+        <div className="grid gap-8">
+          <div className="rounded-[32px] border border-zinc-200 bg-white p-7 shadow-sm">
+            <h2 className="text-2xl font-bold text-zinc-900">
+              Últimas redações
+            </h2>
+
+            <div className="mt-6 grid gap-4">
+              {ultimasRedacoes.map((redacao) => (
+                <div
+                  key={redacao.id}
+                  className="rounded-2xl bg-zinc-50 p-5"
+                >
+                  <p className="font-semibold text-zinc-900">
+                    {redacao.student.name}
+                  </p>
+
+                  <p className="mt-1 text-sm text-zinc-500">
+                    {redacao.student.classRoom.name} • Nota {redacao.totalScore}
+                  </p>
+                </div>
+              ))}
+
+              {ultimasRedacoes.length === 0 && <EmptyState text="Nenhuma redação corrigida ainda." />}
+            </div>
           </div>
 
-          <h2 className="text-xl font-bold text-zinc-900">
-            Fluxo principal
-          </h2>
+          <div className="rounded-[32px] border border-zinc-200 bg-white p-7 shadow-sm">
+            <h2 className="text-2xl font-bold text-zinc-900">
+              Leituras recentes
+            </h2>
 
-          <p className="mt-2 text-sm leading-relaxed text-zinc-500">
-            O sistema segue um fluxo centralizado no simulado: estruturação,
-            gabarito, respostas, correção automática e análise.
-          </p>
+            <div className="mt-6 grid gap-4">
+              {leiturasRecentes.map((leitura) => (
+                <div
+                  key={leitura.id}
+                  className="rounded-2xl bg-zinc-50 p-5"
+                >
+                  <p className="font-semibold text-zinc-900">
+                    {leitura.student.name}
+                  </p>
 
-          <div className="mt-6 grid gap-3">
-            {[
-              "Criar simulado",
-              "Configurar blocos",
-              "Preencher gabarito",
-              "Lançar respostas",
-              "Analisar resultados",
-            ].map((item, index) => (
-              <div
-                key={item}
-                className="flex items-center gap-3 rounded-2xl bg-zinc-50 p-4"
-              >
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white">
-                  {index + 1}
+                  <p className="mt-1 text-sm text-zinc-500">
+                    {leitura.book.title} • {leitura.status}
+                  </p>
                 </div>
+              ))}
 
-                <p className="text-sm font-medium text-zinc-700">
-                  {item}
-                </p>
-              </div>
-            ))}
+              {leiturasRecentes.length === 0 && <EmptyState text="Nenhuma leitura registrada ainda." />}
+            </div>
           </div>
         </div>
       </section>
     </AppLayout>
+  );
+}
+
+function DashboardCard({
+  title,
+  value,
+  icon,
+  highlight,
+}: {
+  title: string;
+  value: number;
+  icon: React.ReactNode;
+  highlight: boolean;
+}) {
+  return (
+    <div className="rounded-[28px] border border-zinc-200 bg-white p-5 shadow-sm transition hover:shadow-md">
+      <div
+        className={`mb-5 flex h-12 w-12 items-center justify-center rounded-2xl ${
+          highlight ? "bg-red-50 text-red-600" : "bg-zinc-100 text-zinc-700"
+        }`}
+      >
+        {icon}
+      </div>
+
+      <p className="text-sm font-medium text-zinc-500">{title}</p>
+
+      <p
+        className={`mt-2 text-4xl font-bold tracking-tight ${
+          highlight ? "text-red-600" : "text-zinc-900"
+        }`}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function AlertItem({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="rounded-2xl bg-white p-5 shadow-sm">
+      <p className="font-semibold text-zinc-900">{title}</p>
+      <p className="mt-2 text-sm leading-relaxed text-zinc-500">
+        {description}
+      </p>
+    </div>
+  );
+}
+
+function QuickAction({
+  href,
+  label,
+}: {
+  href: string;
+  label: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center justify-between rounded-2xl bg-zinc-50 p-4 text-sm font-semibold text-zinc-700 transition hover:bg-red-50 hover:text-red-700"
+    >
+      <span>{label}</span>
+      <Plus size={16} />
+    </Link>
+  );
+}
+
+function EmptyState({ text }: { text: string }) {
+  return (
+    <div className="rounded-2xl border border-dashed border-zinc-300 p-6 text-center">
+      <p className="text-sm text-zinc-500">{text}</p>
+    </div>
   );
 }

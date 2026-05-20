@@ -8,6 +8,7 @@ import {
   LogOut,
   Users,
   Bot,
+  Brain
 } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { logout } from "@/app/logout/actions";
@@ -41,6 +42,24 @@ const menuItems = [
   label: "Redações",
   href: "/redacoes",
   icon: BookText,
+},
+
+{
+  label: "+ Leitura",
+  href: "/leituras",
+  icon: BookOpen,
+},
+
+{
+  label: "Dashboard Leitura",
+  href: "/leituras/dashboard",
+  icon: BookOpen,
+},
+
+{
+  label: "Repertório IA",
+  href: "/repertorio",
+  icon: Brain,
 },
 
 {
