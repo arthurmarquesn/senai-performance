@@ -21,7 +21,7 @@ export async function createSession(userId: string) {
 
   cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: false, // Permitir login via HTTP em servidores locais/desenvolvimento sem HTTPS
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 8,

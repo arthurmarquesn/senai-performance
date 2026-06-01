@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { AppLayout } from "@/components/AppLayout";
 import { updateReadingStatus } from "../actions";
 import { BookAIChat } from "@/components/leituras/BookAIChat";
+import { UnderConstructionBanner } from "@/components/UnderConstructionBanner";
 
 export default async function BookPage({
   params,

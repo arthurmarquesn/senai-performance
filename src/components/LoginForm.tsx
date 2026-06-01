@@ -38,24 +38,24 @@ export function LoginForm() {
       )}
 
       <div className="grid gap-2">
-        <label className="text-sm font-medium text-zinc-700">E-mail</label>
+        <label className="text-sm font-semibold text-zinc-800">E-mail</label>
 
         <input
           name="email"
           type="email"
           placeholder="admin@sistema.local"
-          className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+          className="rounded-2xl border border-zinc-300 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10"
         />
       </div>
 
       <div className="grid gap-2">
-        <label className="text-sm font-medium text-zinc-700">Senha</label>
+        <label className="text-sm font-semibold text-zinc-800">Senha</label>
 
         <input
           name="password"
           type="password"
           placeholder="••••••••"
-          className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+          className="rounded-2xl border border-zinc-300 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10"
         />
       </div>
 

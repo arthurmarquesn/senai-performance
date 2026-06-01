@@ -1,8 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { AppLayout } from "@/components/AppLayout";
+import { UnderConstructionBanner } from "@/components/UnderConstructionBanner";
 
 export default async function LeiturasDashboardPage() {
+  
+
   const books = await prisma.book.findMany({
+
     include: {
       progresses: {
         include: {
@@ -62,6 +66,7 @@ export default async function LeiturasDashboardPage() {
 
   return (
     <AppLayout>
+      <UnderConstructionBanner pageName="Leituras Dashboard" />
       <div className="mb-10">
         <h1 className="text-4xl font-bold text-zinc-900">
           Dashboard + Leitura

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
-  const session = request.cookies.get("session")?.value;
+  const session = request.cookies.get("alfred_token")?.value;
 
   console.log("PROXY EXECUTOU:", pathname, "SESSION:", Boolean(session));
 

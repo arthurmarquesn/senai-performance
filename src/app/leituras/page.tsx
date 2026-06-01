@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { AppLayout } from "@/components/AppLayout";
+import { UnderConstructionBanner } from "@/components/UnderConstructionBanner";
 
 export default async function LeiturasPage() {
   const books = await prisma.book.findMany({
@@ -11,6 +12,7 @@ export default async function LeiturasPage() {
 
   return (
     <AppLayout>
+      <UnderConstructionBanner pageName="Leituras" />
       <div className="mb-10">
         <h1 className="text-4xl font-bold text-zinc-900">
           + Leitura

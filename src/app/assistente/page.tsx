@@ -1,9 +1,13 @@
 import { AppLayout } from "@/components/AppLayout";
 import { AiChat } from "@/components/AIChat";
+import { UnderConstructionBanner } from "@/components/UnderConstructionBanner";
+
+
 
 export default function AssistentePage() {
   return (
     <AppLayout>
+      <UnderConstructionBanner pageName="Assistente Pedagógico" />
       <div className="mb-8">
         <h1 className="text-4xl font-bold tracking-tight text-zinc-900">
           Assistente pedagógico
