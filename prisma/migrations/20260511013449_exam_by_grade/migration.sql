@@ -1,15 +1,15 @@
 /*
   Warnings:
 
-  - You are about to drop the column `classRoomId` on the `exam` table. All the data in the column will be lost.
+  - You are about to drop the column `classRoomId` on the `Exam` table. All the data in the column will be lost.
 
 */
 -- DropForeignKey
-ALTER TABLE `exam` DROP FOREIGN KEY `Exam_classRoomId_fkey`;
+ALTER TABLE `Exam` DROP FOREIGN KEY `Exam_classRoomId_fkey`;
 
 -- DropIndex
-DROP INDEX `Exam_classRoomId_fkey` ON `exam`;
+DROP INDEX `Exam_classRoomId_fkey` ON `Exam`;
 
 -- AlterTable
-ALTER TABLE `exam` DROP COLUMN `classRoomId`,
+ALTER TABLE `Exam` DROP COLUMN `classRoomId`,
     ADD COLUMN `grade` INTEGER NOT NULL DEFAULT 2;
