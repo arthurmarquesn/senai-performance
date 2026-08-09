@@ -51,7 +51,7 @@ export function getAnswerGridGeometry(
     );
   }
 
-  const columns = totalQuestions <= 64 ? 2 : 3;
+  const columns = totalQuestions <= 40 ? 2 : 3;
   const rowsPerColumn = Math.ceil(totalQuestions / columns);
 
   return {
