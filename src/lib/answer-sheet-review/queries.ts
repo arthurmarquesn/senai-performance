@@ -25,6 +25,7 @@ export type ReviewAnswer = {
 
 export type AnswerSheetScanReview = {
   scanId: string;
+  batchId: string;
   examId: string;
   examTitle: string;
   totalQuestions: number;
@@ -104,6 +105,7 @@ export async function getAnswerSheetScanReview({
 
   return {
     scanId: scan.id,
+    batchId: scan.scanBatchId,
     examId: exam.id,
     examTitle: exam.title,
     totalQuestions: exam.totalQuestions,

@@ -491,6 +491,13 @@ export default async function SimuladoDetalhePage({
                                 (scan) => scan._count.answers > 0
                               )}
                             />
+                            <Link
+                              href={`/simulados/${simulado.id}/leituras/lotes/${batch.id}`}
+                              className="inline-flex items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+                            >
+                              Fila de revisao
+                              <ArrowRight size={14} />
+                            </Link>
 
                             {batch.scans.some(
                               (scan) => scan.answerSheetId && scan.normalizedImageKey

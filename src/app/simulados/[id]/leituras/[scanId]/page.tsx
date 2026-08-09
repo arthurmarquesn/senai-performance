@@ -24,6 +24,7 @@ import {
   getAnswerSheetScanReview,
   type ReviewAnswer,
 } from "@/lib/answer-sheet-review/queries";
+import { getNextReviewQueueTarget } from "@/lib/answer-sheet-review/batch-queue";
 
 const alternatives = ["A", "B", "C", "D", "E"] as const;
 
@@ -219,6 +220,10 @@ export default async function AnswerSheetScanReviewPage({
   const detected = review.answers.filter(
     (answer) => answer.detectionStatus === DetectedAnswerStatus.DETECTED
   );
+  const nextPending = await getNextReviewQueueTarget({
+    examId: id,
+    scanId,
+  });
 
   return (
     <AppLayout>
@@ -228,13 +233,23 @@ export default async function AnswerSheetScanReviewPage({
         description={`${review.studentName} - ${review.classRoomName} - pagina ${review.pageNumber} - ${review.examTitle}`}
         icon={<ClipboardCheck size={24} />}
         actions={
-          <Link
-            href={`/simulados/${review.examId}`}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-800 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
-          >
-            <ArrowLeft size={16} />
-            Voltar
-          </Link>
+          <>
+            <Link
+              href={`/simulados/${review.examId}/leituras/lotes/${review.batchId}`}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-800 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+            >
+              <ArrowLeft size={16} />
+              Fila do lote
+            </Link>
+            {nextPending && (
+              <Link
+                href={`/simulados/${review.examId}/leituras/${nextPending.scanId}`}
+                className="performance-primary-action inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold text-white"
+              >
+                Proxima pendencia
+              </Link>
+            )}
+          </>
         }
         stats={
           <MetricStrip columns="md:grid-cols-6">
