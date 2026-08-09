@@ -71,3 +71,27 @@ export async function deleteOriginalScanPdf(sourceFileKey: string) {
 export async function readOriginalScanPdf(sourceFileKey: string) {
   return readFile(getStoragePath(sourceFileKey));
 }
+
+export async function saveNormalizedScanImage({
+  batchId,
+  pageNumber,
+  bytes,
+}: {
+  batchId: string;
+  pageNumber: number;
+  bytes: Uint8Array;
+}) {
+  const normalizedImageKey = `${SCAN_STORAGE_PREFIX}/normalized/${batchId}/page-${String(
+    pageNumber
+  ).padStart(4, "0")}.png`;
+  const filePath = getStoragePath(normalizedImageKey);
+
+  await mkdir(path.dirname(filePath), {
+    recursive: true,
+  });
+  await writeFile(filePath, bytes);
+
+  return {
+    normalizedImageKey,
+  };
+}

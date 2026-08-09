@@ -16,6 +16,7 @@ import {
 import { AnswerSheetGeneratorForm } from "@/components/AnswerSheetGeneratorForm";
 import { AnswerSheetScanIdentifyForm } from "@/components/AnswerSheetScanIdentifyForm";
 import { AnswerSheetScanImportForm } from "@/components/AnswerSheetScanImportForm";
+import { AnswerSheetScanNormalizeForm } from "@/components/AnswerSheetScanNormalizeForm";
 import { AppLayout } from "@/components/AppLayout";
 import {
   Badge,
@@ -449,6 +450,11 @@ export default async function SimuladoDetalhePage({
                               {batch.reviewRequiredPages}
                             </p>
                             <AnswerSheetScanIdentifyForm
+                              examId={simulado.id}
+                              examApplicationId={application.id}
+                              batchId={batch.id}
+                            />
+                            <AnswerSheetScanNormalizeForm
                               examId={simulado.id}
                               examApplicationId={application.id}
                               batchId={batch.id}

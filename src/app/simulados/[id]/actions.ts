@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { generateUniqueAnswerSheetCode } from "@/lib/answer-sheet-code";
 import { identifyScanBatch } from "@/lib/answer-sheet-scans/identify";
 import { createScanBatchWithPendingPages } from "@/lib/answer-sheet-scans/import";
+import { normalizeScanBatch } from "@/lib/answer-sheet-scans/normalize";
 import {
   ScanPdfValidationError,
   validateScanPdfFile,
@@ -57,6 +58,20 @@ export type IdentifyAnswerSheetScansState = {
     duplicatePages: number;
     failedPages: number;
     status: "PROCESSING" | "REVIEW_REQUIRED";
+  };
+};
+
+export type NormalizeAnswerSheetScansState = {
+  status: "idle" | "success" | "error";
+  message?: string;
+  summary?: {
+    batchId: string;
+    identifiedPages: number;
+    normalizedPages: number;
+    reviewRequiredPages: number;
+    failedPages: number;
+    residualAverage: number | null;
+    residualMax: number | null;
   };
 };
 
@@ -476,6 +491,62 @@ export async function identifyAnswerSheetScans(
         error instanceof Error
           ? error.message
           : "Não foi possível identificar os gabaritos digitalizados.",
+    };
+  }
+}
+
+export async function normalizeAnswerSheetScans(
+  _previousState: NormalizeAnswerSheetScansState,
+  formData: FormData
+): Promise<NormalizeAnswerSheetScansState> {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return {
+      status: "error",
+      message: "Sessão expirada. Faça login novamente.",
+    };
+  }
+
+  const examId = getRequiredString(formData, "examId");
+  const examApplicationId = getRequiredString(formData, "examApplicationId");
+  const batchId = getRequiredString(formData, "batchId");
+
+  if (!examId || !examApplicationId || !batchId) {
+    return {
+      status: "error",
+      message: "Lote de digitalização inválido.",
+    };
+  }
+
+  try {
+    const summary = await normalizeScanBatch({
+      examId,
+      examApplicationId,
+      batchId,
+    });
+
+    revalidatePath(`/simulados/${examId}`);
+
+    return {
+      status: "success",
+      summary: {
+        batchId: summary.batchId,
+        identifiedPages: summary.identifiedPages,
+        normalizedPages: summary.normalizedPages,
+        reviewRequiredPages: summary.reviewRequiredPages,
+        failedPages: summary.failedPages,
+        residualAverage: summary.residualAverage,
+        residualMax: summary.residualMax,
+      },
+    };
+  } catch (error) {
+    return {
+      status: "error",
+      message:
+        error instanceof Error
+          ? error.message
+          : "Não foi possível normalizar os gabaritos digitalizados.",
     };
   }
 }
