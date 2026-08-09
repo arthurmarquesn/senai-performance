@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, ArrowRight, ListChecks } from "lucide-react";
 
 import { AppLayout } from "@/components/AppLayout";
+import { AnswerSheetBatchCompleteForm } from "@/components/AnswerSheetBatchCompleteForm";
 import {
   Badge,
   MetricCell,
@@ -167,6 +168,15 @@ export default async function AnswerSheetBatchReviewQueuePage({
   }
 
   const filteredRows = getRowsForFilter(queue, activeFilter);
+  const pendingBatchPages = queue.totalPages - queue.confirmedPages;
+  const canCompleteBatch =
+    queue.totalPages > 0 &&
+    queue.confirmedPages === queue.totalPages &&
+    queue.groups.attention.length === 0 &&
+    queue.groups.blank.length === 0 &&
+    queue.groups.partial.length === 0 &&
+    queue.groups.waiting.length === 0 &&
+    queue.groups.problems.length === 0;
 
   return (
     <AppLayout>
@@ -209,6 +219,22 @@ export default async function AnswerSheetBatchReviewQueuePage({
             <MetricCell label="MULTIPLE" value={queue.opticalSummary.multiple} />
             <MetricCell label="UNCERTAIN" value={queue.opticalSummary.uncertain} />
           </MetricStrip>
+        </Panel>
+
+        <Panel>
+          <SectionHeader
+            title="Conclusao formal"
+            description="Concluir a leitura do lote nao corrige provas e nao gera notas."
+          />
+          <AnswerSheetBatchCompleteForm
+            examId={id}
+            batchId={batchId}
+            totalPages={queue.totalPages}
+            confirmedPages={queue.confirmedPages}
+            reviewedAnswers={queue.reviewedAnswers}
+            canComplete={canCompleteBatch}
+            pendingCount={pendingBatchPages}
+          />
         </Panel>
 
         <Panel>

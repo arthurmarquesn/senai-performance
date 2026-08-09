@@ -44,6 +44,7 @@ export type ReviewBatchQueue = {
   batchId: string;
   examId: string;
   examTitle: string;
+  totalQuestions: number;
   sourceFileName: string;
   status: ScanBatchStatus;
   totalPages: number;
@@ -52,6 +53,8 @@ export type ReviewBatchQueue = {
   reviewRequiredPages: number;
   confirmedPages: number;
   failedPages: number;
+  reviewedAnswers: number;
+  expectedAnswers: number;
   opticalSummary: {
     detected: number;
     blank: number;
@@ -216,6 +219,7 @@ export async function getAnswerSheetBatchReviewQueue({
             select: {
               id: true,
               title: true,
+              totalQuestions: true,
             },
           },
           classRoom: {
@@ -304,6 +308,7 @@ export async function getAnswerSheetBatchReviewQueue({
     };
   });
   const groups = classifyRows(rows);
+  const totalQuestions = batch.examApplication.exam.totalQuestions;
   const opticalSummary = rows.reduce(
     (summary, row) => ({
       detected: summary.detected + row.detected,
@@ -323,13 +328,14 @@ export async function getAnswerSheetBatchReviewQueue({
     batchId: batch.id,
     examId: batch.examApplication.exam.id,
     examTitle: batch.examApplication.exam.title,
+    totalQuestions,
     sourceFileName: batch.sourceFileName,
     status: batch.status,
     totalPages: batch.totalPages,
     identifiedPages: rows.filter((row) => row.hasAnswerSheet).length,
     processedPages: rows.filter(
       (row) =>
-        row.totalAnswers === 60 &&
+        row.totalAnswers === totalQuestions &&
         (row.status === AnswerSheetScanStatus.PROCESSED ||
           row.status === AnswerSheetScanStatus.REVIEW_REQUIRED ||
           row.status === AnswerSheetScanStatus.CONFIRMED)
@@ -342,6 +348,8 @@ export async function getAnswerSheetBatchReviewQueue({
     confirmedPages: groups.confirmed.length,
     failedPages: rows.filter((row) => row.status === AnswerSheetScanStatus.FAILED)
       .length,
+    reviewedAnswers: rows.reduce((sum, row) => sum + row.reviewed, 0),
+    expectedAnswers: rows.length * totalQuestions,
     opticalSummary,
     groups,
   };
