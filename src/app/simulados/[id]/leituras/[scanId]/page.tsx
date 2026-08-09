@@ -6,6 +6,7 @@ import { DetectedAnswerStatus } from "@prisma/client";
 
 import {
   CompleteScanReviewForm,
+  CorrectConfirmedScanForm,
   ConfirmClearReadingsForm,
   ReviewQuestionForm,
 } from "@/components/AnswerSheetReviewForms";
@@ -224,6 +225,9 @@ export default async function AnswerSheetScanReviewPage({
     examId: id,
     scanId,
   });
+  const canCorrectOfficially =
+    review.status === "CONFIRMED" && review.batchStatus === "CONFIRMED";
+  const alreadyCorrected = review.answerSheetStatus === "CORRECTED";
 
   return (
     <AppLayout>
@@ -287,6 +291,29 @@ export default async function AnswerSheetScanReviewPage({
               </p>
               <CompleteScanReviewForm examId={id} scanId={scanId} />
             </div>
+          </div>
+        </Panel>
+
+        <Panel>
+          <SectionHeader
+            title="Correcao oficial"
+            description="Esta acao transforma as respostas confirmadas desta folha em resultado oficial do simulado."
+          />
+          <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+            <p className="mb-3 text-sm text-zinc-600">
+              Use somente depois da revisao da folha e da conclusao formal do lote.
+            </p>
+            <CorrectConfirmedScanForm
+              examId={id}
+              scanId={scanId}
+              canCorrect={canCorrectOfficially}
+              alreadyCorrected={alreadyCorrected}
+              resultHref={
+                alreadyCorrected
+                  ? `/simulados/${id}/respostas/${review.studentId}`
+                  : null
+              }
+            />
           </div>
         </Panel>
 

@@ -1,7 +1,9 @@
 import "server-only";
 
 import {
+  AnswerSheetStatus,
   DetectedAnswerStatus,
+  type ScanBatchStatus,
   type Alternative,
   type AnswerSheetScanStatus,
 } from "@prisma/client";
@@ -30,9 +32,13 @@ export type AnswerSheetScanReview = {
   examTitle: string;
   totalQuestions: number;
   status: AnswerSheetScanStatus;
+  batchStatus: ScanBatchStatus;
+  answerSheetStatus: AnswerSheetStatus;
+  answerSheetCorrectedAt: Date | null;
   confirmedAt: Date | null;
   pageNumber: number;
   code: string;
+  studentId: string;
   studentName: string;
   classRoomName: string;
   summary: {
@@ -75,6 +81,7 @@ export async function getAnswerSheetScanReview({
           },
         },
       },
+      scanBatch: true,
       answers: {
         orderBy: {
           question: "asc",
@@ -110,9 +117,13 @@ export async function getAnswerSheetScanReview({
     examTitle: exam.title,
     totalQuestions: exam.totalQuestions,
     status: scan.status,
+    batchStatus: scan.scanBatch.status,
+    answerSheetStatus: scan.answerSheet.status,
+    answerSheetCorrectedAt: scan.answerSheet.correctedAt,
     confirmedAt: scan.confirmedAt,
     pageNumber: scan.pageNumber,
     code: scan.answerSheet.code,
+    studentId: scan.answerSheet.studentId,
     studentName: scan.answerSheet.student.name,
     classRoomName: scan.answerSheet.examApplication.classRoom.name,
     summary: {

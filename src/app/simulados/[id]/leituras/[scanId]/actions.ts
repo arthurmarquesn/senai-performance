@@ -10,6 +10,10 @@ import {
   IncompleteScanReviewError,
   reviewAnswerQuestion,
 } from "@/lib/answer-sheet-review/mutations";
+import {
+  AnswerSheetCorrectionError,
+  correctConfirmedAnswerSheetScan,
+} from "@/lib/answer-sheet-correction/correct-scan";
 
 const alternatives = new Set<string>(Object.values(Alternative));
 const blankValue = "__BLANK__";
@@ -34,6 +38,20 @@ export type CompleteScanReviewState = {
   summary?: {
     confirmed: number;
     status: "CONFIRMED";
+  };
+};
+
+export type CorrectConfirmedScanState = {
+  status: "idle" | "success" | "error";
+  message?: string;
+  summary?: {
+    examResultId: string;
+    studentAnswers: number;
+    correctAnswers: number;
+    validQuestions: number;
+    canceledQuestions: number;
+    blankAnswers: number;
+    alreadyCorrected: boolean;
   };
 };
 
@@ -184,6 +202,60 @@ export async function completeScanReviewAction(
         error instanceof IncompleteScanReviewError || error instanceof Error
           ? error.message
           : "Nao foi possivel concluir a revisao.",
+    };
+  }
+}
+
+export async function correctConfirmedScanAction(
+  _previousState: CorrectConfirmedScanState,
+  formData: FormData
+): Promise<CorrectConfirmedScanState> {
+  try {
+    await requireUser();
+
+    const examId = getRequiredString(formData, "examId");
+    const scanId = getRequiredString(formData, "scanId");
+
+    if (!examId || !scanId) {
+      return {
+        status: "error",
+        message: "Folha invalida.",
+      };
+    }
+
+    const summary = await correctConfirmedAnswerSheetScan({
+      examId,
+      scanId,
+    });
+
+    revalidatePath(`/simulados/${examId}/leituras/${scanId}`);
+    revalidatePath(`/simulados/${examId}/respostas/${summary.studentId}`);
+    revalidatePath(`/simulados/${examId}/resultados`);
+    revalidatePath(`/simulados/${examId}/ranking`);
+    revalidatePath(`/simulados/${examId}`);
+
+    return {
+      status: "success",
+      message: summary.alreadyCorrected
+        ? "Esta prova ja estava corrigida com as mesmas respostas oficiais."
+        : "Prova corrigida oficialmente.",
+      summary: {
+        examResultId: summary.examResultId,
+        studentAnswers: summary.studentAnswers,
+        correctAnswers: summary.correctAnswers,
+        validQuestions: summary.validQuestions,
+        canceledQuestions: summary.canceledQuestions,
+        blankAnswers: summary.blankAnswers,
+        alreadyCorrected: summary.alreadyCorrected,
+      },
+    };
+  } catch (error) {
+    return {
+      status: "error",
+      message:
+        error instanceof AnswerSheetCorrectionError || error instanceof Error
+          ? error.message
+          : "Nao foi possivel corrigir a prova.",
     };
   }
 }

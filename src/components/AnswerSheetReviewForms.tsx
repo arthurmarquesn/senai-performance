@@ -7,9 +7,11 @@ import { Check, CheckCircle2, Loader2 } from "lucide-react";
 import {
   completeScanReviewAction,
   confirmClearReadingsAction,
+  correctConfirmedScanAction,
   reviewQuestionAction,
   type CompleteScanReviewState,
   type ConfirmClearReadingsState,
+  type CorrectConfirmedScanState,
   type ReviewQuestionState,
 } from "@/app/simulados/[id]/leituras/[scanId]/actions";
 
@@ -176,6 +178,88 @@ export function CompleteScanReviewForm({
         >
           {state.message}
         </p>
+      )}
+    </form>
+  );
+}
+
+export function CorrectConfirmedScanForm({
+  examId,
+  scanId,
+  canCorrect,
+  alreadyCorrected,
+  resultHref,
+}: {
+  examId: string;
+  scanId: string;
+  canCorrect: boolean;
+  alreadyCorrected: boolean;
+  resultHref: string | null;
+}) {
+  const initialState: CorrectConfirmedScanState = {
+    status: "idle",
+  };
+  const [state, action] = useActionState(correctConfirmedScanAction, initialState);
+
+  return (
+    <form
+      action={action}
+      className="grid gap-2"
+      onSubmit={(event) => {
+        if (
+          !window.confirm(
+            "Esta acao transformara as respostas confirmadas desta folha em resultado oficial do simulado."
+          )
+        ) {
+          event.preventDefault();
+        }
+      }}
+    >
+      <input type="hidden" name="examId" value={examId} />
+      <input type="hidden" name="scanId" value={scanId} />
+
+      <button
+        type="submit"
+        disabled={!canCorrect}
+        className="performance-primary-action inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <CheckCircle2 size={16} />
+        {alreadyCorrected ? "Prova corrigida" : "Corrigir prova"}
+      </button>
+
+      {!canCorrect && (
+        <p className="text-xs font-medium text-amber-700">
+          Corrija apenas folhas CONFIRMED de lotes CONFIRMED.
+        </p>
+      )}
+
+      {resultHref && (
+        <a
+          href={resultHref}
+          className="text-xs font-semibold text-red-700 underline-offset-2 hover:underline"
+        >
+          Ver resultado oficial
+        </a>
+      )}
+
+      {state.status !== "idle" && (
+        <div
+          className={`rounded-lg border p-2 text-xs font-medium ${
+            state.status === "success"
+              ? "border-green-200 bg-green-50 text-green-800"
+              : "border-red-200 bg-red-50 text-red-700"
+          }`}
+        >
+          <p>{state.message}</p>
+          {state.summary && (
+            <p>
+              {state.summary.studentAnswers} respostas oficiais. Acertos:{" "}
+              {state.summary.correctAnswers}/{state.summary.validQuestions}.
+              Anuladas: {state.summary.canceledQuestions}. Em branco:{" "}
+              {state.summary.blankAnswers}.
+            </p>
+          )}
+        </div>
       )}
     </form>
   );
