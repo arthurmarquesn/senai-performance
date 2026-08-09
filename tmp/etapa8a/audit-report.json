@@ -1,0 +1,129 @@
+{
+  "artifacts": {
+    "officialPdf": "C:\\Users\\arthu\\features_simulado\\senai-performance\\tmp\\etapa8a\\official-blank.pdf",
+    "controlledPdf": "C:\\Users\\arthu\\features_simulado\\senai-performance\\tmp\\etapa8a\\controlled-filled.pdf",
+    "diagnosticPng": "C:\\Users\\arthu\\features_simulado\\senai-performance\\tmp\\etapa8a\\controlled-page-001.png"
+  },
+  "setup": {
+    "students": 64,
+    "questions": 60,
+    "answerSheets": 64,
+    "uniqueCodes": 64,
+    "canceledQuestion": 4
+  },
+  "pdf": {
+    "pages": 64,
+    "bytes": 2042472
+  },
+  "import": {
+    "scansCreated": 64,
+    "totalPages": 64
+  },
+  "qr": {
+    "correct": 64,
+    "total": 64,
+    "firstRunStatus": "PROCESSING",
+    "rerunStatus": "PROCESSING",
+    "memoryMb": {
+      "before": 541,
+      "after": 515
+    }
+  },
+  "normalization": {
+    "correct": 64,
+    "total": 64,
+    "residualAverage": 0.6990174817483752,
+    "residualMax": 1.1607164574197815,
+    "dimensionFailures": [],
+    "memoryMb": {
+      "before": 516,
+      "after": 409
+    }
+  },
+  "opticalReading": {
+    "detectedAnswers": 3840,
+    "divergences": [],
+    "processStatus": "REVIEW_REQUIRED",
+    "rerunDetectedAnswers": 3840,
+    "reviewRequiredPages": 1,
+    "memoryMb": {
+      "before": 376,
+      "after": 414
+    }
+  },
+  "review": {
+    "reviewPages": 2,
+    "reviewedManually": 4
+  },
+  "batch": {
+    "confirmed": "CONFIRMED",
+    "confirmedPages": 64
+  },
+  "correction": {
+    "correctedNow": 64,
+    "alreadyCorrectedOnRerun": 64,
+    "issues": []
+  },
+  "final": {
+    "counts": {
+      "answerSheets": 64,
+      "scans": 64,
+      "detectedAnswers": 3840,
+      "examResults": 64,
+      "studentAnswers": 3840,
+      "correctedSheets": 64
+    },
+    "finalDivergences": [],
+    "duplicateExamResults": 0,
+    "blank": {
+      "studentNumber": 4,
+      "questions": [
+        10,
+        17,
+        25
+      ],
+      "preserved": true
+    },
+    "canceled": {
+      "question": 4,
+      "preservedAnswers": true,
+      "excludedFromValidTotal": true
+    },
+    "integration": {
+      "resultRowsVisible": 64,
+      "sampleScores": [
+        {
+          "studentNumber": 1,
+          "correct": 59,
+          "valid": 59
+        },
+        {
+          "studentNumber": 2,
+          "correct": 47,
+          "valid": 59
+        },
+        {
+          "studentNumber": 3,
+          "correct": 30,
+          "valid": 59
+        },
+        {
+          "studentNumber": 4,
+          "correct": 56,
+          "valid": 59
+        }
+      ]
+    }
+  },
+  "timingsMs": {
+    "pdf": 2485,
+    "import": 190,
+    "qr": 69947,
+    "normalization": 57322,
+    "opticalReading": 28846,
+    "review": 11615,
+    "batchCompletion": 42,
+    "correction": 1626,
+    "total": 325138
+  }
+}
