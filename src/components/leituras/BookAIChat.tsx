@@ -63,7 +63,7 @@ export function BookAIChat({
   }
 
   return (
-    <section className="mt-8 rounded-[32px] border border-zinc-200 bg-white p-8 shadow-sm">
+    <section className="mt-8 performance-card rounded-[32px] border p-8">
       <div className="mb-8">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
@@ -114,7 +114,7 @@ export function BookAIChat({
         <button
           onClick={() => sendMessage()}
           disabled={loading}
-          className="rounded-2xl bg-red-600 px-6 py-4 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
+          className="performance-primary-action rounded-2xl px-6 py-4 text-sm font-semibold text-white transition disabled:opacity-50"
         >
           {loading
             ? "Alfred está pensando..."

@@ -61,7 +61,7 @@ export function RepertorioClient() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <div className="rounded-[32px] border border-zinc-200 bg-white p-10 shadow-sm">
+      <div className="performance-card rounded-[32px] border p-10">
         <div className="mb-10">
           <h1 className="text-4xl font-bold text-zinc-900">
             Gerador de repertório
@@ -104,7 +104,7 @@ export function RepertorioClient() {
             type="button"
             onClick={() => handleGenerate()}
             disabled={loading}
-            className="rounded-2xl bg-red-600 px-6 py-4 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
+            className="performance-primary-action rounded-2xl px-6 py-4 text-sm font-semibold text-white transition disabled:opacity-50"
           >
             {loading
               ? "Alfred está pensando..."

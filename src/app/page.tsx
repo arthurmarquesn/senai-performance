@@ -6,15 +6,21 @@ import {
   BookOpen,
   Brain,
   FileText,
-  GraduationCap,
-  Layers3,
   Plus,
   TrendingUp,
-  Users,
 } from "lucide-react";
 
-import { prisma } from "@/lib/prisma";
 import { AppLayout } from "@/components/AppLayout";
+import {
+  Badge,
+  EmptyState,
+  MetricCell,
+  MetricStrip,
+  PageHeader,
+  Panel,
+  SectionHeader,
+} from "@/components/design-system";
+import { prisma } from "@/lib/prisma";
 
 export default async function HomePage() {
   const [
@@ -74,313 +80,210 @@ export default async function HomePage() {
   ]);
 
   const alunosSemLeitura = Math.max(totalAlunos - totalLeiturasAtivas, 0);
+  const coberturaLeitura =
+    totalAlunos > 0 ? Math.round((totalLeiturasAtivas / totalAlunos) * 100) : 0;
 
   return (
     <AppLayout>
-      <div className="mb-8 rounded-[32px] bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-800 p-8 text-white shadow-sm">
-        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-          <div>
-            <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-600 shadow-lg shadow-red-600/20">
-              <BarChart3 size={28} />
-            </div>
-
-            <h1 className="text-4xl font-bold tracking-tight">
-              Dashboard institucional
-            </h1>
-
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-400">
-              Visão estratégica do Alfred: desempenho acadêmico, redações,
-              simulados, leitura, repertório e acompanhamento pedagógico.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
+      <PageHeader
+        eyebrow="Visão executiva"
+        title="Dashboard institucional"
+        description="Síntese operacional de turmas, estudantes, simulados, redações e leitura para apoiar decisões pedagógicas."
+        icon={<BarChart3 size={24} />}
+        actions={
+          <>
             <Link
               href="/simulados"
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-zinc-900 transition hover:bg-zinc-100"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-800 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
             >
               Ver simulados
               <ArrowRight size={16} />
             </Link>
-
             <Link
               href="/assistente"
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-red-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-700"
+              className="performance-primary-action inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold text-white transition active:scale-[0.99]"
             >
               Alfred IA
               <Brain size={16} />
             </Link>
-          </div>
-        </div>
-      </div>
+          </>
+        }
+        stats={
+          <MetricStrip columns="md:grid-cols-3 xl:grid-cols-6">
+            <MetricCell label="Turmas" value={totalTurmas} />
+            <MetricCell label="Alunos" value={totalAlunos} tone="brand" />
+            <MetricCell label="Simulados" value={totalSimulados} />
+            <MetricCell label="Redações" value={totalRedacoes} />
+            <MetricCell label="Obras" value={totalObras} />
+            <MetricCell
+              label="Leituras ativas"
+              value={totalLeiturasAtivas}
+              tone="brand"
+            />
+          </MetricStrip>
+        }
+      />
 
-      <section className="mb-8 grid gap-6 md:grid-cols-2 xl:grid-cols-6">
-        <DashboardCard
-          title="Turmas"
-          value={totalTurmas}
-          icon={<Users size={22} />}
-          highlight={false}
-        />
+      <section className="mb-6 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+        <Panel>
+          <SectionHeader
+            eyebrow="Sinais pedagógicos"
+            title="Prioridades do momento"
+            description="Pontos de atenção calculados com os dados já disponíveis no sistema."
+            action={<Badge tone={alunosSemLeitura > 0 ? "warning" : "success"}>{coberturaLeitura}% leitura ativa</Badge>}
+          />
 
-        <DashboardCard
-          title="Alunos"
-          value={totalAlunos}
-          icon={<GraduationCap size={22} />}
-          highlight
-        />
-
-        <DashboardCard
-          title="Simulados"
-          value={totalSimulados}
-          icon={<BookOpen size={22} />}
-          highlight={false}
-        />
-
-        <DashboardCard
-          title="Redações"
-          value={totalRedacoes}
-          icon={<FileText size={22} />}
-          highlight={false}
-        />
-
-        <DashboardCard
-          title="Obras"
-          value={totalObras}
-          icon={<Layers3 size={22} />}
-          highlight={false}
-        />
-
-        <DashboardCard
-          title="Leituras ativas"
-          value={totalLeiturasAtivas}
-          icon={<TrendingUp size={22} />}
-          highlight
-        />
-      </section>
-
-      <section className="mb-8 grid gap-6 xl:grid-cols-[1fr_0.9fr]">
-        <div className="rounded-[32px] border border-red-200 bg-red-50 p-7">
-          <div className="mb-6 flex items-start gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-red-600 shadow-sm">
-              <AlertTriangle size={24} />
-            </div>
-
-            <div>
-              <h2 className="text-2xl font-bold text-red-700">
-                Alertas pedagógicos
-              </h2>
-
-              <p className="mt-1 text-sm text-red-600">
-                Pontos que merecem atenção da coordenação e professores.
-              </p>
-            </div>
-          </div>
-
-          <div className="grid gap-4">
-            <AlertItem
+          <div className="grid gap-3 md:grid-cols-3">
+            <InsightCard
+              icon={<AlertTriangle size={18} />}
               title="Alunos sem leitura ativa"
-              description={`${alunosSemLeitura} aluno(s) ainda não possuem leitura em andamento registrada.`}
+              value={alunosSemLeitura}
+              description="estudante(s) ainda sem leitura em andamento registrada."
+              tone="warning"
             />
-
-            <AlertItem
-              title="Acompanhamento de redação"
-              description={`${totalRedacoes} redação(ões) corrigidas até o momento. Verifique turmas com baixa cobertura.`}
+            <InsightCard
+              icon={<FileText size={18} />}
+              title="Redações corrigidas"
+              value={totalRedacoes}
+              description="registro(s) disponíveis para acompanhamento."
             />
-
-            <AlertItem
-              title="Simulados e análise"
-              description="Acompanhe rankings, questões críticas e desempenho por disciplina após cada simulado."
+            <InsightCard
+              icon={<BookOpen size={18} />}
+              title="Simulados"
+              value={totalSimulados}
+              description="avaliação(ões) na base institucional."
             />
           </div>
-        </div>
+        </Panel>
 
-        <div className="rounded-[32px] border border-zinc-200 bg-white p-7 shadow-sm">
-          <h2 className="text-2xl font-bold text-zinc-900">
-            Ações rápidas
-          </h2>
+        <Panel>
+          <SectionHeader
+            eyebrow="Acesso rápido"
+            title="Fluxos operacionais"
+            description="Entradas principais para executar as rotinas do sistema."
+          />
 
-          <p className="mt-1 text-sm text-zinc-500">
-            Atalhos para os principais fluxos do sistema.
-          </p>
-
-          <div className="mt-6 grid gap-3">
+          <div className="grid gap-2">
             <QuickAction href="/simulados" label="Criar ou acessar simulados" />
             <QuickAction href="/redacoes" label="Corrigir redações ENEM" />
             <QuickAction href="/leituras" label="Gerenciar + Leitura" />
             <QuickAction href="/repertorio" label="Gerar repertório com IA" />
             <QuickAction href="/alunos" label="Acessar perfis dos alunos" />
           </div>
-        </div>
+        </Panel>
       </section>
 
-      <section className="grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-[32px] border border-zinc-200 bg-white p-7 shadow-sm">
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-zinc-900">
-                Últimos simulados
-              </h2>
-
-              <p className="mt-1 text-sm text-zinc-500">
-                Avaliações cadastradas recentemente.
-              </p>
-            </div>
-
-            <Link
-              href="/simulados"
-              className="text-sm font-semibold text-red-600 hover:text-red-700"
-            >
-              Ver todos
-            </Link>
-          </div>
-
-          <div className="grid gap-4">
-            {ultimosSimulados.map((simulado) => (
+      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <Panel>
+          <SectionHeader
+            eyebrow="Avaliações"
+            title="Últimos simulados"
+            description="Avaliações cadastradas recentemente."
+            action={
               <Link
-                key={simulado.id}
-                href={`/simulados/${simulado.id}`}
-                className="group rounded-2xl border border-zinc-200 p-5 transition hover:border-red-200 hover:bg-red-50/40"
+                href="/simulados"
+                className="text-sm font-semibold text-red-600 hover:text-red-700"
               >
-                <div className="flex items-center justify-between gap-4">
+                Ver todos
+              </Link>
+            }
+          />
+
+          <div className="overflow-hidden rounded-3xl border border-zinc-200 bg-white/70">
+            {ultimosSimulados.length === 0 ? (
+              <EmptyState title="Nenhum simulado cadastrado ainda." />
+            ) : (
+              ultimosSimulados.map((simulado, index) => (
+                <Link
+                  key={simulado.id}
+                  href={`/simulados/${simulado.id}`}
+                  className={`performance-data-row group flex items-center justify-between gap-4 px-4 py-4 transition ${
+                    index > 0 ? "border-t border-zinc-200" : ""
+                  }`}
+                >
                   <div>
-                    <h3 className="font-semibold text-zinc-900 group-hover:text-red-700">
+                    <h3 className="font-semibold text-zinc-950 group-hover:text-red-700">
                       {simulado.title}
                     </h3>
-
                     <p className="mt-1 text-sm text-zinc-500">
-                      {simulado.grade}º ano • {simulado.totalQuestions} questões
+                      {simulado.grade}º ano · {simulado.totalQuestions} questões
                     </p>
                   </div>
-
-                  <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600">
-                    {simulado.status}
-                  </span>
-                </div>
-              </Link>
-            ))}
-
-            {ultimosSimulados.length === 0 && <EmptyState text="Nenhum simulado cadastrado ainda." />}
+                  <Badge tone="neutral">{simulado.status}</Badge>
+                </Link>
+              ))
+            )}
           </div>
-        </div>
+        </Panel>
 
-        <div className="grid gap-8">
-          <div className="rounded-[32px] border border-zinc-200 bg-white p-7 shadow-sm">
-            <h2 className="text-2xl font-bold text-zinc-900">
-              Últimas redações
-            </h2>
+        <div className="grid gap-6">
+          <RecentPanel
+            title="Últimas redações"
+            icon={<FileText size={18} />}
+            empty="Nenhuma redação corrigida ainda."
+            items={ultimasRedacoes.map((redacao) => ({
+              id: redacao.id,
+              title: redacao.student.name,
+              detail: `${redacao.student.classRoom.name} · Nota ${redacao.totalScore}`,
+            }))}
+          />
 
-            <div className="mt-6 grid gap-4">
-              {ultimasRedacoes.map((redacao) => (
-                <div
-                  key={redacao.id}
-                  className="rounded-2xl bg-zinc-50 p-5"
-                >
-                  <p className="font-semibold text-zinc-900">
-                    {redacao.student.name}
-                  </p>
-
-                  <p className="mt-1 text-sm text-zinc-500">
-                    {redacao.student.classRoom.name} • Nota {redacao.totalScore}
-                  </p>
-                </div>
-              ))}
-
-              {ultimasRedacoes.length === 0 && <EmptyState text="Nenhuma redação corrigida ainda." />}
-            </div>
-          </div>
-
-          <div className="rounded-[32px] border border-zinc-200 bg-white p-7 shadow-sm">
-            <h2 className="text-2xl font-bold text-zinc-900">
-              Leituras recentes
-            </h2>
-
-            <div className="mt-6 grid gap-4">
-              {leiturasRecentes.map((leitura) => (
-                <div
-                  key={leitura.id}
-                  className="rounded-2xl bg-zinc-50 p-5"
-                >
-                  <p className="font-semibold text-zinc-900">
-                    {leitura.student.name}
-                  </p>
-
-                  <p className="mt-1 text-sm text-zinc-500">
-                    {leitura.book.title} • {leitura.status}
-                  </p>
-                </div>
-              ))}
-
-              {leiturasRecentes.length === 0 && <EmptyState text="Nenhuma leitura registrada ainda." />}
-            </div>
-          </div>
+          <RecentPanel
+            title="Leituras recentes"
+            icon={<TrendingUp size={18} />}
+            empty="Nenhuma leitura registrada ainda."
+            items={leiturasRecentes.map((leitura) => ({
+              id: leitura.id,
+              title: leitura.student.name,
+              detail: `${leitura.book.title} · ${leitura.status}`,
+            }))}
+          />
         </div>
       </section>
     </AppLayout>
   );
 }
 
-function DashboardCard({
+function InsightCard({
+  icon,
   title,
   value,
-  icon,
-  highlight,
+  description,
+  tone = "default",
 }: {
+  icon: React.ReactNode;
   title: string;
   value: number;
-  icon: React.ReactNode;
-  highlight: boolean;
+  description: string;
+  tone?: "default" | "warning";
 }) {
   return (
-    <div className="rounded-[28px] border border-zinc-200 bg-white p-5 shadow-sm transition hover:shadow-md">
+    <div className="rounded-3xl border border-zinc-200 bg-white/70 p-4">
       <div
-        className={`mb-5 flex h-12 w-12 items-center justify-center rounded-2xl ${
-          highlight ? "bg-red-50 text-red-600" : "bg-zinc-100 text-zinc-700"
+        className={`mb-4 flex h-9 w-9 items-center justify-center rounded-xl ${
+          tone === "warning"
+            ? "bg-amber-50 text-amber-700"
+            : "bg-red-50 text-red-600"
         }`}
       >
         {icon}
       </div>
-
-      <p className="text-sm font-medium text-zinc-500">{title}</p>
-
-      <p
-        className={`mt-2 text-4xl font-bold tracking-tight ${
-          highlight ? "text-red-600" : "text-zinc-900"
-        }`}
-      >
+      <p className="text-sm font-semibold text-zinc-950">{title}</p>
+      <p className="mt-2 text-3xl font-semibold tracking-tight text-zinc-950">
         {value}
       </p>
-    </div>
-  );
-}
-
-function AlertItem({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="rounded-2xl bg-white p-5 shadow-sm">
-      <p className="font-semibold text-zinc-900">{title}</p>
-      <p className="mt-2 text-sm leading-relaxed text-zinc-500">
+      <p className="mt-1 text-xs leading-relaxed text-zinc-500">
         {description}
       </p>
     </div>
   );
 }
 
-function QuickAction({
-  href,
-  label,
-}: {
-  href: string;
-  label: string;
-}) {
+function QuickAction({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
-      className="flex items-center justify-between rounded-2xl bg-zinc-50 p-4 text-sm font-semibold text-zinc-700 transition hover:bg-red-50 hover:text-red-700"
+      className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-white/70 px-4 py-3 text-sm font-semibold text-zinc-700 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
     >
       <span>{label}</span>
       <Plus size={16} />
@@ -388,10 +291,45 @@ function QuickAction({
   );
 }
 
-function EmptyState({ text }: { text: string }) {
+function RecentPanel({
+  title,
+  icon,
+  items,
+  empty,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  items: Array<{ id: string; title: string; detail: string }>;
+  empty: string;
+}) {
   return (
-    <div className="rounded-2xl border border-dashed border-zinc-300 p-6 text-center">
-      <p className="text-sm text-zinc-500">{text}</p>
-    </div>
+    <Panel>
+      <SectionHeader
+        title={title}
+        action={
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-50 text-red-600">
+            {icon}
+          </div>
+        }
+      />
+
+      <div className="space-y-2">
+        {items.length === 0 ? (
+          <p className="rounded-2xl border border-dashed border-zinc-300 bg-white/60 p-4 text-sm text-zinc-500">
+            {empty}
+          </p>
+        ) : (
+          items.map((item) => (
+            <div
+              key={item.id}
+              className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3"
+            >
+              <p className="font-semibold text-zinc-950">{item.title}</p>
+              <p className="mt-1 text-sm text-zinc-500">{item.detail}</p>
+            </div>
+          ))
+        )}
+      </div>
+    </Panel>
   );
 }

@@ -12,7 +12,8 @@ model ClassRoom {
   name  String @unique
   grade Int
 
-  students Student[]
+  students         Student[]
+  examApplications ExamApplication[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -29,6 +30,7 @@ model Student {
   results          ExamResult[]
   essayCorrections EssayCorrection[]
   bookProgresses   BookProgress[]
+  answerSheets     AnswerSheet[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -46,6 +48,7 @@ model Exam {
   answerKey        AnswerKey[]
   results          ExamResult[]
   essayCorrections EssayCorrection[]
+  applications     ExamApplication[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -59,7 +62,7 @@ model ExamBlock {
   endQuestion   Int
 
   examId String
-  exam   Exam @relation(fields: [examId], references: [id])
+  exam   Exam   @relation(fields: [examId], references: [id])
 
   createdAt DateTime @default(now())
 }
@@ -69,10 +72,10 @@ model AnswerKey {
 
   question Int
   answer   Alternative
-  canceled Boolean @default(false)
+  canceled Boolean     @default(false)
 
   examId String
-  exam   Exam @relation(fields: [examId], references: [id])
+  exam   Exam   @relation(fields: [examId], references: [id])
 
   createdAt DateTime @default(now())
 
@@ -86,7 +89,7 @@ model ExamResult {
   student   Student @relation(fields: [studentId], references: [id])
 
   examId String
-  exam   Exam @relation(fields: [examId], references: [id])
+  exam   Exam   @relation(fields: [examId], references: [id])
 
   answers StudentAnswer[]
 
@@ -111,6 +114,245 @@ model StudentAnswer {
   @@unique([examResultId, question])
 }
 
+// ======================================================
+// APLICAÇÃO DO SIMULADO EM UMA TURMA
+// ======================================================
+
+model ExamApplication {
+  id String @id @default(cuid())
+
+  examId String
+  exam   Exam   @relation(fields: [examId], references: [id])
+
+  classRoomId String
+  classRoom   ClassRoom @relation(fields: [classRoomId], references: [id])
+
+  answerSheets AnswerSheet[]
+  scanBatches  AnswerSheetScanBatch[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([examId, classRoomId])
+  @@index([examId])
+  @@index([classRoomId])
+}
+
+// ======================================================
+// FOLHA FÍSICA INDIVIDUAL
+// ======================================================
+
+model AnswerSheet {
+  id String @id @default(cuid())
+
+  code String @unique @db.VarChar(32)
+
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id])
+
+  examApplicationId String
+  examApplication   ExamApplication @relation(fields: [examApplicationId], references: [id])
+
+  status AnswerSheetStatus @default(GENERATED)
+
+  scans AnswerSheetScan[]
+
+  generatedAt DateTime  @default(now())
+  scannedAt   DateTime?
+  correctedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, examApplicationId])
+  @@index([studentId])
+  @@index([examApplicationId])
+}
+
+// ======================================================
+// LOTE DE DIGITALIZAÇÃO
+// ======================================================
+//
+// Representa o arquivo multipágina enviado pelo professor.
+//
+// Exemplo:
+// gabaritos-IDEV-3.pdf
+// 64 páginas
+//
+// Um ExamApplication pode possuir vários lotes.
+// Isso permite reprocessamento ou novos uploads no futuro.
+// ======================================================
+
+model AnswerSheetScanBatch {
+  id String @id @default(cuid())
+
+  examApplicationId String
+  examApplication   ExamApplication @relation(fields: [examApplicationId], references: [id])
+
+  sourceFileName String  @db.VarChar(255)
+  sourceFileKey  String? @db.VarChar(500)
+
+  totalPages          Int @default(0)
+  processedPages      Int @default(0)
+  identifiedPages     Int @default(0)
+  reviewRequiredPages Int @default(0)
+  confirmedPages      Int @default(0)
+
+  status ScanBatchStatus @default(UPLOADED)
+
+  scans AnswerSheetScan[]
+
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([examApplicationId])
+  @@index([status])
+}
+
+// ======================================================
+// DIGITALIZAÇÃO DE UMA PÁGINA
+// ======================================================
+//
+// Cada registro representa UMA página do arquivo multipágina.
+//
+// Exemplo:
+// página 17 do PDF
+// QR encontrado: PF-ABCD-EFGH
+// AnswerSheet correspondente localizada.
+//
+// answerSheetId é opcional porque inicialmente a página
+// ainda pode não ter sido identificada.
+// ======================================================
+
+model AnswerSheetScan {
+  id String @id @default(cuid())
+
+  scanBatchId String
+  scanBatch   AnswerSheetScanBatch @relation(fields: [scanBatchId], references: [id])
+
+  pageNumber Int
+
+  answerSheetId String?
+  answerSheet   AnswerSheet? @relation(fields: [answerSheetId], references: [id])
+
+  detectedCode String? @db.VarChar(32)
+
+  status AnswerSheetScanStatus @default(PENDING)
+
+  // Confiança da identificação pelo QR.
+  // Valor esperado futuramente entre 0 e 1.
+  qrConfidence Float?
+
+  // Confiança do alinhamento/correção de perspectiva.
+  alignmentConfidence Float?
+
+  // Confiança geral da leitura daquela página.
+  overallConfidence Float?
+
+  // Informações úteis para auditoria/debug do processamento.
+  rotationDegrees Float?
+
+  // Referências opcionais para imagens armazenadas fora do banco.
+  // Não armazenaremos a imagem binária no MySQL.
+  sourceImageKey     String? @db.VarChar(500)
+  normalizedImageKey String? @db.VarChar(500)
+
+  answers DetectedAnswer[]
+
+  processedAt DateTime?
+  reviewedAt  DateTime?
+  confirmedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([scanBatchId, pageNumber])
+  @@index([answerSheetId])
+  @@index([detectedCode])
+  @@index([status])
+}
+
+// ======================================================
+// RESPOSTA DETECTADA PELA VISÃO COMPUTACIONAL
+// ======================================================
+//
+// Representa o que o algoritmo detectou em UMA questão.
+//
+// Não representa ainda o resultado oficial.
+//
+// Exemplo:
+//
+// Questão 17
+//
+// A = 0.08
+// B = 0.11
+// C = 0.76
+// D = 0.07
+// E = 0.09
+//
+// detectedAnswer = C
+// detectionStatus = DETECTED
+// confidence = 0.98
+//
+// Depois de revisão manual, finalAnswer pode ser alterada.
+// ======================================================
+
+model DetectedAnswer {
+  id String @id @default(cuid())
+
+  answerSheetScanId String
+  answerSheetScan   AnswerSheetScan @relation(fields: [answerSheetScanId], references: [id])
+
+  question Int
+
+  detectedAnswer Alternative?
+
+  detectionStatus DetectedAnswerStatus
+
+  // Confiança final da decisão do detector.
+  confidence Float?
+
+  // Percentual/intensidade de preenchimento detectado
+  // em cada bolha.
+  //
+  // Futuramente trabalharemos normalmente entre 0 e 1.
+  fillA Float?
+  fillB Float?
+  fillC Float?
+  fillD Float?
+  fillE Float?
+
+  // Resultado final após eventual revisão humana.
+  //
+  // Pode permanecer null em uma questão confirmada como
+  // não respondida.
+  finalAnswer Alternative?
+
+  // Permite distinguir:
+  //
+  // finalAnswer = null + reviewed = false
+  //   → ainda não revisada
+  //
+  // finalAnswer = null + reviewed = true
+  //   → revisão confirmou questão em branco
+  reviewed Boolean @default(false)
+
+  reviewedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([answerSheetScanId, question])
+  @@index([detectionStatus])
+}
+
+// ======================================================
+// USUÁRIOS
+// ======================================================
+
 model User {
   id       String   @id @default(cuid())
   name     String
@@ -122,6 +364,10 @@ model User {
   updatedAt DateTime @updatedAt
 }
 
+// ======================================================
+// REDAÇÃO
+// ======================================================
+
 model EssayCorrection {
   id String @id @default(cuid())
 
@@ -129,7 +375,7 @@ model EssayCorrection {
   student   Student @relation(fields: [studentId], references: [id])
 
   examId String?
-  exam   Exam? @relation(fields: [examId], references: [id])
+  exam   Exam?   @relation(fields: [examId], references: [id])
 
   competency1 Int @default(0)
   competency2 Int @default(0)
@@ -147,12 +393,16 @@ model EssayCorrection {
   @@unique([studentId, examId])
 }
 
+// ======================================================
+// LEITURAS
+// ======================================================
+
 model Book {
   id String @id @default(cuid())
 
   title       String
   author      String
-  description String? @db.Text
+  description String?        @db.Text
   category    BookCategory
   type        BookType
   difficulty  BookDifficulty @default(MEDIUM)
@@ -179,13 +429,13 @@ model BookProgress {
   id String @id @default(cuid())
 
   bookId String
-  book   Book @relation(fields: [bookId], references: [id])
+  book   Book   @relation(fields: [bookId], references: [id])
 
   studentId String
   student   Student @relation(fields: [studentId], references: [id])
 
   status   ReadingStatus @default(WANT_TO_READ)
-  progress Int @default(0)
+  progress Int           @default(0)
 
   startedAt  DateTime?
   finishedAt DateTime?
@@ -195,6 +445,10 @@ model BookProgress {
 
   @@unique([bookId, studentId])
 }
+
+// ======================================================
+// MODELOS LEGADOS
+// ======================================================
 
 model LegacyAluno {
   id      Int     @id @default(autoincrement())
@@ -275,10 +529,60 @@ model LegacyResultado {
   @@map("resultados")
 }
 
+// ======================================================
+// ENUMS
+// ======================================================
+
 enum ExamStatus {
   DRAFT
   IN_PROGRESS
   FINISHED
+}
+
+enum AnswerSheetStatus {
+  GENERATED
+  SCANNED
+  REVIEW_REQUIRED
+  CORRECTED
+}
+
+// ======================================================
+// STATUS DO ARQUIVO MULTIPÁGINA
+// ======================================================
+
+enum ScanBatchStatus {
+  UPLOADED
+  PROCESSING
+  REVIEW_REQUIRED
+  READY_FOR_CONFIRMATION
+  CONFIRMED
+  FAILED
+}
+
+// ======================================================
+// STATUS DE UMA PÁGINA DIGITALIZADA
+// ======================================================
+
+enum AnswerSheetScanStatus {
+  PENDING
+  PROCESSING
+  IDENTIFIED
+  PROCESSED
+  REVIEW_REQUIRED
+  CONFIRMED
+  DUPLICATE
+  FAILED
+}
+
+// ======================================================
+// RESULTADO DA DETECÇÃO DE UMA QUESTÃO
+// ======================================================
+
+enum DetectedAnswerStatus {
+  DETECTED
+  BLANK
+  MULTIPLE
+  UNCERTAIN
 }
 
 enum Alternative {

@@ -418,7 +418,7 @@ export default async function AlunoPage({
         />
       </section>
 
-      <section className="mb-8 rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm">
+      <section className="mb-8 performance-card rounded-[28px] border p-6">
         <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="text-xl font-bold text-zinc-900">Redações</h2>

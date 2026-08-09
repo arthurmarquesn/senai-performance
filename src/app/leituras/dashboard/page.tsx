@@ -78,7 +78,7 @@ export default async function LeiturasDashboardPage() {
       </div>
 
       <section className="mb-8 grid gap-6 md:grid-cols-3">
-        <div className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm">
+        <div className="performance-card rounded-[28px] border p-6">
           <p className="text-sm text-zinc-500">
             Obras cadastradas
           </p>
@@ -88,7 +88,7 @@ export default async function LeiturasDashboardPage() {
           </p>
         </div>
 
-        <div className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm">
+        <div className="performance-card rounded-[28px] border p-6">
           <p className="text-sm text-zinc-500">
             Leituras em andamento
           </p>
@@ -98,7 +98,7 @@ export default async function LeiturasDashboardPage() {
           </p>
         </div>
 
-        <div className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm">
+        <div className="performance-card rounded-[28px] border p-6">
           <p className="text-sm text-zinc-500">
             Leituras concluídas
           </p>
@@ -110,7 +110,7 @@ export default async function LeiturasDashboardPage() {
       </section>
 
       <section className="mb-8 grid gap-8 lg:grid-cols-2">
-        <div className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm">
+        <div className="performance-card rounded-[28px] border p-6">
           <h2 className="text-2xl font-bold text-zinc-900">
             Ranking intelectual
           </h2>
@@ -139,7 +139,7 @@ export default async function LeiturasDashboardPage() {
           </div>
         </div>
 
-        <div className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm">
+        <div className="performance-card rounded-[28px] border p-6">
           <h2 className="text-2xl font-bold text-zinc-900">
             Obras mais lidas
           </h2>

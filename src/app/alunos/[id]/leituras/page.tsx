@@ -111,14 +111,14 @@ export default async function StudentReadingPage({
       </div>
 
       <section className="mb-8 grid gap-6 md:grid-cols-3">
-        <div className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm">
+        <div className="performance-card rounded-[28px] border p-6">
           <p className="text-sm text-zinc-500">Leituras iniciadas</p>
           <p className="mt-2 text-4xl font-bold text-red-600">
             {student.bookProgresses.length}
           </p>
         </div>
 
-        <div className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm">
+        <div className="performance-card rounded-[28px] border p-6">
           <p className="text-sm text-zinc-500">Leituras concluídas</p>
           <p className="mt-2 text-4xl font-bold text-zinc-900">
             {
@@ -129,7 +129,7 @@ export default async function StudentReadingPage({
           </p>
         </div>
 
-        <div className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm">
+        <div className="performance-card rounded-[28px] border p-6">
           <p className="text-sm text-zinc-500">Média redação</p>
           <p className="mt-2 text-4xl font-bold text-zinc-900">
             {averageEssay ?? "-"}
@@ -142,7 +142,7 @@ export default async function StudentReadingPage({
           <Link
             key={book.id}
             href={`/leituras/${book.id}`}
-            className="group rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-red-200 hover:shadow-lg"
+            className="group performance-card rounded-[28px] border p-6 transition hover:-translate-y-1 hover:border-red-200 hover:shadow-lg"
           >
             <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
               <div>

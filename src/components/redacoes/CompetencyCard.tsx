@@ -18,7 +18,7 @@ export function CompetencyCard({
   name,
 }: CompetencyCardProps) {
   return (
-    <div className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm">
+    <div className="performance-card rounded-[28px] border p-6">
       <div className="mb-5">
         <h3 className="text-xl font-bold text-zinc-900">
           {title}

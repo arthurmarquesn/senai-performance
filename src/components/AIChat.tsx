@@ -81,7 +81,7 @@ export function AiChat() {
 
   return (
     <section className="grid gap-6">
-      <div className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm">
+      <div className="performance-card rounded-[28px] border p-6">
         <div className="mb-5 flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-red-600">
             <Bot size={24} />
@@ -191,14 +191,14 @@ export function AiChat() {
               }
             }}
             placeholder="Ex: Faça um resumo geral do sistema..."
-            className="flex-1 rounded-2xl border border-zinc-200 px-4 py-3 text-sm outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+            className="flex-1 performance-field rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
           />
 
           <button
             type="button"
             onClick={() => askAi()}
             disabled={loading}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-red-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-70"
+            className="performance-primary-action inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold text-white transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
           >
             <Send size={18} />
             Enviar

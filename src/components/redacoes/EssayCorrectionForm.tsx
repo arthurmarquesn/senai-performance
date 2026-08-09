@@ -67,7 +67,7 @@ export function EssayCorrectionForm({
 }}
       className="grid gap-6"
     >
-      <div className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm">
+      <div className="performance-card rounded-[28px] border p-6">
         <div className="mb-6 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h2 className="text-2xl font-bold text-zinc-900">
@@ -100,7 +100,7 @@ export function EssayCorrectionForm({
           <select
             name="studentId"
             required
-            className="rounded-2xl border border-zinc-200 px-4 py-3 text-sm outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+            className="performance-field rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
           >
             <option value="">
               Selecione o aluno
@@ -115,7 +115,7 @@ export function EssayCorrectionForm({
 
           <select
             name="examId"
-            className="rounded-2xl border border-zinc-200 px-4 py-3 text-sm outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+            className="performance-field rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
           >
             <option value="">
               Sem simulado vinculado
@@ -200,7 +200,7 @@ export function EssayCorrectionForm({
         name="competency5"
       />
 
-      <div className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm">
+      <div className="performance-card rounded-[28px] border p-6">
         <h3 className="mb-4 text-xl font-bold text-zinc-900">
           Comentário pedagógico
         </h3>

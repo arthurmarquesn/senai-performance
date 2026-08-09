@@ -39,7 +39,7 @@ export function EssayStudentCharts({
 }: EssayStudentChartsProps) {
   return (
     <div className="grid gap-8">
-      <section className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm">
+      <section className="performance-card rounded-[28px] border p-6">
         <h2 className="mb-1 text-xl font-bold text-zinc-900">
           Perfil de competências
         </h2>
@@ -68,7 +68,7 @@ export function EssayStudentCharts({
         </div>
       </section>
 
-      <section className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm">
+      <section className="performance-card rounded-[28px] border p-6">
         <h2 className="mb-1 text-xl font-bold text-zinc-900">
           Desempenho por competência
         </h2>
@@ -91,7 +91,7 @@ export function EssayStudentCharts({
         </div>
       </section>
 
-      <section className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm">
+      <section className="performance-card rounded-[28px] border p-6">
         <h2 className="mb-1 text-xl font-bold text-zinc-900">
           Evolução da redação
         </h2>

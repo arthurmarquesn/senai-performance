@@ -16,7 +16,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="mt-2 inline-flex items-center justify-center gap-2 rounded-2xl bg-red-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/20 disabled:cursor-not-allowed disabled:opacity-70"
+      className="performance-primary-action mt-2 inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-70"
     >
       {pending && <Loader2 size={18} className="animate-spin" />}
       {pending ? "Entrando..." : "Entrar no sistema"}
@@ -44,7 +44,7 @@ export function LoginForm() {
           name="email"
           type="email"
           placeholder="admin@sistema.local"
-          className="rounded-2xl border border-zinc-300 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10"
+          className="performance-field rounded-2xl border px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
         />
       </div>
 
@@ -55,7 +55,7 @@ export function LoginForm() {
           name="password"
           type="password"
           placeholder="••••••••"
-          className="rounded-2xl border border-zinc-300 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10"
+          className="performance-field rounded-2xl border px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
         />
       </div>
 

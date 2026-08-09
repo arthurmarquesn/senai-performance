@@ -29,7 +29,7 @@ export default async function LeiturasPage() {
           <Link
             key={book.id}
             href={`/leituras/${book.id}`}
-            className="group rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-red-300 hover:shadow-lg"
+            className="group performance-card rounded-[28px] border p-6 transition hover:-translate-y-1 hover:border-red-300 hover:shadow-lg"
           >
             <div className="flex items-start justify-between">
               <div>

@@ -1,16 +1,18 @@
 import Link from "next/link";
-import {
-  ArrowRight,
-  BookOpen,
-  GraduationCap,
-  Layers3,
-  Plus,
-  Users,
-} from "lucide-react";
+import { ArrowRight, Plus, Users } from "lucide-react";
 
-import { prisma } from "@/lib/prisma";
-import { AppLayout } from "@/components/AppLayout";
 import { createClassRoom } from "./actions";
+import { AppLayout } from "@/components/AppLayout";
+import {
+  Badge,
+  EmptyState,
+  MetricCell,
+  MetricStrip,
+  PageHeader,
+  Panel,
+  SectionHeader,
+} from "@/components/design-system";
+import { prisma } from "@/lib/prisma";
 
 export default async function TurmasPage() {
   const turmas = await prisma.classRoom.findMany({
@@ -60,285 +62,297 @@ export default async function TurmasPage() {
     0
   );
 
+  const totalResultados = turmas.reduce(
+    (acc, turma) =>
+      acc +
+      turma.students.reduce(
+        (studentAcc, student) => studentAcc + student.results.length,
+        0
+      ),
+    0
+  );
+
   const totalSimuladosSeries = simuladosPorSerie.reduce(
     (acc, item) => acc + item._count.id,
     0
   );
 
+  const turmasPorSerie = [1, 2, 3].map((grade) => ({
+    grade,
+    turmas: turmas.filter((turma) => turma.grade === grade),
+    simulados: getTotalSimuladosDaSerie(grade),
+  }));
+
   return (
     <AppLayout>
-      <div className="mb-8 rounded-[32px] bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-800 p-8 text-white shadow-sm">
-        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-          <div>
-            <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-600 shadow-lg shadow-red-600/20">
-              <Users size={28} />
-            </div>
-
-            <h1 className="text-4xl font-bold tracking-tight">
-              Gestão de turmas
-            </h1>
-
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-400">
-              Organize turmas, estudantes, simulados por série e indicadores de
-              leitura em uma visão institucional.
-            </p>
-          </div>
-
+      <PageHeader
+        eyebrow="Núcleo acadêmico"
+        title="Turmas"
+        description="Estrutura institucional das turmas, com vínculo de estudantes, simulados por série e sinais de acompanhamento pedagógico."
+        icon={<Users size={24} />}
+        actions={
           <Link
             href="/turmas#cadastro"
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-zinc-900 transition hover:bg-zinc-100"
+            className="performance-primary-action inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold text-white transition active:scale-[0.99]"
           >
-            <Plus size={18} />
+            <Plus size={17} />
             Nova turma
           </Link>
-        </div>
-      </div>
+        }
+        stats={
+          <MetricStrip>
+            <MetricCell
+              label="Turmas"
+              value={turmas.length}
+              detail="unidades acadêmicas"
+              tone="brand"
+            />
+            <MetricCell label="Alunos" value={totalAlunos} detail="vinculados" />
+            <MetricCell
+              label="Simulados"
+              value={totalSimuladosSeries}
+              detail="disponíveis por série"
+            />
+            <MetricCell
+              label="Leituras"
+              value={totalLeituras}
+              detail={`${totalResultados} resultado(s)`}
+            />
+          </MetricStrip>
+        }
+      />
 
-      <section className="mb-8 grid gap-6 md:grid-cols-3">
-        <StatCard
-          title="Turmas cadastradas"
-          value={turmas.length}
-          icon={<Users size={22} />}
-          highlight
-        />
-
-        <StatCard
-          title="Alunos vinculados"
-          value={totalAlunos}
-          icon={<GraduationCap size={22} />}
-          highlight={false}
-        />
-
-        <StatCard
-          title="Leituras registradas"
-          value={totalLeituras}
-          icon={<BookOpen size={22} />}
-          highlight
-        />
-      </section>
-
-      <section
-        id="cadastro"
-        className="mb-8 rounded-[32px] border border-zinc-200 bg-white p-7 shadow-sm"
-      >
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-zinc-900">Nova turma</h2>
-
-          <p className="mt-1 text-sm text-zinc-500">
-            Informe o nome da turma e a série correspondente.
-          </p>
-        </div>
-
-        <form action={createClassRoom} className="grid gap-4 md:grid-cols-3">
-          <input
-            name="name"
-            placeholder="Nome da turma. Ex: IDEV-2"
-            className="rounded-2xl border border-zinc-200 px-4 py-3 text-sm outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <Panel className="min-h-[520px]">
+          <SectionHeader
+            eyebrow="Mapa das turmas"
+            title="Turmas cadastradas"
+            description={`${turmas.length} turma(s) organizadas por série, com dados de alunos, simulados, resultados e leitura.`}
+            action={
+              <Badge tone="brand">
+                {totalSimuladosSeries} simulado(s) na matriz
+              </Badge>
+            }
           />
 
-          <select
-            name="grade"
-            defaultValue=""
-            className="rounded-2xl border border-zinc-200 px-4 py-3 text-sm outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
-          >
-            <option value="" disabled>
-              Selecione a série
-            </option>
+          {turmas.length === 0 ? (
+            <EmptyState
+              title="Nenhuma turma cadastrada"
+              description="Crie uma turma para organizar estudantes, simulados, leituras e relatórios acadêmicos."
+              action={
+                <Link
+                  href="/turmas#cadastro"
+                  className="performance-primary-action inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold text-white"
+                >
+                  <Plus size={17} />
+                  Criar primeira turma
+                </Link>
+              }
+            />
+          ) : (
+            <div className="space-y-6">
+              {turmasPorSerie.map((grupo) => (
+                <section key={grupo.grade}>
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-950 text-sm font-semibold text-white">
+                        {grupo.grade}º
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-semibold text-zinc-950">
+                          {grupo.grade}º ano
+                        </h3>
+                        <p className="text-xs text-zinc-500">
+                          {grupo.turmas.length} turma(s) · {grupo.simulados} simulado(s)
+                        </p>
+                      </div>
+                    </div>
+                    <div className="hidden h-px flex-1 bg-zinc-200 md:block" />
+                  </div>
 
-            <option value="1">1º ano</option>
-            <option value="2">2º ano</option>
-            <option value="3">3º ano</option>
-          </select>
+                  {grupo.turmas.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-zinc-300 bg-white/60 px-4 py-5 text-sm text-zinc-500">
+                      Nenhuma turma cadastrada para esta série.
+                    </div>
+                  ) : (
+                    <div className="overflow-hidden rounded-3xl border border-zinc-200 bg-white/70">
+                      {grupo.turmas.map((turma, index) => {
+                        const totalSimuladosDaSerie = getTotalSimuladosDaSerie(
+                          turma.grade
+                        );
 
-          <button
-            type="submit"
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-red-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/20"
-          >
-            <Plus size={18} />
-            Cadastrar
-          </button>
-        </form>
-      </section>
+                        const totalLeiturasDaTurma = turma.students.reduce(
+                          (acc, student) => acc + student.bookProgresses.length,
+                          0
+                        );
 
-      <section className="mb-6 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-zinc-900">
-            Turmas cadastradas
-          </h2>
+                        const totalResultadosDaTurma = turma.students.reduce(
+                          (acc, student) => acc + student.results.length,
+                          0
+                        );
 
-          <p className="mt-1 text-sm text-zinc-500">
-            {turmas.length} turma(s) organizadas no Alfred.
-          </p>
-        </div>
+                        return (
+                          <Link
+                            key={turma.id}
+                            href={`/turmas/${turma.id}`}
+                            className={`performance-data-row group grid gap-4 px-4 py-4 transition md:grid-cols-[minmax(180px,1.2fr)_repeat(4,minmax(72px,0.55fr))_auto] md:items-center ${
+                              index > 0 ? "border-t border-zinc-200" : ""
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="performance-icon-tile flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-red-50 text-red-600">
+                                <Users size={20} />
+                              </div>
+                              <div>
+                                <h4 className="font-semibold tracking-tight text-zinc-950 transition group-hover:text-red-700">
+                                  {turma.name}
+                                </h4>
+                                <p className="mt-1 text-xs text-zinc-500">
+                                  Entidade acadêmica · {turma.grade}º ano
+                                </p>
+                              </div>
+                            </div>
 
-        <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-zinc-700 shadow-sm">
-          {totalSimuladosSeries} simulado(s) por série
-        </div>
-      </section>
+                            <DataPoint
+                              label="Alunos"
+                              value={String(turma.students.length)}
+                            />
+                            <DataPoint
+                              label="Simulados"
+                              value={String(totalSimuladosDaSerie)}
+                              brand
+                            />
+                            <DataPoint
+                              label="Resultados"
+                              value={String(totalResultadosDaTurma)}
+                            />
+                            <DataPoint
+                              label="Leituras"
+                              value={String(totalLeiturasDaTurma)}
+                              brand
+                            />
 
-      {turmas.length === 0 ? (
-        <div className="rounded-[32px] border border-dashed border-zinc-300 bg-white p-16 text-center shadow-sm">
-          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-3xl bg-zinc-100 text-zinc-500">
-            <GraduationCap size={30} />
-          </div>
+                            <div className="flex items-center justify-between gap-3 md:justify-end">
+                              <Badge tone="neutral">Painel da turma</Badge>
+                              <ArrowRight
+                                size={18}
+                                className="text-zinc-400 transition group-hover:translate-x-0.5 group-hover:text-red-600"
+                              />
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </section>
+              ))}
+            </div>
+          )}
+        </Panel>
 
-          <h2 className="text-2xl font-bold text-zinc-900">
-            Nenhuma turma cadastrada
-          </h2>
+        <aside className="space-y-6">
+          <Panel id="cadastro" className="xl:sticky xl:top-24">
+            <SectionHeader
+              eyebrow="Cadastro"
+              title="Nova turma"
+              description="Informe o nome da turma e selecione a série correspondente."
+            />
 
-          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-zinc-500">
-            Comece criando uma turma para organizar estudantes, simulados,
-            leituras e relatórios acadêmicos.
-          </p>
+            <form action={createClassRoom} className="grid gap-4">
+              <label className="grid gap-2">
+                <span className="text-sm font-semibold text-zinc-800">
+                  Nome da turma
+                </span>
+                <input
+                  name="name"
+                  placeholder="Ex: IDEV-2"
+                  className="performance-field rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+                />
+              </label>
 
-          <Link
-            href="/turmas#cadastro"
-            className="mt-8 inline-flex items-center justify-center gap-2 rounded-2xl bg-red-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-700"
-          >
-            <Plus size={18} />
-            Criar primeira turma
-          </Link>
-        </div>
-      ) : (
-        <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {turmas.map((turma) => {
-            const totalSimuladosDaSerie = getTotalSimuladosDaSerie(turma.grade);
+              <label className="grid gap-2">
+                <span className="text-sm font-semibold text-zinc-800">
+                  Série
+                </span>
+                <select
+                  name="grade"
+                  defaultValue=""
+                  className="performance-field rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+                >
+                  <option value="" disabled>
+                    Selecione a série
+                  </option>
 
-            const totalLeiturasDaTurma = turma.students.reduce(
-              (acc, student) => acc + student.bookProgresses.length,
-              0
-            );
+                  <option value="1">1º ano</option>
+                  <option value="2">2º ano</option>
+                  <option value="3">3º ano</option>
+                </select>
+              </label>
 
-            const totalResultadosDaTurma = turma.students.reduce(
-              (acc, student) => acc + student.results.length,
-              0
-            );
-
-            return (
-              <Link
-                key={turma.id}
-                href={`/turmas/${turma.id}`}
-                className="group rounded-[32px] border border-zinc-200 bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:border-red-200 hover:shadow-xl"
+              <button
+                type="submit"
+                className="performance-primary-action inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold text-white transition active:scale-[0.99]"
               >
-                <div className="mb-6 flex items-start justify-between">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-red-50 text-red-600">
-                    <Users size={28} />
+                <Plus size={18} />
+                Cadastrar turma
+              </button>
+            </form>
+          </Panel>
+
+          <Panel>
+            <SectionHeader
+              eyebrow="Leitura rápida"
+              title="Cobertura acadêmica"
+              description="Resumo operacional para localizar séries sem turmas ou com baixa estrutura de simulado."
+            />
+
+            <div className="space-y-3">
+              {turmasPorSerie.map((grupo) => (
+                <div
+                  key={grupo.grade}
+                  className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-zinc-950">
+                      {grupo.grade}º ano
+                    </p>
+                    <p className="text-xs text-zinc-500">
+                      {grupo.turmas.length} turma(s)
+                    </p>
                   </div>
-
-                  <ArrowRight
-                    size={18}
-                    className="text-zinc-400 transition group-hover:text-red-600"
-                  />
-                </div>
-
-                <h2 className="text-2xl font-bold tracking-tight text-zinc-900 transition group-hover:text-red-700">
-                  {turma.name}
-                </h2>
-
-                <p className="mt-2 text-sm text-zinc-500">
-                  {turma.grade}º ano
-                </p>
-
-                <div className="mt-8 grid grid-cols-2 gap-3">
-                  <InfoCard
-                    label="Alunos"
-                    value={String(turma.students.length)}
-                    highlight={false}
-                  />
-
-                  <InfoCard
-                    label="Simulados"
-                    value={String(totalSimuladosDaSerie)}
-                    highlight
-                  />
-
-                  <InfoCard
-                    label="Resultados"
-                    value={String(totalResultadosDaTurma)}
-                    highlight={false}
-                  />
-
-                  <InfoCard
-                    label="Leituras"
-                    value={String(totalLeiturasDaTurma)}
-                    highlight
-                  />
-                </div>
-
-                <div className="mt-6 flex items-center justify-between rounded-2xl bg-zinc-50 px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <Layers3 size={16} className="text-red-600" />
-
-                    <span className="text-sm font-medium text-zinc-700">
-                      Painel da turma
-                    </span>
+                  <div className="text-right">
+                    <p className="text-lg font-semibold text-red-600">
+                      {grupo.simulados}
+                    </p>
+                    <p className="text-xs text-zinc-500">simulados</p>
                   </div>
-
-                  <span className="text-sm font-semibold text-red-600">
-                    Ver detalhes
-                  </span>
                 </div>
-              </Link>
-            );
-          })}
-        </section>
-      )}
+              ))}
+            </div>
+          </Panel>
+        </aside>
+      </div>
     </AppLayout>
   );
 }
 
-function StatCard({
-  title,
-  value,
-  icon,
-  highlight,
-}: {
-  title: string;
-  value: number;
-  icon: React.ReactNode;
-  highlight: boolean;
-}) {
-  return (
-    <div className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm">
-      <div
-        className={`mb-5 flex h-12 w-12 items-center justify-center rounded-2xl ${
-          highlight ? "bg-red-50 text-red-600" : "bg-zinc-100 text-zinc-700"
-        }`}
-      >
-        {icon}
-      </div>
-
-      <p className="text-sm font-medium text-zinc-500">{title}</p>
-
-      <p
-        className={`mt-2 text-4xl font-bold tracking-tight ${
-          highlight ? "text-red-600" : "text-zinc-900"
-        }`}
-      >
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function InfoCard({
+function DataPoint({
   label,
   value,
-  highlight,
+  brand = false,
 }: {
   label: string;
   value: string;
-  highlight: boolean;
+  brand?: boolean;
 }) {
   return (
-    <div className="rounded-2xl bg-zinc-50 p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-zinc-400">
+    <div>
+      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-zinc-400">
         {label}
       </p>
-
       <p
-        className={`mt-2 text-2xl font-bold ${
-          highlight ? "text-red-600" : "text-zinc-900"
+        className={`mt-1 text-xl font-semibold tracking-tight ${
+          brand ? "text-red-600" : "text-zinc-950"
         }`}
       >
         {value}

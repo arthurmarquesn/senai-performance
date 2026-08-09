@@ -59,7 +59,7 @@ export default async function BookPage({
   return (
     <AppLayout>
       <div className="mx-auto max-w-6xl">
-        <div className="rounded-[32px] border border-zinc-200 bg-white p-10 shadow-sm">
+        <div className="performance-card rounded-[32px] border p-10">
           <div className="flex flex-col gap-8 lg:flex-row">
             <div className="flex h-[360px] w-[250px] shrink-0 items-center justify-center rounded-[28px] bg-zinc-100 text-center">
               <span className="px-6 text-lg font-semibold text-zinc-500">
@@ -127,7 +127,7 @@ export default async function BookPage({
           </div>
         </div>
 
-        <section className="mt-8 rounded-[32px] border border-zinc-200 bg-white p-8 shadow-sm">
+        <section className="mt-8 performance-card rounded-[32px] border p-8">
           <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="text-2xl font-bold text-zinc-900">

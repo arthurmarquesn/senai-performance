@@ -3,57 +3,54 @@ import { BarChart3, LockKeyhole } from "lucide-react";
 
 export default function LoginPage() {
   return (
-    <main className="relative flex min-h-screen overflow-hidden bg-[#F4F6F8]">
-      <div className="absolute left-[-120px] top-[-120px] h-[320px] w-[320px] rounded-full bg-red-600/10 blur-3xl" />
+    <main className="grid min-h-screen bg-background lg:grid-cols-[1.08fr_0.92fr]">
+      <section className="hidden flex-col justify-between bg-zinc-950 p-14 text-white lg:flex">
+        <div className="flex items-center gap-4">
+          <div className="performance-hero-icon flex h-14 w-14 items-center justify-center rounded-2xl bg-red-600">
+            <BarChart3 size={28} />
+          </div>
 
-      <div className="absolute bottom-[-120px] right-[-120px] h-[320px] w-[320px] rounded-full bg-red-600/10 blur-3xl" />
-
-      <section className="hidden flex-1 flex-col justify-between bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-800 p-14 text-white lg:flex">
-        <div>
-          <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-red-600">
-              <BarChart3 size={28} />
-            </div>
-
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">
-                Performance
-              </h1>
-
-              <p className="text-sm text-zinc-400">
-                Ninguém cresce sozinho.
-              </p>
-            </div>
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight">
+              Performance
+            </h1>
+            <p className="text-sm text-zinc-400">
+              Inteligência acadêmica institucional
+            </p>
           </div>
         </div>
 
-        <div className="max-w-lg">
-          <h2 className="text-5xl font-bold leading-tight">
-            Gestão inteligente de desempenho escolar.
+        <div className="max-w-2xl">
+          <p className="text-sm font-semibold uppercase tracking-[0.26em] text-red-400">
+            Academic Intelligence Platform
+          </p>
+
+          <h2 className="mt-6 text-5xl font-semibold leading-tight tracking-tight">
+            Centro institucional de desempenho acadêmico.
           </h2>
 
           <p className="mt-6 text-lg leading-relaxed text-zinc-400">
-            Plataforma institucional para acompanhamento analítico de
-            simulados, evolução acadêmica e indicadores de desempenho.
+            Reúna simulados, redações, leitura, repertório e acompanhamento
+            pedagógico em um ambiente seguro para coordenação e professores.
           </p>
         </div>
 
-        <div className="flex items-center gap-3 text-sm text-zinc-500">
-          <div className="h-2 w-2 rounded-full bg-red-500" />
-
-          Ambiente institucional seguro
+        <div className="grid grid-cols-3 gap-3 border-t border-white/10 pt-6 text-sm text-zinc-400">
+          <span>Dados</span>
+          <span>Análise</span>
+          <span>Educação</span>
         </div>
       </section>
 
-      <section className="relative flex w-full items-center justify-center p-6 lg:max-w-xl">
+      <section className="flex items-center justify-center p-6">
         <div className="w-full max-w-md">
-          <div className="rounded-[32px] border border-white/40 bg-white/80 p-8 shadow-2xl backdrop-blur-xl">
+          <div className="performance-panel rounded-[32px] p-8">
             <div className="mb-8">
-              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-600 text-white shadow-lg shadow-red-600/20">
+              <div className="performance-icon-tile mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-600 text-white">
                 <LockKeyhole size={24} />
               </div>
 
-              <h1 className="text-3xl font-bold tracking-tight text-zinc-900">
+              <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">
                 Entrar
               </h1>
 
@@ -62,7 +59,7 @@ export default function LoginPage() {
               </p>
             </div>
 
-           <LoginForm></LoginForm>
+            <LoginForm />
 
             <div className="mt-8 border-t border-zinc-200 pt-6">
               <p className="text-xs leading-relaxed text-zinc-400">
