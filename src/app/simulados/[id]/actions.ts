@@ -12,6 +12,7 @@ import {
   ScanPdfValidationError,
   validateScanPdfFile,
 } from "@/lib/answer-sheet-scans/pdf";
+import { processAnswerSheetScan } from "@/lib/answer-sheet-scans/process-answers";
 import {
   deleteOriginalScanPdf,
   saveOriginalScanPdf,
@@ -72,6 +73,23 @@ export type NormalizeAnswerSheetScansState = {
     failedPages: number;
     residualAverage: number | null;
     residualMax: number | null;
+  };
+};
+
+export type ProcessAnswerSheetScanState = {
+  status: "idle" | "success" | "error";
+  message?: string;
+  summary?: {
+    scanId: string;
+    pageNumber: number;
+    studentName: string | null;
+    totalQuestions: number;
+    persistedAnswers: number;
+    detected: number;
+    blank: number;
+    multiple: number;
+    uncertain: number;
+    status: "PROCESSED" | "REVIEW_REQUIRED";
   };
 };
 
@@ -547,6 +565,62 @@ export async function normalizeAnswerSheetScans(
         error instanceof Error
           ? error.message
           : "Não foi possível normalizar os gabaritos digitalizados.",
+    };
+  }
+}
+
+export async function processSingleAnswerSheetScan(
+  _previousState: ProcessAnswerSheetScanState,
+  formData: FormData
+): Promise<ProcessAnswerSheetScanState> {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return {
+      status: "error",
+      message: "SessÃ£o expirada. FaÃ§a login novamente.",
+    };
+  }
+
+  const examId = getRequiredString(formData, "examId");
+  const scanId = getRequiredString(formData, "scanId");
+
+  if (!examId || !scanId) {
+    return {
+      status: "error",
+      message: "PÃ¡gina digitalizada invÃ¡lida.",
+    };
+  }
+
+  try {
+    const summary = await processAnswerSheetScan({
+      scanId,
+    });
+
+    revalidatePath(`/simulados/${examId}`);
+
+    return {
+      status: "success",
+      summary: {
+        scanId: summary.scanId,
+        pageNumber: summary.pageNumber,
+        studentName: summary.studentName,
+        totalQuestions: summary.totalQuestions,
+        persistedAnswers: summary.persistedAnswers,
+        detected: summary.detected,
+        blank: summary.blank,
+        multiple: summary.multiple,
+        uncertain: summary.uncertain,
+        status: summary.status,
+      },
+    };
+  } catch (error) {
+    return {
+      status: "error",
+      message:
+        error instanceof Error
+          ? error.message
+          : "NÃ£o foi possÃ­vel ler as respostas da folha.",
     };
   }
 }

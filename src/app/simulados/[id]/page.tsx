@@ -17,6 +17,7 @@ import { AnswerSheetGeneratorForm } from "@/components/AnswerSheetGeneratorForm"
 import { AnswerSheetScanIdentifyForm } from "@/components/AnswerSheetScanIdentifyForm";
 import { AnswerSheetScanImportForm } from "@/components/AnswerSheetScanImportForm";
 import { AnswerSheetScanNormalizeForm } from "@/components/AnswerSheetScanNormalizeForm";
+import { AnswerSheetScanProcessForm } from "@/components/AnswerSheetScanProcessForm";
 import { AppLayout } from "@/components/AppLayout";
 import {
   Badge,
@@ -75,6 +76,23 @@ export default async function SimuladoDetalhePage({
               createdAt: "desc",
             },
             include: {
+              scans: {
+                orderBy: {
+                  pageNumber: "asc",
+                },
+                include: {
+                  answerSheet: {
+                    include: {
+                      student: true,
+                    },
+                  },
+                  _count: {
+                    select: {
+                      answers: true,
+                    },
+                  },
+                },
+              },
               _count: {
                 select: {
                   scans: true,
@@ -459,6 +477,43 @@ export default async function SimuladoDetalhePage({
                               examApplicationId={application.id}
                               batchId={batch.id}
                             />
+
+                            {batch.scans.some(
+                              (scan) => scan.answerSheetId && scan.normalizedImageKey
+                            ) && (
+                              <div className="mt-1 grid gap-2 border-t border-zinc-100 pt-2">
+                                {batch.scans
+                                  .filter(
+                                    (scan) =>
+                                      scan.answerSheetId && scan.normalizedImageKey
+                                  )
+                                  .map((scan) => (
+                                    <div
+                                      key={scan.id}
+                                      className="grid gap-2 rounded-lg border border-zinc-100 bg-zinc-50 p-2"
+                                    >
+                                      <div className="flex items-center justify-between gap-2">
+                                        <div className="min-w-0">
+                                          <p className="truncate font-semibold text-zinc-900">
+                                            Pagina {scan.pageNumber}
+                                          </p>
+                                          <p className="truncate text-zinc-500">
+                                            {scan.answerSheet?.student.name ??
+                                              "Aluno identificado"}
+                                          </p>
+                                        </div>
+                                        <Badge tone="neutral">
+                                          {scan._count.answers}/60
+                                        </Badge>
+                                      </div>
+                                      <AnswerSheetScanProcessForm
+                                        examId={simulado.id}
+                                        scanId={scan.id}
+                                      />
+                                    </div>
+                                  ))}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
