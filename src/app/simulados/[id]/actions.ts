@@ -12,6 +12,7 @@ import {
   ScanPdfValidationError,
   validateScanPdfFile,
 } from "@/lib/answer-sheet-scans/pdf";
+import { processAnswerSheetScanBatch } from "@/lib/answer-sheet-scans/process-batch";
 import { processAnswerSheetScan } from "@/lib/answer-sheet-scans/process-answers";
 import {
   deleteOriginalScanPdf,
@@ -90,6 +91,28 @@ export type ProcessAnswerSheetScanState = {
     multiple: number;
     uncertain: number;
     status: "PROCESSED" | "REVIEW_REQUIRED";
+  };
+};
+
+export type ProcessAnswerSheetScanBatchState = {
+  status: "idle" | "success" | "error";
+  message?: string;
+  summary?: {
+    batchId: string;
+    totalPages: number;
+    eligiblePages: number;
+    processedNow: number;
+    processedPages: number;
+    reviewRequiredPages: number;
+    confirmedPages: number;
+    previouslyConfirmed: number;
+    protectedPages: number;
+    skippedNotIdentified: number;
+    skippedNotNormalized: number;
+    technicalFailures: number;
+    detectedAnswerTotal: number;
+    status: "UPLOADED" | "PROCESSING" | "REVIEW_REQUIRED" | "READY_FOR_CONFIRMATION" | "CONFIRMED" | "FAILED";
+    durationMs: number;
   };
 };
 
@@ -621,6 +644,70 @@ export async function processSingleAnswerSheetScan(
         error instanceof Error
           ? error.message
           : "NÃ£o foi possÃ­vel ler as respostas da folha.",
+    };
+  }
+}
+
+export async function processAnswerSheetScanBatchAction(
+  _previousState: ProcessAnswerSheetScanBatchState,
+  formData: FormData
+): Promise<ProcessAnswerSheetScanBatchState> {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return {
+      status: "error",
+      message: "SessÃ£o expirada. FaÃ§a login novamente.",
+    };
+  }
+
+  const examId = getRequiredString(formData, "examId");
+  const examApplicationId = getRequiredString(formData, "examApplicationId");
+  const batchId = getRequiredString(formData, "batchId");
+
+  if (!examId || !examApplicationId || !batchId) {
+    return {
+      status: "error",
+      message: "Lote de digitalizaÃ§Ã£o invÃ¡lido.",
+    };
+  }
+
+  try {
+    const summary = await processAnswerSheetScanBatch({
+      examId,
+      examApplicationId,
+      batchId,
+    });
+
+    revalidatePath(`/simulados/${examId}`);
+
+    return {
+      status: "success",
+      summary: {
+        batchId: summary.batchId,
+        totalPages: summary.totalPages,
+        eligiblePages: summary.eligiblePages,
+        processedNow: summary.processedNow,
+        processedPages: summary.processedPages,
+        reviewRequiredPages: summary.reviewRequiredPages,
+        confirmedPages: summary.confirmedPages,
+        previouslyConfirmed: summary.previouslyConfirmed,
+        protectedPages: summary.protectedPages,
+        skippedNotIdentified: summary.skippedNotIdentified,
+        skippedNotNormalized: summary.skippedNotNormalized,
+        technicalFailures: summary.technicalFailures,
+        detectedAnswerTotal: summary.detectedAnswerTotal,
+        status: summary.status,
+        durationMs: summary.durationMs,
+      },
+    };
+  } catch (error) {
+    return {
+      status: "error",
+      message:
+        error instanceof Error
+          ? error.message
+          : "NÃ£o foi possÃ­vel processar as respostas do lote.",
     };
   }
 }

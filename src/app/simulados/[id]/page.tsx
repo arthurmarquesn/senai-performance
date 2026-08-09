@@ -15,6 +15,7 @@ import {
 } from "./actions";
 import { AnswerSheetGeneratorForm } from "@/components/AnswerSheetGeneratorForm";
 import { AnswerSheetScanIdentifyForm } from "@/components/AnswerSheetScanIdentifyForm";
+import { AnswerSheetScanBatchProcessForm } from "@/components/AnswerSheetScanBatchProcessForm";
 import { AnswerSheetScanImportForm } from "@/components/AnswerSheetScanImportForm";
 import { AnswerSheetScanNormalizeForm } from "@/components/AnswerSheetScanNormalizeForm";
 import { AnswerSheetScanProcessForm } from "@/components/AnswerSheetScanProcessForm";
@@ -89,6 +90,11 @@ export default async function SimuladoDetalhePage({
                   _count: {
                     select: {
                       answers: true,
+                    },
+                  },
+                  answers: {
+                    select: {
+                      detectionStatus: true,
                     },
                   },
                 },
@@ -477,6 +483,14 @@ export default async function SimuladoDetalhePage({
                               examApplicationId={application.id}
                               batchId={batch.id}
                             />
+                            <AnswerSheetScanBatchProcessForm
+                              examId={simulado.id}
+                              examApplicationId={application.id}
+                              batchId={batch.id}
+                              hasDetectedAnswers={batch.scans.some(
+                                (scan) => scan._count.answers > 0
+                              )}
+                            />
 
                             {batch.scans.some(
                               (scan) => scan.answerSheetId && scan.normalizedImageKey
@@ -487,7 +501,25 @@ export default async function SimuladoDetalhePage({
                                     (scan) =>
                                       scan.answerSheetId && scan.normalizedImageKey
                                   )
-                                  .map((scan) => (
+                                  .map((scan) => {
+                                    const detected = scan.answers.filter(
+                                      (answer) =>
+                                        answer.detectionStatus === "DETECTED"
+                                    ).length;
+                                    const blank = scan.answers.filter(
+                                      (answer) =>
+                                        answer.detectionStatus === "BLANK"
+                                    ).length;
+                                    const multiple = scan.answers.filter(
+                                      (answer) =>
+                                        answer.detectionStatus === "MULTIPLE"
+                                    ).length;
+                                    const uncertain = scan.answers.filter(
+                                      (answer) =>
+                                        answer.detectionStatus === "UNCERTAIN"
+                                    ).length;
+
+                                    return (
                                     <div
                                       key={scan.id}
                                       className="grid gap-2 rounded-lg border border-zinc-100 bg-zinc-50 p-2"
@@ -506,6 +538,11 @@ export default async function SimuladoDetalhePage({
                                           {scan._count.answers}/60
                                         </Badge>
                                       </div>
+                                      <p className="text-[11px] text-zinc-500">
+                                        Status: {scan.status} | DETECTED:{" "}
+                                        {detected} | BLANK: {blank} | MULTIPLE:{" "}
+                                        {multiple} | UNCERTAIN: {uncertain}
+                                      </p>
                                       <AnswerSheetScanProcessForm
                                         examId={simulado.id}
                                         scanId={scan.id}
@@ -520,7 +557,8 @@ export default async function SimuladoDetalhePage({
                                         </Link>
                                       )}
                                     </div>
-                                  ))}
+                                    );
+                                  })}
                               </div>
                             )}
                           </div>
