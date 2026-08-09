@@ -2,9 +2,7 @@ import PDFDocument from "pdfkit/js/pdfkit.standalone.js";
 import QRCode from "qrcode";
 
 import {
-  ALTERNATIVE_STEP,
-  ANSWER_BUBBLE_START_OFFSET,
-  ANSWER_BUBBLE_DIAMETER,
+  ANSWER_SHEET_ALTERNATIVES,
   ANSWER_GRID_HEADER_HEIGHT,
   ANSWER_GRID_HEIGHT,
   ANSWER_GRID_WIDTH,
@@ -18,11 +16,10 @@ import {
   QR_SIZE,
   REGISTRATION_MARKER_SIZE,
   getAnswerGridGeometry,
+  getAnswerBubbleGeometry,
   getQuestionPosition,
 } from "./layout";
 import type { AnswerSheetPdfData, AnswerSheetPdfSheet } from "./types";
-
-const alternatives = ["A", "B", "C", "D", "E"] as const;
 
 export async function generateAnswerSheetsPdf(data: AnswerSheetPdfData) {
   getAnswerGridGeometry(data.totalQuestions);
@@ -288,11 +285,6 @@ function drawQuestionRow(
 ) {
   const position = getQuestionPosition(question, totalQuestions);
   const labelY = position.rowY + 3;
-  const answerStartX =
-    position.columnX + QUESTION_LABEL_WIDTH + ANSWER_BUBBLE_START_OFFSET;
-  const bubbleRadius = ANSWER_BUBBLE_DIAMETER / 2;
-  const bubbleY =
-    position.rowY + (QUESTION_ROW_HEIGHT - ANSWER_BUBBLE_DIAMETER) / 2;
 
   doc
     .font("Helvetica-Bold")
@@ -303,19 +295,21 @@ function drawQuestionRow(
       align: "right",
     });
 
-  for (const [index, alternative] of alternatives.entries()) {
-    const bubbleX = answerStartX + index * ALTERNATIVE_STEP;
-    const bubbleCenterX = bubbleX + bubbleRadius;
-    const bubbleCenterY = bubbleY + bubbleRadius;
+  for (const alternative of ANSWER_SHEET_ALTERNATIVES) {
+    const bubble = getAnswerBubbleGeometry(
+      question,
+      totalQuestions,
+      alternative
+    );
 
     doc
       .font("Helvetica")
       .fontSize(7)
       .fillColor("#111111")
-      .text(alternative, bubbleX - 7, labelY);
+      .text(alternative, bubble.centerX - bubble.radius - 7, labelY);
 
     doc
-      .circle(bubbleCenterX, bubbleCenterY, bubbleRadius)
+      .circle(bubble.centerX, bubble.centerY, bubble.radius)
       .lineWidth(0.55)
       .strokeColor("#111111")
       .stroke();

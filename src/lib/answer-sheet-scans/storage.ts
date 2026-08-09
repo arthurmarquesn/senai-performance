@@ -95,3 +95,7 @@ export async function saveNormalizedScanImage({
     normalizedImageKey,
   };
 }
+
+export async function readNormalizedScanImage(normalizedImageKey: string) {
+  return readFile(getStoragePath(normalizedImageKey));
+}

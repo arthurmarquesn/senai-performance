@@ -1,4 +1,8 @@
-import type { AnswerGridGeometry } from "./types";
+import type {
+  AnswerBubbleGeometry,
+  AnswerGridGeometry,
+  AnswerSheetAlternative,
+} from "./types";
 
 export const PDF_POINTS_PER_MM = 72 / 25.4;
 
@@ -24,6 +28,15 @@ export const ANSWER_BUBBLE_START_OFFSET = 4.6 * PDF_POINTS_PER_MM;
 export const ALTERNATIVE_STEP = 8.2 * PDF_POINTS_PER_MM;
 
 export const MAX_QUESTIONS_PER_PAGE = 96;
+export const ANSWER_SHEET_ALTERNATIVES = ["A", "B", "C", "D", "E"] as const;
+
+const alternativeIndexes: Record<AnswerSheetAlternative, number> = {
+  A: 0,
+  B: 1,
+  C: 2,
+  D: 3,
+  E: 4,
+};
 
 export function getAnswerGridGeometry(
   totalQuestions: number
@@ -92,5 +105,28 @@ export function getQuestionPosition(question: number, totalQuestions: number) {
     columnX,
     rowY,
     columnWidth: availableColumnWidth,
+  };
+}
+
+export function getAnswerBubbleGeometry(
+  question: number,
+  totalQuestions: number,
+  alternative: AnswerSheetAlternative
+): AnswerBubbleGeometry {
+  const position = getQuestionPosition(question, totalQuestions);
+  const answerStartX =
+    position.columnX + QUESTION_LABEL_WIDTH + ANSWER_BUBBLE_START_OFFSET;
+  const radius = ANSWER_BUBBLE_DIAMETER / 2;
+  const bubbleY =
+    position.rowY + (QUESTION_ROW_HEIGHT - ANSWER_BUBBLE_DIAMETER) / 2;
+  const alternativeIndex = alternativeIndexes[alternative];
+  const bubbleX = answerStartX + alternativeIndex * ALTERNATIVE_STEP;
+
+  return {
+    question,
+    alternative,
+    centerX: bubbleX + radius,
+    centerY: bubbleY + radius,
+    radius,
   };
 }

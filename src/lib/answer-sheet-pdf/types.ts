@@ -12,6 +12,16 @@ export type AnswerSheetPdfData = {
   sheets: AnswerSheetPdfSheet[];
 };
 
+export type AnswerSheetAlternative = "A" | "B" | "C" | "D" | "E";
+
+export type AnswerBubbleGeometry = {
+  question: number;
+  alternative: AnswerSheetAlternative;
+  centerX: number;
+  centerY: number;
+  radius: number;
+};
+
 export type AnswerGridGeometry = {
   columns: number;
   rowsPerColumn: number;
