@@ -49,6 +49,32 @@ function fail(message: string): never {
   throw new AnswerSheetCorrectionError(message);
 }
 
+export function validateCompleteAnswerKey<TAnswerKey extends { question: number }>({
+  totalQuestions,
+  answerKey,
+}: {
+  totalQuestions: number;
+  answerKey: TAnswerKey[];
+}) {
+  const keyByQuestion = new Map(
+    answerKey.map((item) => [item.question, item])
+  );
+
+  if (keyByQuestion.size !== totalQuestions) {
+    fail(
+      `Gabarito incompleto: ${keyByQuestion.size}/${totalQuestions} questoes cadastradas.`
+    );
+  }
+
+  for (let question = 1; question <= totalQuestions; question++) {
+    if (!keyByQuestion.has(question)) {
+      fail(`Gabarito incompleto: questao ${question} ausente.`);
+    }
+  }
+
+  return keyByQuestion;
+}
+
 async function loadScanForCorrection(
   tx: Prisma.TransactionClient,
   {
@@ -132,23 +158,11 @@ function assertScanReady(scan: LoadedScan | null, examId: string): asserts scan 
 
 function validateAnswerKey(scan: ReadyScan) {
   const exam = scan.answerSheet.examApplication.exam;
-  const keyByQuestion = new Map(
-    exam.answerKey.map((answerKey) => [answerKey.question, answerKey])
-  );
 
-  if (keyByQuestion.size !== exam.totalQuestions) {
-    fail(
-      `Gabarito incompleto: ${keyByQuestion.size}/${exam.totalQuestions} questoes cadastradas.`
-    );
-  }
-
-  for (let question = 1; question <= exam.totalQuestions; question++) {
-    if (!keyByQuestion.has(question)) {
-      fail(`Gabarito incompleto: questao ${question} ausente.`);
-    }
-  }
-
-  return keyByQuestion;
+  return validateCompleteAnswerKey({
+    totalQuestions: exam.totalQuestions,
+    answerKey: exam.answerKey,
+  });
 }
 
 function getFinalAnswers(scan: ReadyScan): FinalAnswer[] {
@@ -340,6 +354,12 @@ export async function correctConfirmedAnswerSheetScan({
           alreadyCorrected: true,
           correctedAt: scan.answerSheet.correctedAt,
         });
+      }
+
+      if (scan.answerSheet.status === AnswerSheetStatus.CORRECTED) {
+        fail(
+          "Resultado oficial divergente das respostas confirmadas desta folha. A correcao optica nao sobrescreve respostas existentes."
+        );
       }
 
       fail(

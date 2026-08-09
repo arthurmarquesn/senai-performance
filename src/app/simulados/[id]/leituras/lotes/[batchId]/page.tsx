@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, ListChecks } from "lucide-react";
 
 import { AppLayout } from "@/components/AppLayout";
 import { AnswerSheetBatchCompleteForm } from "@/components/AnswerSheetBatchCompleteForm";
+import { AnswerSheetBatchCorrectForm } from "@/components/AnswerSheetBatchCorrectForm";
 import {
   Badge,
   MetricCell,
@@ -177,6 +178,7 @@ export default async function AnswerSheetBatchReviewQueuePage({
     queue.groups.partial.length === 0 &&
     queue.groups.waiting.length === 0 &&
     queue.groups.problems.length === 0;
+  const canCorrectBatch = queue.status === "CONFIRMED";
 
   return (
     <AppLayout>
@@ -235,6 +237,35 @@ export default async function AnswerSheetBatchReviewQueuePage({
             canComplete={canCompleteBatch}
             pendingCount={pendingBatchPages}
           />
+        </Panel>
+
+        <Panel>
+          <SectionHeader
+            title="Correcao das provas"
+            description="Corrigir cria resultados oficiais a partir das respostas confirmadas e do gabarito cadastrado."
+          />
+          <MetricStrip columns="md:grid-cols-2">
+            <MetricCell
+              label="Leitura"
+              value={`${queue.confirmedPages}/${queue.totalPages}`}
+              detail="folhas confirmadas"
+            />
+            <MetricCell
+              label="Correcao"
+              value={`${queue.correctedAnswerSheets}/${queue.totalAnswerSheets}`}
+              detail="provas corrigidas"
+              tone={queue.correctedAnswerSheets === queue.totalAnswerSheets ? "brand" : "default"}
+            />
+          </MetricStrip>
+          <div className="mt-4">
+            <AnswerSheetBatchCorrectForm
+              examId={id}
+              batchId={batchId}
+              totalAnswerSheets={queue.totalAnswerSheets}
+              correctedAnswerSheets={queue.correctedAnswerSheets}
+              canCorrect={canCorrectBatch}
+            />
+          </div>
         </Panel>
 
         <Panel>

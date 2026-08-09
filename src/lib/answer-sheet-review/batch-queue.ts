@@ -1,6 +1,7 @@
 import "server-only";
 
 import {
+  AnswerSheetStatus,
   AnswerSheetScanStatus,
   DetectedAnswerStatus,
   type ScanBatchStatus,
@@ -24,6 +25,7 @@ export type ReviewQueueRow = {
   studentName: string | null;
   classRoomName: string | null;
   code: string | null;
+  answerSheetStatus: AnswerSheetStatus | null;
   confirmedAt: Date | null;
   hasAnswerSheet: boolean;
   hasNormalizedImage: boolean;
@@ -55,6 +57,8 @@ export type ReviewBatchQueue = {
   failedPages: number;
   reviewedAnswers: number;
   expectedAnswers: number;
+  totalAnswerSheets: number;
+  correctedAnswerSheets: number;
   opticalSummary: {
     detected: number;
     blank: number;
@@ -279,6 +283,7 @@ export async function getAnswerSheetBatchReviewQueue({
       studentName: scan.answerSheet?.student.name ?? null,
       classRoomName: batch.examApplication.classRoom.name,
       code: scan.answerSheet?.code ?? scan.detectedCode,
+      answerSheetStatus: scan.answerSheet?.status ?? null,
       confirmedAt: scan.confirmedAt,
       hasAnswerSheet,
       hasNormalizedImage,
@@ -350,6 +355,10 @@ export async function getAnswerSheetBatchReviewQueue({
       .length,
     reviewedAnswers: rows.reduce((sum, row) => sum + row.reviewed, 0),
     expectedAnswers: rows.length * totalQuestions,
+    totalAnswerSheets: rows.filter((row) => row.hasAnswerSheet).length,
+    correctedAnswerSheets: rows.filter(
+      (row) => row.answerSheetStatus === AnswerSheetStatus.CORRECTED
+    ).length,
     opticalSummary,
     groups,
   };
