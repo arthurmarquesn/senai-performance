@@ -2,6 +2,18 @@ generator client {
   provider = "prisma-client-js"
 }
 
+enum ClassroomConnectionStatus {
+  CONNECTED
+  REAUTH_REQUIRED
+  REVOKED
+}
+
+enum ClassroomPublicationStatus {
+  PENDING
+  CREATED
+  FAILED
+}
+
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
@@ -371,6 +383,10 @@ model User {
   validatedJourneySuggestions JourneySuggestion[] @relation("JourneySuggestionValidator")
   validatedJourneyBnccLinks   JourneyBnccLink[]   @relation("JourneyBnccValidator")
 
+  // Integração com o Google Classroom.
+  googleClassroomConnection GoogleClassroomConnection? @relation("GoogleClassroomConnectionUser")
+  classroomPublications     ClassroomPublication[]     @relation("ClassroomPublicationCreator")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -673,22 +689,16 @@ model JourneySuggestion {
   analysisId String?
   analysis   JourneyAnalysis? @relation(fields: [analysisId], references: [id], onDelete: SetNull)
 
-  // Disciplina para a qual a sugestão possui pertinência pedagógica.
-  //
-  // Isso NÃO altera os metadados oficiais da BNCC.
   subject Subject
-
-  type JourneySuggestionType
+  type    JourneySuggestionType
 
   title     String  @db.VarChar(220)
   objective String? @db.Text
   content   String  @db.LongText
   rationale String? @db.LongText
 
-  // Conteúdos, conceitos e possibilidades de abordagem.
   contentTopics Json?
 
-  // Evidência concreta do roteiro.
   evidenceChunkId String?
   evidenceChunk   JourneyDocumentChunk? @relation(fields: [evidenceChunkId], references: [id], onDelete: SetNull)
 
@@ -701,7 +711,8 @@ model JourneySuggestion {
 
   validatedAt DateTime?
 
-  bnccLinks JourneyBnccLink[]
+  bnccLinks  JourneyBnccLink[]
+  activities JourneyActivity[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -880,7 +891,10 @@ model JourneyActivity {
   journeyId String
   journey   Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
 
-  // Responsável opcional pela atividade.
+  // Sugestão pedagógica que originou a atividade.
+  suggestionId String?
+  suggestion   JourneySuggestion? @relation(fields: [suggestionId], references: [id], onDelete: SetNull)
+
   teacherProfileId String?
   teacherProfile   TeacherProfile? @relation(fields: [teacherProfileId], references: [id], onDelete: SetNull)
 
@@ -890,7 +904,6 @@ model JourneyActivity {
   objective    String? @db.Text
   instructions String? @db.LongText
 
-  // Materiais, links, anexos e configurações futuras.
   materials Json?
 
   status        JourneyActivityStatus @default(DRAFT)
@@ -898,10 +911,14 @@ model JourneyActivity {
 
   bnccSkills JourneyActivityBnccSkill[]
 
+  // Publicações da atividade no Google Classroom.
+  classroomPublications ClassroomPublication[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([journeyId])
+  @@index([suggestionId])
   @@index([teacherProfileId])
   @@index([subject])
   @@index([status])
@@ -922,6 +939,80 @@ model JourneyActivityBnccSkill {
 
   @@id([journeyActivityId, bnccSkillId])
   @@index([bnccSkillId])
+}
+
+// ======================================================
+// GOOGLE CLASSROOM
+// ======================================================
+//
+// Uma conexão OAuth pertence a um usuário.
+//
+// ClassroomPublication mantém o vínculo entre a atividade
+// interna do Performance e o CourseWork criado no Classroom.
+//
+// Nesta fase, a existência do model NÃO significa que uma
+// atividade já foi publicada. O registro poderá começar como
+// PENDING e receber os IDs do Google posteriormente.
+// ======================================================
+
+model GoogleClassroomConnection {
+  id String @id @default(cuid())
+
+  userId String @unique
+  user   User   @relation("GoogleClassroomConnectionUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  // Refresh token armazenado criptografado.
+  refreshTokenEncrypted String @db.Text
+
+  // Scopes efetivamente concedidos pelo Google.
+  grantedScopes String? @db.Text
+
+  status ClassroomConnectionStatus @default(CONNECTED)
+
+  connectedAt DateTime  @default(now())
+  lastUsedAt  DateTime?
+  revokedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
+
+model ClassroomPublication {
+  id String @id @default(cuid())
+
+  journeyActivityId String
+  journeyActivity   JourneyActivity @relation(fields: [journeyActivityId], references: [id], onDelete: Cascade)
+
+  createdById String
+  createdBy   User   @relation("ClassroomPublicationCreator", fields: [createdById], references: [id], onDelete: Restrict)
+
+  // Turma do Google Classroom escolhida pelo professor.
+  googleCourseId   String  @db.VarChar(255)
+  googleCourseName String? @db.VarChar(500)
+
+  // Preenchidos após a criação do CourseWork.
+  googleCourseWorkId    String? @db.VarChar(255)
+  googleCourseWorkState String? @db.VarChar(50)
+
+  status ClassroomPublicationStatus @default(PENDING)
+
+  errorMessage String? @db.Text
+
+  classroomCreatedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Impede publicar a mesma atividade duas vezes
+  // na mesma turma através do fluxo normal da aplicação.
+  @@unique([journeyActivityId, googleCourseId])
+  @@index([journeyActivityId])
+  @@index([createdById])
+  @@index([googleCourseId])
+  @@index([googleCourseWorkId])
+  @@index([status])
 }
 
 // ======================================================

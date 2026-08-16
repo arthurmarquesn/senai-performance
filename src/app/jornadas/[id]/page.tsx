@@ -1,6 +1,13 @@
 import type {
   ReactNode,
 } from "react";
+import {
+  JourneyActivityButton,
+} from "./JourneyActivityButton";
+
+import {
+  JourneyActivityEditor,
+} from "./JourneyActivityEditor";
 
 import Link from "next/link";
 
@@ -17,6 +24,7 @@ import {
   BookOpen,
   BookOpenCheck,
   CheckCircle2,
+  ClipboardList,
   FileText,
   Lightbulb,
   Map,
@@ -252,6 +260,31 @@ export default async function JornadaDetalhePage({
       },
 
       include: {
+        activities: {
+  include: {
+    bnccSkills: {
+      include: {
+        bnccSkill: {
+          select: {
+            id:
+              true,
+
+            code:
+              true,
+
+            description:
+              true,
+          },
+        },
+      },
+    },
+  },
+
+  orderBy: {
+    createdAt:
+      "desc",
+  },
+},
         mindMaps: {
   where: {
     isCurrent: true,
@@ -1129,7 +1162,142 @@ const mindMapMatchesCurrentAnalysis =
                             </div>
                           </div>
                         )}
+
+                        <div className="mt-5 border-t border-zinc-100 pt-4">
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-400">
+                                Atividade
+                              </p>
+
+                              <p className="mt-1 text-xs leading-relaxed text-zinc-500">
+                                Gere uma atividade a partir desta possibilidade e das habilidades BNCC aprovadas.
+                              </p>
+                            </div>
+
+                            <JourneyActivityButton
+                              journeyId={
+                                journey.id
+                              }
+                              suggestionId={
+                                suggestion.id
+                              }
+                              approvedBnccCount={
+                                suggestion.bnccLinks.filter(
+                                  (link) =>
+                                    link.status ===
+                                    "APPROVED",
+                                ).length
+                              }
+                            />
+                          </div>
+                        </div>
                       </article>
+                    );
+                  },
+                )}
+              </div>
+            )}
+          </Panel>
+
+          <Panel>
+            <SectionHeader
+              eyebrow="Aplicação pedagógica"
+              title="Atividades da Jornada"
+              description="Atividades construídas a partir das sugestões pedagógicas e das habilidades BNCC validadas."
+              action={
+                <ClipboardList
+                  size={18}
+                  className="text-red-600"
+                />
+              }
+            />
+
+            {journey.activities.length ===
+            0 ? (
+              <EmptyState
+                title="Nenhuma atividade criada"
+                description="Aprove habilidades BNCC em uma sugestão e utilize a opção Gerar atividade."
+              />
+            ) : (
+              <div className="space-y-4">
+                {journey.activities.map(
+                  (activity) => {
+                    const materials =
+                      readActivityMaterials(
+                        activity.materials,
+                      );
+
+                    const originTitle =
+                      activity.suggestionId
+                        ? journey.suggestions.find(
+                            (suggestion) =>
+                              suggestion.id ===
+                              activity.suggestionId,
+                          )?.title ?? null
+                        : null;
+
+                    return (
+                      <JourneyActivityEditor
+                        key={
+                          activity.id
+                        }
+                        journeyId={
+                          journey.id
+                        }
+                        activity={{
+                          id:
+                            activity.id,
+                          title:
+                            activity.title,
+                          objective:
+                            activity.objective ??
+                            "",
+                          instructions:
+                            activity.instructions ??
+                            "",
+                          status:
+                            activity.status,
+                          generatedByAi:
+                            activity.generatedByAi,
+                        }}
+                        subjectLabel={
+                          subjectLabels[
+                            activity.subject
+                          ]
+                        }
+                        originTitle={
+                          originTitle
+                        }
+                        initialMaterials={
+                          materials ?? {
+                            estimatedMinutes:
+                              0,
+                            studentOrganization:
+                              "",
+                            resources:
+                              [],
+                            expectedProduct:
+                              "",
+                            assessmentCriteria:
+                              [],
+                            teacherNotes:
+                              "",
+                          }
+                        }
+                        bnccSkills={
+                          activity.bnccSkills.map(
+                            (link) => ({
+                              id:
+                                link.bnccSkill.id,
+                              code:
+                                link.bnccSkill.code,
+                              description:
+                                link.bnccSkill.description,
+                            }),
+                          )
+                        }
+                      />
                     );
                   },
                 )}
@@ -1481,6 +1649,100 @@ function TextSection({
       </p>
     </div>
   );
+}
+
+type ActivityMaterials = {
+  estimatedMinutes: number;
+
+  studentOrganization: string;
+
+  resources: string[];
+
+  expectedProduct: string;
+
+  assessmentCriteria: string[];
+
+  teacherNotes: string;
+};
+
+function isRecord(
+  value: unknown,
+): value is Record<
+  string,
+  unknown
+> {
+  return (
+    typeof value ===
+      "object" &&
+    value !== null &&
+    !Array.isArray(value)
+  );
+}
+
+
+function readActivityMaterials(
+  value: unknown,
+): ActivityMaterials | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  if (
+    typeof value.estimatedMinutes !==
+      "number" ||
+    typeof value.studentOrganization !==
+      "string" ||
+    typeof value.expectedProduct !==
+      "string" ||
+    typeof value.teacherNotes !==
+      "string"
+  ) {
+    return null;
+  }
+
+  const resources =
+    Array.isArray(
+      value.resources,
+    )
+      ? value.resources.filter(
+          (
+            item,
+          ): item is string =>
+            typeof item ===
+            "string",
+        )
+      : [];
+
+  const assessmentCriteria =
+    Array.isArray(
+      value.assessmentCriteria,
+    )
+      ? value.assessmentCriteria.filter(
+          (
+            item,
+          ): item is string =>
+            typeof item ===
+            "string",
+        )
+      : [];
+
+  return {
+    estimatedMinutes:
+      value.estimatedMinutes,
+
+    studentOrganization:
+      value.studentOrganization,
+
+    resources,
+
+    expectedProduct:
+      value.expectedProduct,
+
+    assessmentCriteria,
+
+    teacherNotes:
+      value.teacherNotes,
+  };
 }
 
 function ValidationItem({

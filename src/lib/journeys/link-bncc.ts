@@ -24,14 +24,29 @@ import {
   knowledgeAreaForSubject,
 } from "./subject-area";
 
+// ======================================================
+// CONFIGURAÇÃO
+// ======================================================
+
 export const JOURNEY_BNCC_PROMPT_VERSION =
-  "journey-bncc-v1";
+  "journey-bncc-v2";
 
 const DEFAULT_MODEL =
   "openai/gpt-oss-120b";
 
-const MAX_CANDIDATES_PER_SUGGESTION =
-  10;
+// O retriever pode procurar um conjunto relativamente amplo.
+//
+// Estes candidatos NÃO são todos enviados para a IA.
+// O objetivo é manter recall no mecanismo determinístico.
+const MAX_RETRIEVED_CANDIDATES_PER_SUGGESTION =
+  8;
+
+// Apenas os melhores candidatos recuperados são enviados
+// ao modelo.
+//
+// Isso reduz drasticamente o payload da chamada Groq.
+const MAX_AI_CANDIDATES_PER_SUGGESTION =
+  4;
 
 const MAX_LINKS_PER_SUGGESTION =
   3;
@@ -39,8 +54,129 @@ const MAX_LINKS_PER_SUGGESTION =
 const MIN_AI_RELEVANCE =
   70;
 
+// A resposta do modelo contém somente:
+//
+// candidateId
+// relevanceScore
+// confidence
+// justification
+//
+// Portanto não precisamos reservar milhares de tokens.
+const MAX_COMPLETION_TOKENS =
+  900;
+
+// ======================================================
+// LIMITES DE COMPACTAÇÃO
+// ======================================================
+
+const MAX_SEARCH_QUERY_CHARS =
+  1800;
+
+const MAX_SEARCH_CONTENT_CHARS =
+  1200;
+
+const MAX_SEARCH_EVIDENCE_CHARS =
+  500;
+
+const MAX_AI_TITLE_CHARS =
+  240;
+
+const MAX_AI_OBJECTIVE_CHARS =
+  450;
+
+const MAX_AI_CONTENT_CHARS =
+  700;
+
+const MAX_AI_EVIDENCE_CHARS =
+  320;
+
+const MAX_AI_TOPIC_CHARS =
+  120;
+
+const MAX_AI_TOPICS =
+  6;
+
+const MAX_AI_BNCC_DESCRIPTION_CHARS =
+  700;
+
+const MAX_SAVED_EVIDENCE_CHARS =
+  1200;
+
+// ======================================================
+// SEGURANÇA BNCC
+// ======================================================
+
 const BNCC_CODE_PATTERN =
   /\bEM\d{2}[A-Z]{2,4}\d{2,3}\b/i;
+
+const BNCC_CODE_REPLACE_PATTERN =
+  /\bEM\d{2}[A-Z]{2,4}\d{2,3}\b/gi;
+
+// ======================================================
+// STOP WORDS
+// ======================================================
+//
+// Usadas somente para gerar keywords determinísticas.
+//
+// Isso NÃO altera o conteúdo oficial da BNCC.
+// ======================================================
+
+const SEARCH_STOP_WORDS =
+  new Set([
+    "a",
+    "as",
+    "ao",
+    "aos",
+    "aquela",
+    "aquele",
+    "aqueles",
+    "com",
+    "como",
+    "da",
+    "das",
+    "de",
+    "do",
+    "dos",
+    "e",
+    "em",
+    "entre",
+    "essa",
+    "esse",
+    "esta",
+    "este",
+    "isso",
+    "mais",
+    "nas",
+    "no",
+    "nos",
+    "na",
+    "o",
+    "os",
+    "ou",
+    "para",
+    "pela",
+    "pelas",
+    "pelo",
+    "pelos",
+    "por",
+    "que",
+    "se",
+    "sem",
+    "ser",
+    "sobre",
+    "sua",
+    "suas",
+    "seu",
+    "seus",
+    "um",
+    "uma",
+    "umas",
+    "uns",
+  ]);
+
+// ======================================================
+// TIPOS PÚBLICOS
+// ======================================================
 
 export type JourneyBnccSuggestionInput = {
   id: string;
@@ -172,6 +308,10 @@ export type JourneyBnccLinkingResult = {
     JourneyBnccDiagnostic[];
 };
 
+// ======================================================
+// GROQ
+// ======================================================
+
 function getGroq(): {
   client: Groq;
   modelName: string;
@@ -203,6 +343,82 @@ function getGroq(): {
   };
 }
 
+// ======================================================
+// UTILITÁRIOS
+// ======================================================
+
+function normalizeWhitespace(
+  value: string,
+): string {
+  return value
+    .replace(
+      /\s+/g,
+      " ",
+    )
+    .trim();
+}
+
+function clipText(
+  value:
+    | string
+    | null
+    | undefined,
+  maxLength: number,
+): string | null {
+  if (!value) {
+    return null;
+  }
+
+  const normalized =
+    normalizeWhitespace(
+      value,
+    );
+
+  if (!normalized) {
+    return null;
+  }
+
+  if (
+    normalized.length <=
+    maxLength
+  ) {
+    return normalized;
+  }
+
+  return `${normalized
+    .slice(
+      0,
+      maxLength,
+    )
+    .trimEnd()}…`;
+}
+
+function stripBnccCodes(
+  value: string,
+): string {
+  return normalizeWhitespace(
+    value.replace(
+      BNCC_CODE_REPLACE_PATTERN,
+      " ",
+    ),
+  );
+}
+
+function assertNoBnccCode(
+  value: string,
+  field: string,
+): void {
+  if (
+    BNCC_CODE_PATTERN.test(
+      value,
+    )
+  ) {
+    throw new Error(
+      `Um código BNCC foi encontrado indevidamente no campo "${field}".`,
+    );
+  }
+}
+
 function requireString(
   value: unknown,
   field: string,
@@ -228,428 +444,240 @@ function requireString(
   return text;
 }
 
-function readStringArray(
-  value: unknown,
-  field: string,
+function uniqueStrings(
+  values: string[],
 ): string[] {
-  if (
-    !Array.isArray(value)
-  ) {
-    throw new Error(
-      `A IA retornou "${field}" em formato inválido.`,
-    );
-  }
-
-  const result =
-    value
-      .map((item) =>
-        typeof item ===
-        "string"
-          ? item.trim()
-          : "",
-      )
-      .filter(Boolean);
-
-  if (
-    result.length === 0
-  ) {
-    throw new Error(
-      `A IA não retornou termos em "${field}".`,
-    );
-  }
-
-  return result;
+  return [
+    ...new Set(
+      values,
+    ),
+  ];
 }
 
-function assertNoBnccCode(
-  value: string,
-  field: string,
-): void {
-  if (
-    BNCC_CODE_PATTERN.test(
-      value,
+// ======================================================
+// KEYWORDS DETERMINÍSTICAS
+// ======================================================
+//
+// Antes a IA era chamada somente para gerar uma query.
+//
+// Isso consumia TPM sem necessidade.
+//
+// Agora usamos os próprios dados já validados da sugestão
+// para construir a consulta.
+// ======================================================
+
+function extractSearchKeywords(
+  values: Array<
+    string |
+    null |
+    undefined
+  >,
+): string[] {
+  const text =
+    stripBnccCodes(
+      values
+        .filter(
+          (
+            value,
+          ): value is string =>
+            typeof value ===
+              "string" &&
+            value.trim().length >
+              0,
+        )
+        .join(
+          " ",
+        ),
     )
-  ) {
-    throw new Error(
-      `A IA tentou inserir um código BNCC no campo "${field}". A operação foi bloqueada.`,
-    );
-  }
-}
-
-async function generateSearchIntents(
-  client: Groq,
-  modelName: string,
-  suggestions:
-    JourneyBnccSuggestionInput[],
-): Promise<SearchIntent[]> {
-  const suggestionIds =
-    suggestions.map(
-      (suggestion) =>
-        suggestion.id,
-    );
-
-  const response =
-    await client.chat.completions.create({
-      model:
-        modelName,
-
-      messages: [
-        {
-          role:
-            "system",
-
-          content: `
-Você prepara intenções de busca para um mecanismo controlado de recuperação da BNCC do Ensino Médio.
-
-Você NÃO pesquisa a BNCC.
-Você NÃO escolhe habilidades.
-Você NÃO cria códigos.
-Você NÃO cita códigos BNCC.
-
-Sua única função é transformar cada sugestão pedagógica recebida em uma intenção textual de busca.
-
-REGRAS:
-
-1. Produza exatamente uma intenção para cada suggestionId recebido.
-
-2. Preserve o suggestionId exatamente como recebido.
-
-3. query deve descrever os processos cognitivos, objetos de conhecimento e ações educacionais relacionados à sugestão.
-
-4. keywords deve possuir termos conceituais úteis para recuperação textual.
-
-5. Não tente imitar a redação oficial da BNCC.
-
-6. Não produza qualquer código começando por EM.
-
-7. Não associe uma disciplina a uma habilidade oficial. A disciplina recebida representa apenas o contexto pedagógico da sugestão.
-
-8. Baseie a intenção na sugestão e na evidência da Jornada.
-
-9. Não invente elementos que não sejam sustentados pelo contexto.
-
-10. Escreva em português do Brasil.
-`.trim(),
-        },
-
-        {
-          role:
-            "user",
-
-          content:
-            JSON.stringify(
-              {
-                suggestions:
-                  suggestions.map(
-                    (
-                      suggestion,
-                    ) => ({
-                      suggestionId:
-                        suggestion.id,
-
-                      subject:
-                        suggestion.subject,
-
-                      type:
-                        suggestion.type,
-
-                      title:
-                        suggestion.title,
-
-                      objective:
-                        suggestion.objective,
-
-                      content:
-                        suggestion.content,
-
-                      rationale:
-                        suggestion.rationale,
-
-                      contentTopics:
-                        suggestion.contentTopics,
-
-                      evidence:
-                        suggestion.evidenceText,
-
-                      evidenceExplanation:
-                        suggestion.evidenceExplanation,
-                    }),
-                  ),
-              },
-              null,
-              2,
-            ),
-        },
-      ],
-
-      response_format: {
-        type:
-          "json_schema",
-
-        json_schema: {
-          name:
-            "journey_bncc_search_intents",
-
-          strict:
-            true,
-
-          schema: {
-            type:
-              "object",
-
-            properties: {
-              intents: {
-                type:
-                  "array",
-
-                items: {
-                  type:
-                    "object",
-
-                  properties: {
-                    suggestionId: {
-                      type:
-                        "string",
-
-                      enum:
-                        suggestionIds,
-                    },
-
-                    query: {
-                      type:
-                        "string",
-                    },
-
-                    keywords: {
-                      type:
-                        "array",
-
-                      items: {
-                        type:
-                          "string",
-                      },
-                    },
-
-                    rationale: {
-                      type:
-                        "string",
-                    },
-                  },
-
-                  required: [
-                    "suggestionId",
-                    "query",
-                    "keywords",
-                    "rationale",
-                  ],
-
-                  additionalProperties:
-                    false,
-                },
-              },
-            },
-
-            required: [
-              "intents",
-            ],
-
-            additionalProperties:
-              false,
-          },
-        },
-      },
-    });
-
-  const content =
-    response.choices[0]
-      ?.message
-      ?.content;
-
-  if (!content) {
-    throw new Error(
-      "A IA não retornou intenções de busca para a BNCC.",
-    );
-  }
-
-  let parsed:
-    unknown;
-
-  try {
-    parsed =
-      JSON.parse(
-        content,
+      .toLocaleLowerCase(
+        "pt-BR",
       );
-  } catch {
-    throw new Error(
-      "As intenções de busca BNCC não puderam ser interpretadas.",
-    );
-  }
 
-  if (
-    typeof parsed !==
-      "object" ||
-    parsed === null ||
-    !(
-      "intents" in
-      parsed
-    ) ||
-    !Array.isArray(
-      (
-        parsed as {
-          intents?: unknown;
-        }
-      ).intents,
-    )
-  ) {
-    throw new Error(
-      "A estrutura das intenções de busca BNCC é inválida.",
-    );
-  }
+  const words =
+    text.match(
+      /[\p{L}\p{N}]+/gu,
+    ) ??
+    [];
 
-  const rawIntents =
-    (
-      parsed as {
-        intents: unknown[];
-      }
-    ).intents;
+  const keywords:
+    string[] =
+    [];
 
-  if (
-    rawIntents.length !==
-    suggestions.length
-  ) {
-    throw new Error(
-      "A IA não retornou exatamente uma intenção de busca para cada sugestão.",
-    );
-  }
-
-  const validIds =
-    new Set(
-      suggestionIds,
-    );
-
-  const seenIds =
+  const seen =
     new Set<string>();
 
-  const intents =
-    rawIntents.map(
-      (
-        rawIntent,
-        index,
-      ): SearchIntent => {
-        if (
-          typeof rawIntent !==
-            "object" ||
-          rawIntent ===
-            null
-        ) {
-          throw new Error(
-            `A intenção ${index + 1} é inválida.`,
-          );
-        }
-
-        const object =
-          rawIntent as Record<
-            string,
-            unknown
-          >;
-
-        const suggestionId =
-          requireString(
-            object.suggestionId,
-            `intents[${index}].suggestionId`,
-          );
-
-        if (
-          !validIds.has(
-            suggestionId,
-          )
-        ) {
-          throw new Error(
-            "A IA retornou uma sugestão inexistente ao preparar a busca BNCC.",
-          );
-        }
-
-        if (
-          seenIds.has(
-            suggestionId,
-          )
-        ) {
-          throw new Error(
-            "A IA duplicou uma sugestão na preparação da busca BNCC.",
-          );
-        }
-
-        seenIds.add(
-          suggestionId,
-        );
-
-        const query =
-          requireString(
-            object.query,
-            `intents[${index}].query`,
-          );
-
-        const keywords =
-          readStringArray(
-            object.keywords,
-            `intents[${index}].keywords`,
-          ).slice(
-            0,
-            12,
-          );
-
-        const rationale =
-          requireString(
-            object.rationale,
-            `intents[${index}].rationale`,
-          );
-
-        assertNoBnccCode(
-          query,
-          "query",
-        );
-
-        assertNoBnccCode(
-          rationale,
-          "rationale",
-        );
-
-        for (
-          const keyword of
-          keywords
-        ) {
-          assertNoBnccCode(
-            keyword,
-            "keywords",
-          );
-        }
-
-        return {
-          suggestionId,
-          query,
-          keywords,
-          rationale,
-        };
-      },
-    );
-
   for (
-    const suggestionId of
-    suggestionIds
+    const word of words
   ) {
+    const normalized =
+      word.trim();
+
     if (
-      !seenIds.has(
-        suggestionId,
+      normalized.length <
+      4
+    ) {
+      continue;
+    }
+
+    if (
+      SEARCH_STOP_WORDS.has(
+        normalized,
       )
     ) {
-      throw new Error(
-        "Uma sugestão ficou sem intenção de busca BNCC.",
-      );
+      continue;
+    }
+
+    if (
+      seen.has(
+        normalized,
+      )
+    ) {
+      continue;
+    }
+
+    seen.add(
+      normalized,
+    );
+
+    keywords.push(
+      normalized,
+    );
+
+    if (
+      keywords.length >=
+      12
+    ) {
+      break;
     }
   }
 
-  return intents;
+  return keywords;
 }
+
+// ======================================================
+// INTENÇÃO DE BUSCA DETERMINÍSTICA
+// ======================================================
+
+function buildSearchIntent(
+  suggestion:
+    JourneyBnccSuggestionInput,
+): SearchIntent {
+  const content =
+    clipText(
+      suggestion.content,
+      MAX_SEARCH_CONTENT_CHARS,
+    );
+
+  const evidence =
+    clipText(
+      suggestion.evidenceText,
+      MAX_SEARCH_EVIDENCE_CHARS,
+    );
+
+  const queryParts =
+    [
+      suggestion.title,
+
+      suggestion.objective,
+
+      suggestion.contentTopics.join(
+        ", ",
+      ),
+
+      content,
+
+      evidence,
+    ]
+      .filter(
+        (
+          value,
+        ): value is string =>
+          typeof value ===
+            "string" &&
+          value.trim().length >
+            0,
+      );
+
+  const rawQuery =
+    stripBnccCodes(
+      queryParts.join(
+        ". ",
+      ),
+    );
+
+  const query =
+    clipText(
+      rawQuery,
+      MAX_SEARCH_QUERY_CHARS,
+    );
+
+  if (!query) {
+    throw new Error(
+      `Não foi possível construir uma intenção de busca para a sugestão "${suggestion.title}".`,
+    );
+  }
+
+  const keywords =
+    extractSearchKeywords([
+      suggestion.title,
+
+      suggestion.objective,
+
+      ...suggestion
+        .contentTopics,
+
+      content,
+    ]);
+
+  if (
+    keywords.length ===
+    0
+  ) {
+    throw new Error(
+      `Não foi possível extrair termos de busca da sugestão "${suggestion.title}".`,
+    );
+  }
+
+  assertNoBnccCode(
+    query,
+    "query",
+  );
+
+  for (
+    const keyword of
+    keywords
+  ) {
+    assertNoBnccCode(
+      keyword,
+      "keywords",
+    );
+  }
+
+  return {
+    suggestionId:
+      suggestion.id,
+
+    query,
+
+    keywords,
+
+    rationale:
+      "Intenção construída deterministicamente a partir do título, objetivo, conteúdos e evidência da sugestão pedagógica.",
+  };
+}
+
+function generateSearchIntents(
+  suggestions:
+    JourneyBnccSuggestionInput[],
+): SearchIntent[] {
+  return suggestions.map(
+    buildSearchIntent,
+  );
+}
+
+// ======================================================
+// RECUPERAÇÃO DETERMINÍSTICA
+// ======================================================
 
 async function retrieveCandidates(
   suggestions:
@@ -707,17 +735,20 @@ async function retrieveCandidates(
           intent.keywords,
 
         limit:
-          MAX_CANDIDATES_PER_SUGGESTION,
+          MAX_RETRIEVED_CANDIDATES_PER_SUGGESTION,
 
-        // Um corte um pouco mais aberto aumenta recall.
-        // A IA ainda fará a avaliação pedagógica depois.
+        // Mantemos recall relativamente aberto.
+        //
+        // A etapa seguinte fará a avaliação pedagógica.
         minScore:
           0.05,
       });
 
     bundles.push({
       suggestion,
+
       intent,
+
       candidates,
     });
   }
@@ -725,35 +756,135 @@ async function retrieveCandidates(
   return bundles;
 }
 
-function clipText(
-  value:
-    | string
-    | null,
-  maxLength: number,
-): string | null {
-  if (!value) {
-    return null;
-  }
+// ======================================================
+// COMPACTAÇÃO PARA IA
+// ======================================================
+//
+// A base oficial permanece COMPLETA no banco.
+//
+// Estamos compactando somente o contexto enviado ao LLM.
+// ======================================================
 
-  const normalized =
-    value.trim();
+function buildAssessmentPayload(
+  bundles:
+    CandidateBundle[],
+) {
+  return bundles.map(
+    (bundle) => {
+      const candidates =
+        bundle.candidates
+          .slice(
+            0,
+            MAX_AI_CANDIDATES_PER_SUGGESTION,
+          );
 
-  if (!normalized) {
-    return null;
-  }
+      return {
+        suggestionId:
+          bundle.suggestion.id,
 
-  if (
-    normalized.length <=
-    maxLength
-  ) {
-    return normalized;
-  }
+        context: {
+          subject:
+            bundle.suggestion.subject,
 
-  return `${normalized.slice(
-    0,
-    maxLength,
-  )}…`;
+          title:
+            clipText(
+              bundle.suggestion
+                .title,
+
+              MAX_AI_TITLE_CHARS,
+            ),
+
+          objective:
+            clipText(
+              bundle.suggestion
+                .objective,
+
+              MAX_AI_OBJECTIVE_CHARS,
+            ),
+
+          content:
+            clipText(
+              bundle.suggestion
+                .content,
+
+              MAX_AI_CONTENT_CHARS,
+            ),
+
+          topics:
+            bundle.suggestion
+              .contentTopics
+              .slice(
+                0,
+                MAX_AI_TOPICS,
+              )
+              .map(
+                (topic) =>
+                  clipText(
+                    topic,
+                    MAX_AI_TOPIC_CHARS,
+                  ),
+              )
+              .filter(
+                (
+                  topic,
+                ): topic is string =>
+                  Boolean(
+                    topic,
+                  ),
+              ),
+
+          evidence:
+            clipText(
+              bundle.suggestion
+                .evidenceText,
+
+              MAX_AI_EVIDENCE_CHARS,
+            ),
+        },
+
+        candidates:
+          candidates.map(
+            (
+              candidate,
+            ) => ({
+              candidateId:
+                candidate.id,
+
+              description:
+                clipText(
+                  candidate.description,
+
+                  MAX_AI_BNCC_DESCRIPTION_CHARS,
+                ),
+
+              retrievalRank:
+                candidate.retrieval
+                  .rank,
+
+              retrievalScore:
+                candidate.retrieval
+                  .score,
+            }),
+          ),
+      };
+    },
+  );
 }
+
+// ======================================================
+// AVALIAÇÃO PELA IA
+// ======================================================
+//
+// Esta é agora a ÚNICA chamada ao Groq neste fluxo.
+//
+// A IA:
+//
+// - não pesquisa;
+// - não cria habilidades;
+// - não recebe liberdade para criar IDs;
+// - não recebe códigos BNCC;
+// - somente classifica candidatos recuperados do banco.
+// ======================================================
 
 async function assessCandidates(
   client: Groq,
@@ -777,18 +908,25 @@ async function assessCandidates(
     return [];
   }
 
+  // ----------------------------------------------------
+  // Somente candidatos realmente enviados à IA
+  // ----------------------------------------------------
+
   const candidateIds =
-    [
-      ...new Set(
-        bundlesWithCandidates.flatMap(
-          (bundle) =>
-            bundle.candidates.map(
+    uniqueStrings(
+      bundlesWithCandidates.flatMap(
+        (bundle) =>
+          bundle.candidates
+            .slice(
+              0,
+              MAX_AI_CANDIDATES_PER_SUGGESTION,
+            )
+            .map(
               (candidate) =>
                 candidate.id,
             ),
-        ),
       ),
-    ];
+    );
 
   const suggestionIds =
     bundlesWithCandidates.map(
@@ -797,90 +935,30 @@ async function assessCandidates(
     );
 
   const payload =
-    bundlesWithCandidates.map(
-      (bundle) => ({
-        suggestion: {
-          id:
-            bundle.suggestion.id,
-
-          subject:
-            bundle.suggestion.subject,
-
-          title:
-            bundle.suggestion.title,
-
-          objective:
-            bundle.suggestion.objective,
-
-          content:
-            bundle.suggestion.content,
-
-          rationale:
-            bundle.suggestion.rationale,
-
-          contentTopics:
-            bundle.suggestion.contentTopics,
-
-          evidence:
-            clipText(
-              bundle.suggestion
-                .evidenceText,
-              1600,
-            ),
-        },
-
-        searchIntent: {
-          query:
-            bundle.intent.query,
-
-          keywords:
-            bundle.intent.keywords,
-        },
-
-        candidates:
-          bundle.candidates.map(
-            (candidate) => ({
-              candidateId:
-                candidate.id,
-
-              code:
-                candidate.code,
-
-              area:
-                candidate.area,
-
-              officialSubject:
-                candidate.officialSubject,
-
-              description:
-                candidate.description,
-
-              competencyCode:
-                candidate.competencyCode,
-
-              competencyText:
-                clipText(
-                  candidate.competencyText,
-                  1000,
-                ),
-
-              sourcePage:
-                candidate.sourcePage,
-
-              retrievalRank:
-                candidate.retrieval.rank,
-
-              retrievalScore:
-                candidate.retrieval.score,
-            }),
-          ),
-      }),
+    buildAssessmentPayload(
+      bundlesWithCandidates,
     );
+
+  // ----------------------------------------------------
+  // Chamada Groq
+  // ----------------------------------------------------
 
   const response =
     await client.chat.completions.create({
       model:
         modelName,
+
+      // Para esta tarefa o modelo não precisa de uma
+      // cadeia de raciocínio longa.
+      reasoning_effort:
+        "low",
+
+      // Saída curta e estruturada.
+      max_completion_tokens:
+        MAX_COMPLETION_TOKENS,
+
+      temperature:
+        0.1,
 
       messages: [
         {
@@ -888,58 +966,34 @@ async function assessCandidates(
             "system",
 
           content: `
-Você avalia candidatos da BNCC previamente recuperados de uma base oficial e verificada.
+Você avalia relações pedagógicas entre sugestões de uma Jornada e candidatos previamente recuperados de uma base oficial e verificada da BNCC.
 
-IMPORTANTE:
+Você NÃO pesquisa a BNCC.
+Você NÃO cria habilidades.
+Você NÃO cria códigos.
+Você NÃO altera habilidades.
+Você NÃO pode escolher IDs que não tenham sido fornecidos.
 
-Você NÃO pode criar habilidades.
-Você NÃO pode criar códigos.
-Você NÃO pode alterar códigos.
-Você NÃO pode escolher habilidades que não estejam na lista recebida.
+Os candidateId são identificadores internos e opacos do sistema.
 
-Sua resposta só pode selecionar candidateId que tenha sido fornecido.
+TAREFA
 
-OBJETIVO
+Para cada suggestionId:
 
-Avaliar se cada candidato possui relação pedagógica defensável com a sugestão da Jornada.
-
-REGRAS
-
-1. Para cada sugestão, selecione de ZERO a TRÊS candidatos.
-
-2. É melhor retornar zero candidatos do que criar uma associação fraca.
-
-3. relevanceScore deve representar pertinência pedagógica entre 0 e 100.
-
-4. Só selecione candidatos que você considere claramente defensáveis.
-
-5. Uma coincidência lexical isolada não é suficiente.
-
-6. Considere:
-- objetivo da sugestão;
-- conteúdo;
-- justificativa;
-- conteúdos possíveis;
-- evidência da Jornada;
-- descrição oficial da habilidade.
-
-7. A disciplina da sugestão representa contexto pedagógico.
-Não transforme uma habilidade oficial de área em uma habilidade oficialmente disciplinar.
-
-8. officialSubject = null é normal para várias habilidades do Ensino Médio.
-
-9. confidence:
-HIGH = conexão direta e fortemente sustentada;
-MEDIUM = conexão consistente e defensável;
-LOW = conexão limitada ou indireta.
-
-10. Evite selecionar LOW.
-
-11. justification deve explicar por que a habilidade oficial se relaciona à sugestão.
-
-12. Não utilize conhecimento de códigos BNCC fora dos candidatos recebidos.
-
-13. Responda em português do Brasil.
+1. avalie apenas os candidatos fornecidos;
+2. selecione de ZERO a TRÊS;
+3. prefira ZERO a uma associação pedagógica fraca;
+4. relevanceScore deve ficar entre 0 e 100;
+5. coincidência lexical isolada não é suficiente;
+6. considere objetivo, conteúdo, tópicos, evidência e descrição oficial;
+7. subject representa o contexto do professor, não transforma uma habilidade de área em habilidade disciplinar;
+8. HIGH significa relação direta e forte;
+9. MEDIUM significa relação consistente e defensável;
+10. LOW significa relação limitada ou indireta;
+11. evite LOW;
+12. justification deve ser curta, objetiva e explicar a relação pedagógica;
+13. preserve suggestionId e candidateId exatamente;
+14. responda em português do Brasil.
 `.trim(),
         },
 
@@ -948,14 +1002,10 @@ LOW = conexão limitada ou indireta.
             "user",
 
           content:
-            JSON.stringify(
-              {
-                analyses:
-                  payload,
-              },
-              null,
-              2,
-            ),
+            JSON.stringify({
+              analyses:
+                payload,
+            }),
         },
       ],
 
@@ -1066,6 +1116,10 @@ LOW = conexão limitada ou indireta.
       },
     });
 
+  // ====================================================
+  // RESPOSTA
+  // ====================================================
+
   const content =
     response.choices[0]
       ?.message
@@ -1115,7 +1169,8 @@ LOW = conexão limitada ou indireta.
   const rawAssessments =
     (
       parsed as {
-        assessments: unknown[];
+        assessments:
+          unknown[];
       }
     ).assessments;
 
@@ -1127,6 +1182,10 @@ LOW = conexão limitada ou indireta.
       "A IA não avaliou exatamente todas as sugestões que possuíam candidatos BNCC.",
     );
   }
+
+  // ====================================================
+  // VALIDAÇÃO DA RESPOSTA
+  // ====================================================
 
   const bundleBySuggestion =
     new Map(
@@ -1167,6 +1226,7 @@ LOW = conexão limitada ou indireta.
         const suggestionId =
           requireString(
             object.suggestionId,
+
             `assessments[${index}].suggestionId`,
           );
 
@@ -1214,12 +1274,22 @@ LOW = conexão limitada ou indireta.
           );
         }
 
+        // ------------------------------------------------
+        // Somente os TOP candidatos realmente enviados
+        // ao modelo são permitidos.
+        // ------------------------------------------------
+
         const allowedCandidates =
           new Set(
-            bundle.candidates.map(
-              (candidate) =>
-                candidate.id,
-            ),
+            bundle.candidates
+              .slice(
+                0,
+                MAX_AI_CANDIDATES_PER_SUGGESTION,
+              )
+              .map(
+                (candidate) =>
+                  candidate.id,
+              ),
           );
 
         const seenCandidates =
@@ -1252,6 +1322,7 @@ LOW = conexão limitada ou indireta.
                 const candidateId =
                   requireString(
                     match.candidateId,
+
                     "candidateId",
                   );
 
@@ -1261,7 +1332,7 @@ LOW = conexão limitada ou indireta.
                   )
                 ) {
                   throw new Error(
-                    "A IA tentou selecionar uma habilidade fora dos candidatos recuperados.",
+                    "A IA tentou selecionar uma habilidade fora dos candidatos efetivamente enviados.",
                   );
                 }
 
@@ -1294,8 +1365,10 @@ LOW = conexão limitada ou indireta.
                 const relevanceScore =
                   Math.max(
                     0,
+
                     Math.min(
                       100,
+
                       match.relevanceScore,
                     ),
                   );
@@ -1315,6 +1388,13 @@ LOW = conexão limitada ou indireta.
                   );
                 }
 
+                const justification =
+                  requireString(
+                    match.justification,
+
+                    "justification",
+                  );
+
                 return {
                   candidateId,
 
@@ -1324,11 +1404,7 @@ LOW = conexão limitada ou indireta.
                     match.confidence as
                       BnccLinkConfidence,
 
-                  justification:
-                    requireString(
-                      match.justification,
-                      "justification",
-                    ),
+                  justification,
                 };
               },
             )
@@ -1348,18 +1424,44 @@ LOW = conexão limitada ou indireta.
 
         return {
           suggestionId,
+
           matches,
         };
       },
     );
 
+  // ====================================================
+  // GARANTIR QUE TODAS FORAM PROCESSADAS
+  // ====================================================
+
+  for (
+    const suggestionId of
+    suggestionIds
+  ) {
+    if (
+      !seenSuggestions.has(
+        suggestionId,
+      )
+    ) {
+      throw new Error(
+        "Uma sugestão com candidatos ficou sem avaliação BNCC.",
+      );
+    }
+  }
+
   return assessments;
 }
+
+// ======================================================
+// FUNÇÃO PRINCIPAL
+// ======================================================
 
 export async function linkJourneySuggestionsToBncc(
   suggestions:
     JourneyBnccSuggestionInput[],
-): Promise<JourneyBnccLinkingResult> {
+): Promise<
+  JourneyBnccLinkingResult
+> {
   if (
     suggestions.length ===
     0
@@ -1369,24 +1471,37 @@ export async function linkJourneySuggestionsToBncc(
     );
   }
 
-  const {
-    client,
-    modelName,
-  } =
-    getGroq();
+  // ====================================================
+  // 1. INTENÇÕES DETERMINÍSTICAS
+  // ====================================================
+  //
+  // Não há mais chamada Groq nesta etapa.
+  // ====================================================
 
   const intents =
-    await generateSearchIntents(
-      client,
-      modelName,
+    generateSearchIntents(
       suggestions,
     );
+
+  // ====================================================
+  // 2. RECUPERAÇÃO DA BASE OFICIAL
+  // ====================================================
 
   const bundles =
     await retrieveCandidates(
       suggestions,
       intents,
     );
+
+  // ====================================================
+  // 3. ÚNICA CHAMADA À IA
+  // ====================================================
+
+  const {
+    client,
+    modelName,
+  } =
+    getGroq();
 
   const assessments =
     await assessCandidates(
@@ -1405,12 +1520,17 @@ export async function linkJourneySuggestionsToBncc(
       ),
     );
 
+  // ====================================================
+  // 4. CONSTRUIR LINKS
+  // ====================================================
+
   const links:
     JourneyBnccLinkDraft[] =
     [];
 
   for (
-    const bundle of bundles
+    const bundle of
+    bundles
   ) {
     const assessment =
       assessmentBySuggestion.get(
@@ -1451,7 +1571,8 @@ export async function linkJourneySuggestionsToBncc(
           bundle.suggestion.id,
 
         analysisId:
-          bundle.suggestion.analysisId,
+          bundle.suggestion
+            .analysisId,
 
         bnccSkillId:
           candidate.id,
@@ -1464,7 +1585,8 @@ export async function linkJourneySuggestionsToBncc(
           clipText(
             bundle.suggestion
               .evidenceText,
-            1200,
+
+            MAX_SAVED_EVIDENCE_CHARS,
           ),
 
         retrievalScore:
@@ -1478,7 +1600,7 @@ export async function linkJourneySuggestionsToBncc(
         confidence:
           match.confidence,
 
-        // Este rank pertence ao retriever determinístico.
+        // Rank produzido pelo retriever determinístico.
         candidateRank:
           candidate.retrieval
             .rank,
@@ -1489,15 +1611,31 @@ export async function linkJourneySuggestionsToBncc(
     }
   }
 
-  // Última barreira:
-  // todos os IDs selecionados precisam continuar sendo
-  // habilidades ENSINO_MEDIO + current + fonte VERIFIED.
+  // ====================================================
+  // 5. BARREIRA FINAL DE SEGURANÇA
+  // ====================================================
+  //
+  // Mesmo depois do LLM:
+  //
+  // - o ID precisa existir;
+  // - precisa ser Ensino Médio;
+  // - precisa estar current;
+  // - a fonte precisa estar VERIFIED.
+  //
+  // Portanto a IA nunca consegue persistir uma habilidade
+  // que não pertença à nossa base oficial.
+  // ====================================================
+
   await requireVerifiedBnccSkillsByIds(
     links.map(
       (link) =>
         link.bnccSkillId,
     ),
   );
+
+  // ====================================================
+  // 6. DIAGNÓSTICOS
+  // ====================================================
 
   const diagnostics =
     bundles.map(
@@ -1527,7 +1665,9 @@ export async function linkJourneySuggestionsToBncc(
 
   return {
     modelName,
+
     links,
+
     diagnostics,
   };
 }
