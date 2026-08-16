@@ -1,9 +1,20 @@
 import type { NextConfig } from "next";
+import path from "node:path";
 
 const nextConfig: NextConfig = {
-  /* config options here */
   reactCompiler: true,
-  serverExternalPackages: ["@napi-rs/canvas"],
+
+  allowedDevOrigins: ["127.0.0.1"],
+
+  turbopack: {
+    root: path.resolve(__dirname),
+  },
+
+  serverExternalPackages: [
+    "@napi-rs/canvas",
+    "pdfjs-dist",
+  ],
+
   experimental: {
     serverActions: {
       bodySizeLimit: "60mb",

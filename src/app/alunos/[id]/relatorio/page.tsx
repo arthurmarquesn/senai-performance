@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { AppLayout } from "@/components/AppLayout";
 import { prisma } from "@/lib/prisma";
 import { PrintButton } from "@/components/PrintButton";
 import { ReportCharts } from "@/components/ReportCharts";
@@ -76,9 +78,9 @@ export default async function RelatorioAlunoPage({
 
   if (!aluno) {
     return (
-      <main className="p-8">
+      <AppLayout>
         <p>Aluno não encontrado.</p>
-      </main>
+      </AppLayout>
     );
   }
 
@@ -354,6 +356,22 @@ export default async function RelatorioAlunoPage({
     }));
 
   return (
+    <AppLayout>
+      <AppBreadcrumb
+        items={[
+          {
+            label: "Alunos",
+            href: "/alunos",
+          },
+          {
+            label: aluno.name,
+            href: `/alunos/${aluno.id}`,
+          },
+          {
+            label: "Relatorio",
+          },
+        ]}
+      />
     <main className="mx-auto min-h-screen max-w-[1000px] bg-white p-10 text-zinc-900 print:max-w-none print:p-6">
       <div className="mb-8 flex items-center justify-between print:hidden">
         <Link
@@ -482,5 +500,6 @@ export default async function RelatorioAlunoPage({
         </div>
       </section>
     </main>
+    </AppLayout>
   );
 }

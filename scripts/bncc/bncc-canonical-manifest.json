@@ -1,0 +1,1665 @@
+{
+  "schemaVersion": 1,
+  "skills": [
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS101",
+      "lexicalHash": "b48523bb683c595fb9591d4edb0a2bc513b93594a102ef8c6ba17b3211d4b594",
+      "physicalPage": 574,
+      "printedPage": 572,
+      "subject": null,
+      "tokenCount": 32
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS102",
+      "lexicalHash": "d8284fd22049a8ec73dd61e941163760cb496eb31b946224710af1749de7b87c",
+      "physicalPage": 574,
+      "printedPage": 572,
+      "subject": null,
+      "tokenCount": 40
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS103",
+      "lexicalHash": "632f85f2bb1109fd906591983c3840ba59ee25424b377e0a4ab183d3c4167e5e",
+      "physicalPage": 574,
+      "printedPage": 572,
+      "subject": null,
+      "tokenCount": 45
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS104",
+      "lexicalHash": "60c1e686850e705f59679f2c898b3501ad461925d925d39b22b8e8f98d9ebeb9",
+      "physicalPage": 574,
+      "printedPage": 572,
+      "subject": null,
+      "tokenCount": 35
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS105",
+      "lexicalHash": "1bdfae71597043567a6661df7f486e95d69e3be2100949d838df4d20db784771",
+      "physicalPage": 574,
+      "printedPage": 572,
+      "subject": null,
+      "tokenCount": 29
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS106",
+      "lexicalHash": "246d9d9f647cd5eaab22c15723f3c81cdf8f22647e5e61711a78e6cf059e34a0",
+      "physicalPage": 574,
+      "printedPage": 572,
+      "subject": null,
+      "tokenCount": 52
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS201",
+      "lexicalHash": "3a5fb61ca4a0eb587e18dac82a92db1105827a3ce1c4238f8f44a8ecaf34fc5e",
+      "physicalPage": 575,
+      "printedPage": 573,
+      "subject": null,
+      "tokenCount": 59
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS202",
+      "lexicalHash": "7f3b891381769ed98cd101bc82cc4181b184dd504d361e713b20f05ec73b0de4",
+      "physicalPage": 575,
+      "printedPage": 573,
+      "subject": null,
+      "tokenCount": 43
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS203",
+      "lexicalHash": "c343eb23cfe0dc97ada4767ad5eddb080a77dbd4a90e8cafad45a6df06f7174e",
+      "physicalPage": 575,
+      "printedPage": 573,
+      "subject": null,
+      "tokenCount": 30
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS204",
+      "lexicalHash": "89bbceef8dd90b2166d5e03cc6d31850ef7162d3937138c4d5bccc5a125c0e0f",
+      "physicalPage": 575,
+      "printedPage": 573,
+      "subject": null,
+      "tokenCount": 53
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS205",
+      "lexicalHash": "53e50bc63afc5821e61e530b6eeb469c6cf56633bb9d575aecd1dfa093865984",
+      "physicalPage": 575,
+      "printedPage": 573,
+      "subject": null,
+      "tokenCount": 27
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS206",
+      "lexicalHash": "ee3f3b3b7314b5719cb22fb667fe94c91c9437d9211bf159a3a931e0fa024347",
+      "physicalPage": 575,
+      "printedPage": 573,
+      "subject": null,
+      "tokenCount": 31
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS301",
+      "lexicalHash": "7dd3ed9ebacccf99cd763f00cefa455f8de9380ac1b51e8f71e03b02f3ee952d",
+      "physicalPage": 577,
+      "printedPage": 575,
+      "subject": null,
+      "tokenCount": 48
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS302",
+      "lexicalHash": "816faa21aff46bf92855dc13a2bde43198b0558ecdc1e875549a3f158e810fa1",
+      "physicalPage": 577,
+      "printedPage": 575,
+      "subject": null,
+      "tokenCount": 55
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS303",
+      "lexicalHash": "1c37fd95c4a27ee367c5308b13b24448d59598f387a904a2fa71e45cbce547ca",
+      "physicalPage": 577,
+      "printedPage": 575,
+      "subject": null,
+      "tokenCount": 38
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS304",
+      "lexicalHash": "df6f6d3f44a06b54abcede05acf0011282e8215d8fde6d78fb43ece015fa3cbe",
+      "physicalPage": 577,
+      "printedPage": 575,
+      "subject": null,
+      "tokenCount": 37
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS305",
+      "lexicalHash": "3c041fb40195228d9902bd86637ec14c828bbbd56435ec02d87a43fce1ad4cdf",
+      "physicalPage": 577,
+      "printedPage": 575,
+      "subject": null,
+      "tokenCount": 34
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS306",
+      "lexicalHash": "3f3f099c3a5e491e20edc360a5323f79e253c8145fda058c09c30c662017d120",
+      "physicalPage": 577,
+      "printedPage": 575,
+      "subject": null,
+      "tokenCount": 39
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS401",
+      "lexicalHash": "ad7519b52eba16fcea5b65b13606f62de9e1bcbe4cd5b0a46d66db98cddbaacb",
+      "physicalPage": 578,
+      "printedPage": 576,
+      "subject": null,
+      "tokenCount": 40
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS402",
+      "lexicalHash": "d88d6f0aa7e7e44b94679c5b36285443604a5ef1bea607d4625a59505c6b4020",
+      "physicalPage": 578,
+      "printedPage": 576,
+      "subject": null,
+      "tokenCount": 24
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS403",
+      "lexicalHash": "947008f678f0bcf9705d50d099d75c8616d22fce478784d9e93947cdcbe74eb4",
+      "physicalPage": 578,
+      "printedPage": 576,
+      "subject": null,
+      "tokenCount": 33
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS404",
+      "lexicalHash": "942ef9d616895cd3f1c2670c417ae3dae9b3836650793e33f90d2215e25545f9",
+      "physicalPage": 578,
+      "printedPage": 576,
+      "subject": null,
+      "tokenCount": 38
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS501",
+      "lexicalHash": "cb84c8f0302cb84234afe2970ecdb6343cf9e2e4f43443c5d693bbf292dc1ce9",
+      "physicalPage": 579,
+      "printedPage": 577,
+      "subject": null,
+      "tokenCount": 37
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS502",
+      "lexicalHash": "fa902e5aa7348e563a55ac81b105d5c1a4b7b3ad8aa1644f57c8ac9cc57fe08d",
+      "physicalPage": 579,
+      "printedPage": 577,
+      "subject": null,
+      "tokenCount": 40
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS503",
+      "lexicalHash": "c40818c9a17d793786f8000f286cbd2139eac343f9aca3228c8df11d9599a2a2",
+      "physicalPage": 579,
+      "printedPage": 577,
+      "subject": null,
+      "tokenCount": 38
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS504",
+      "lexicalHash": "6bd895b8293528ca6971aff7c33488359fe7b151ad0aab849a8224fc95f89157",
+      "physicalPage": 579,
+      "printedPage": 577,
+      "subject": null,
+      "tokenCount": 34
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS601",
+      "lexicalHash": "4b8f66fd086c21dac2c24e90271b4a904d5b65c51a64d274358730bd2875ac14",
+      "physicalPage": 581,
+      "printedPage": 579,
+      "subject": null,
+      "tokenCount": 57
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS602",
+      "lexicalHash": "4c933a7018d49942e30663609648de8ae61d13e3ab89394345f4796ceed68b7b",
+      "physicalPage": 581,
+      "printedPage": 579,
+      "subject": null,
+      "tokenCount": 62
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS603",
+      "lexicalHash": "de52a2834ed1662d8f9e4cd29203a4d793a88f589f96fcddafe7d100455d3c89",
+      "physicalPage": 581,
+      "printedPage": 579,
+      "subject": null,
+      "tokenCount": 33
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS604",
+      "lexicalHash": "0d008219dc642ab905f5936b2b45e517ab281c644eeab0bbcb5c8cf1534a8c9d",
+      "physicalPage": 581,
+      "printedPage": 579,
+      "subject": null,
+      "tokenCount": 39
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS605",
+      "lexicalHash": "ec8cfbc9f3c7ca817e92985b7cb2f1b5dbf7c9ece4f2009ee6473a354ffd2066",
+      "physicalPage": 581,
+      "printedPage": 579,
+      "subject": null,
+      "tokenCount": 56
+    },
+    {
+      "area": "CIENCIAS_HUMANAS",
+      "code": "EM13CHS606",
+      "lexicalHash": "47f612ee606f70b802d4ad9c43821134dd1961913685681e0151248b15092cd6",
+      "physicalPage": 581,
+      "printedPage": 579,
+      "subject": null,
+      "tokenCount": 55
+    },
+    {
+      "area": "CIENCIAS_DA_NATUREZA",
+      "code": "EM13CNT101",
+      "lexicalHash": "2266ab0f18482904359a1c629bd8bfd902bbbefa14451ebd4732626b42dcca95",
+      "physicalPage": 557,
+      "printedPage": 555,
+      "subject": null,
+      "tokenCount": 65
+    },
+    {
+      "area": "CIENCIAS_DA_NATUREZA",
+      "code": "EM13CNT102",
+      "lexicalHash": "937c2909dba1497a3c8dbdff67ff218a151014adf2d782ab5578a580308dbcfd",
+      "physicalPage": 557,
+      "printedPage": 555,
+      "subject": null,
+      "tokenCount": 47
+    },
+    {
+      "area": "CIENCIAS_DA_NATUREZA",
+      "code": "EM13CNT103",
+      "lexicalHash": "fc034bc1244257cc3336fe25de826a739629b364ac1ad9b6163d8c567f5b5378",
+      "physicalPage": 557,
+      "printedPage": 555,
+      "subject": null,
+      "tokenCount": 38
+    },
+    {
+      "area": "CIENCIAS_DA_NATUREZA",
+      "code": "EM13CNT104",
+      "lexicalHash": "1ed52779ed0a103ef6ab5a471c4919e28164b63ad7bfd053c2fa902fdccc9f94",
+      "physicalPage": 557,
+      "printedPage": 555,
+      "subject": null,
+      "tokenCount": 48
+    },
+    {
+      "area": "CIENCIAS_DA_NATUREZA",
+      "code": "EM13CNT105",
+      "lexicalHash": "aafd8ea4dec41650c783d1f9d4abb2a53dfa44de1173a5265ad0cc7a882b426b",
+      "physicalPage": 557,
+      "printedPage": 555,
+      "subject": null,
+      "tokenCount": 31
+    },
+    {
+      "area": "CIENCIAS_DA_NATUREZA",
+      "code": "EM13CNT106",
+      "lexicalHash": "1b8e149530bc294da053706b92d3047bcf8293e3be02ff0f42eb2697595edbb0",
+      "physicalPage": 557,
+      "printedPage": 555,
+      "subject": null,
+      "tokenCount": 59
+    },
+    {
+      "area": "CIENCIAS_DA_NATUREZA",
+      "code": "EM13CNT107",
+      "lexicalHash": "f7cbc98cc05f4c441443867c01d514b3b1c1b7142d13ee33a05d414902acfdfa",
+      "physicalPage": 557,
+      "printedPage": 555,
+      "subject": null,
+      "tokenCount": 52
+    },
+    {
+      "area": "CIENCIAS_DA_NATUREZA",
+      "code": "EM13CNT201",
+      "lexicalHash": "5bf9be3233a133e0bd9355ab84a74754688a8238796d9a3c8fae4e81087b7fc2",
+      "physicalPage": 559,
+      "printedPage": 557,
+      "subject": null,
+      "tokenCount": 36
+    },
+    {
+      "area": "CIENCIAS_DA_NATUREZA",
+      "code": "EM13CNT202",
+      "lexicalHash": "10168ec3137fbdd986c32bd9f48d6b6c3319799666bf9ddfbfb9645233947604",
+      "physicalPage": 559,
+      "printedPage": 557,
+      "subject": null,
+      "tokenCount": 46
+    },
+    {
+      "area": "CIENCIAS_DA_NATUREZA",
+      "code": "EM13CNT203",
+      "lexicalHash": "5379a4537d470294f118a71d5ed79adcb4581218145bd189eae4ef0519271d6d",
+      "physicalPage": 559,
+      "printedPage": 557,
+      "subject": null,
+      "tokenCount": 64
+    },
+    {
+      "area": "CIENCIAS_DA_NATUREZA",
+      "code": "EM13CNT204",
+      "lexicalHash": "a51cfcc2b25d39df757f68e9a90b710a6312ebc9c95872b035f8c75fd2715e66",
+      "physicalPage": 559,
+      "printedPage": 557,
+      "subject": null,
+      "tokenCount": 46
+    },
+    {
+      "area": "CIENCIAS_DA_NATUREZA",
+      "code": "EM13CNT205",
+      "lexicalHash": "e08aef6f665111c13619f3bdd46928617d0fe2067f9af361a53a78b8801b1120",
+      "physicalPage": 559,
+      "printedPage": 557,
+      "subject": null,
+      "tokenCount": 27
+    },
+    {
+      "area": "CIENCIAS_DA_NATUREZA",
+      "code": "EM13CNT206",
+      "lexicalHash": "b4461d9b8f9cd8a50d399ac6b0bd3f0a7513ab8a945816e049036c49c0cfbb4a",
+      "physicalPage": 559,
+      "printedPage": 557,
+      "subject": null,
+      "tokenCount": 32
+    },
+    {
+      "area": "CIENCIAS_DA_NATUREZA",
+      "code": "EM13CNT207",
+      "lexicalHash": "56498aeda0d012ab9c18b48977aed7ec8f6e39e69b1cc493f7580c28707e6d21",
+      "physicalPage": 559,
+      "printedPage": 557,
+      "subject": null,
+      "tokenCount": 43
+    },
+    {
+      "area": "CIENCIAS_DA_NATUREZA",
+      "code": "EM13CNT208",
+      "lexicalHash": "2973610306a017e3f4b9dfbeafcabf95fabede6ac49b6521c2fcb8edcbcbe156",
+      "physicalPage": 559,
+      "printedPage": 557,
+      "subject": null,
+      "tokenCount": 35
+    },
+    {
+      "area": "CIENCIAS_DA_NATUREZA",
+      "code": "EM13CNT209",
+      "lexicalHash": "2c2e9ba69c9d4bce4f5a32e0f859c62da8f71f9af78b017d551e68086e001df6",
+      "physicalPage": 559,
+      "printedPage": 557,
+      "subject": null,
+      "tokenCount": 66
+    },
+    {
+      "area": "CIENCIAS_DA_NATUREZA",
+      "code": "EM13CNT301",
+      "lexicalHash": "c09294a15fc6aedd326fd27dfaf4f939a552f11e34a0ec328a6281f71d262425",
+      "physicalPage": 561,
+      "printedPage": 559,
+      "subject": null,
+      "tokenCount": 37
+    },
+    {
+      "area": "CIENCIAS_DA_NATUREZA",
+      "code": "EM13CNT302",
+      "lexicalHash": "9b6a8734e59a038e867dc1ac5c52eab40db0324ca8a600a2a7ccecab7f442841",
+      "physicalPage": 561,
+      "printedPage": 559,
+      "subject": null,
+      "tokenCount": 62
+    },
+    {
+      "area": "CIENCIAS_DA_NATUREZA",
+      "code": "EM13CNT303",
+      "lexicalHash": "d7958b48f7532567e5bb3f12eab28789e428c46617547eb69d0f022e63b95601",
+      "physicalPage": 561,
+      "printedPage": 559,
+      "subject": null,
+      "tokenCount": 53
+    },
+    {
+      "area": "CIENCIAS_DA_NATUREZA",
+      "code": "EM13CNT304",
+      "lexicalHash": "01e2b00f55b1c689af5b4ab2a1d75450d6e4e4db1da47528ca59eca0252c731a",
+      "physicalPage": 561,
+      "printedPage": 559,
+      "subject": null,
+      "tokenCount": 52
+    },
+    {
+      "area": "CIENCIAS_DA_NATUREZA",
+      "code": "EM13CNT305",
+      "lexicalHash": "6d7cb0898227407ece980cf7d9f5073c92df73f99c2a42b51e45fd6793ef98b5",
+      "physicalPage": 561,
+      "printedPage": 559,
+      "subject": null,
+      "tokenCount": 41
+    },
+    {
+      "area": "CIENCIAS_DA_NATUREZA",
+      "code": "EM13CNT306",
+      "lexicalHash": "0053b149f5d567e48c95cdb7991ad42c977d7d1f7a8c850bbaabd1429ee45266",
+      "physicalPage": 561,
+      "printedPage": 559,
+      "subject": null,
+      "tokenCount": 52
+    },
+    {
+      "area": "CIENCIAS_DA_NATUREZA",
+      "code": "EM13CNT307",
+      "lexicalHash": "eb989d7d7bfde4728bbe215f604e621fdd3dc4a02c7f5203fa7dfc9bfba7dbbc",
+      "physicalPage": 561,
+      "printedPage": 559,
+      "subject": null,
+      "tokenCount": 33
+    },
+    {
+      "area": "CIENCIAS_DA_NATUREZA",
+      "code": "EM13CNT308",
+      "lexicalHash": "309b1c917e2172e07f3259b83215b781333bca81aba424b38efee0ed2fd0fb8d",
+      "physicalPage": 562,
+      "printedPage": 560,
+      "subject": null,
+      "tokenCount": 28
+    },
+    {
+      "area": "CIENCIAS_DA_NATUREZA",
+      "code": "EM13CNT309",
+      "lexicalHash": "b1e6be7d68ed4389d9445fe0b30c377ed9f60231de703ccac4606306b998228b",
+      "physicalPage": 562,
+      "printedPage": 560,
+      "subject": null,
+      "tokenCount": 45
+    },
+    {
+      "area": "CIENCIAS_DA_NATUREZA",
+      "code": "EM13CNT310",
+      "lexicalHash": "443d28a922400d1e89a417f4909ff1bd2ecd240b16ffb84662035de2b4c66921",
+      "physicalPage": 562,
+      "printedPage": 560,
+      "subject": null,
+      "tokenCount": 66
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG101",
+      "lexicalHash": "047efd4146a739f957f14d1ccf835f02a86051ad0c091f29a8661c4ca4537f6e",
+      "physicalPage": 493,
+      "printedPage": 491,
+      "subject": null,
+      "tokenCount": 24
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG102",
+      "lexicalHash": "9b12ca552d2d40d9115e523aabb87ecd2394dd74a9889615c544e54d99583883",
+      "physicalPage": 493,
+      "printedPage": 491,
+      "subject": null,
+      "tokenCount": 29
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG103",
+      "lexicalHash": "7a4d03caa22028b48736707f1fc8febf532ebe042e7530da069e06dcc22f7173",
+      "physicalPage": 493,
+      "printedPage": 491,
+      "subject": null,
+      "tokenCount": 20
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG104",
+      "lexicalHash": "9e6ddd100b427b85ed5cde2c452de505b65db73e4b776ad84b9e36cc6ce8b4d3",
+      "physicalPage": 493,
+      "printedPage": 491,
+      "subject": null,
+      "tokenCount": 24
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG105",
+      "lexicalHash": "09c449c85e3e354b3b8f3fc3d93716845cc9bff076b83b9eff4bd7af3b8fd87e",
+      "physicalPage": 493,
+      "printedPage": 491,
+      "subject": null,
+      "tokenCount": 21
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG201",
+      "lexicalHash": "2ab33196f8493cefc718ec46855f428a9131ebcda7ff7ce10ea77cad2aef46d8",
+      "physicalPage": 494,
+      "printedPage": 492,
+      "subject": null,
+      "tokenCount": 26
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG202",
+      "lexicalHash": "94a0c69eecfedb2374b40a13314c977e615afdf3003979dff87841bc0af87809",
+      "physicalPage": 494,
+      "printedPage": 492,
+      "subject": null,
+      "tokenCount": 34
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG203",
+      "lexicalHash": "ba658d37803db2bc25442d385c48587accc092dab818b4434f8f875e844bc490",
+      "physicalPage": 494,
+      "printedPage": 492,
+      "subject": null,
+      "tokenCount": 22
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG204",
+      "lexicalHash": "4704f0f8551081b550e4e52fd5ca0ba46da7562e0f558a6b70c2652b3c017d14",
+      "physicalPage": 494,
+      "printedPage": 492,
+      "subject": null,
+      "tokenCount": 31
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG301",
+      "lexicalHash": "9c1565c7601b44ba9b3c00c234d0c26616aac503d03349d54fafcffad4c6ecc3",
+      "physicalPage": 495,
+      "printedPage": 493,
+      "subject": null,
+      "tokenCount": 29
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG302",
+      "lexicalHash": "f5409fe93fca8fef9e945814bf939f0ce81ab76db65181eb32f1b5e77ec264c9",
+      "physicalPage": 495,
+      "printedPage": 493,
+      "subject": null,
+      "tokenCount": 25
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG303",
+      "lexicalHash": "3c5e716ef24b2c22654c318ac307cbc95302751030cc5f76eef0da017401a7d4",
+      "physicalPage": 495,
+      "printedPage": 493,
+      "subject": null,
+      "tokenCount": 23
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG304",
+      "lexicalHash": "2bd1df55d30caccead00eafe919378bdce2ba96856ff378eaa5c72bd9d2ab0bd",
+      "physicalPage": 495,
+      "printedPage": 493,
+      "subject": null,
+      "tokenCount": 30
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG305",
+      "lexicalHash": "2d4d0819def2942dcd1a714ce948c8241ac4f61063cb18f7df8f531f897b6e01",
+      "physicalPage": 495,
+      "printedPage": 493,
+      "subject": null,
+      "tokenCount": 34
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG401",
+      "lexicalHash": "6f37caea3630dcbd2e3b87b309abd777f880496bcfe26583ddc9ec38f9690111",
+      "physicalPage": 496,
+      "printedPage": 494,
+      "subject": null,
+      "tokenCount": 26
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG402",
+      "lexicalHash": "51b8f3780e02ed332d6ef867520a54bda2dce874915df20512660c4ca4fe267d",
+      "physicalPage": 496,
+      "printedPage": 494,
+      "subject": null,
+      "tokenCount": 38
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG403",
+      "lexicalHash": "bae23a039dd5a23df3b9af328b251b355a4c8e9989bf7cb9a2cbf1702e631fe6",
+      "physicalPage": 496,
+      "printedPage": 494,
+      "subject": null,
+      "tokenCount": 26
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG501",
+      "lexicalHash": "f532d1cde28a4f9218d573abaf001d66c4e94326df6b5248c26139ed52c51936",
+      "physicalPage": 497,
+      "printedPage": 495,
+      "subject": null,
+      "tokenCount": 29
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG502",
+      "lexicalHash": "b9567805e195e0f95fffb183442529343f9ca6b579b226fce63b84f90e59034a",
+      "physicalPage": 497,
+      "printedPage": 495,
+      "subject": null,
+      "tokenCount": 28
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG503",
+      "lexicalHash": "cce3f4b9cb02c8e023ad3113d9f75da687a20f0bf6f99aa1ab7d77cc43ba31f4",
+      "physicalPage": 497,
+      "printedPage": 495,
+      "subject": null,
+      "tokenCount": 26
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG601",
+      "lexicalHash": "e270660de0d17ef34573903a6d457a5adea689eb1b9d21e08d2fafc6681e7911",
+      "physicalPage": 498,
+      "printedPage": 496,
+      "subject": null,
+      "tokenCount": 30
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG602",
+      "lexicalHash": "a2d0cf6c5335968cce31e2a4eed2778455ab1997576df89058944155e30b8226",
+      "physicalPage": 498,
+      "printedPage": 496,
+      "subject": null,
+      "tokenCount": 29
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG603",
+      "lexicalHash": "b1dec97ac03fdfcc9fe61525aa13bc4d61df0275dc0da9aaa4ebce4463ebe04f",
+      "physicalPage": 498,
+      "printedPage": 496,
+      "subject": null,
+      "tokenCount": 48
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG604",
+      "lexicalHash": "ad493a461b488354db5ff8e28013e6da1fb6812c5259083305d5604d162402a5",
+      "physicalPage": 498,
+      "printedPage": 496,
+      "subject": null,
+      "tokenCount": 23
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG701",
+      "lexicalHash": "85f3b15a3d12450c48faf6d417fdeba2e02eef244364127ab068af1d5026e8f8",
+      "physicalPage": 499,
+      "printedPage": 497,
+      "subject": null,
+      "tokenCount": 30
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG702",
+      "lexicalHash": "aae684a8e2f30bd2cab554a3472d69fd945ca8a39295c6db938b7d4a5e490fbe",
+      "physicalPage": 499,
+      "printedPage": 497,
+      "subject": null,
+      "tokenCount": 38
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG703",
+      "lexicalHash": "bd8e1c00d3d4190937302e5d337f2abcea2b7227800d9a9305c2df8b0d965ebb",
+      "physicalPage": 499,
+      "printedPage": 497,
+      "subject": null,
+      "tokenCount": 19
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LGG704",
+      "lexicalHash": "28c3edfbc18931627bc31b774d1ec82d2daf662fc6cd15e069b9c8294f149766",
+      "physicalPage": 499,
+      "printedPage": 497,
+      "subject": null,
+      "tokenCount": 29
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP01",
+      "lexicalHash": "8ac362e9f8ae5f7b8f63f5bc57f96302c214b8ffeb3e11df15047528c1baa882",
+      "physicalPage": 508,
+      "printedPage": 506,
+      "subject": "PORTUGUES",
+      "tokenCount": 61
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP02",
+      "lexicalHash": "8d60e3f2facdba55ec1c6aa85ae98a8825863091ace235304c9605777029b907",
+      "physicalPage": 508,
+      "printedPage": 506,
+      "subject": "PORTUGUES",
+      "tokenCount": 71
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP03",
+      "lexicalHash": "d900ec27b8bf3aa92865f03a4633c4b05437853756d690974e244fcfcf39c733",
+      "physicalPage": 508,
+      "printedPage": 506,
+      "subject": "PORTUGUES",
+      "tokenCount": 30
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP04",
+      "lexicalHash": "86ce12299c148748ed88ad8b0dbe2d38e1014ef7601d6e89b9c2c97c2d47bea0",
+      "physicalPage": 508,
+      "printedPage": 506,
+      "subject": "PORTUGUES",
+      "tokenCount": 30
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP05",
+      "lexicalHash": "7bcf1924e8ff6395b90c2289e8ac5b8d9eac83aae2b6f564c0608cfd310bcb44",
+      "physicalPage": 509,
+      "printedPage": 507,
+      "subject": "PORTUGUES",
+      "tokenCount": 47
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP06",
+      "lexicalHash": "b4ea9060a618dfbe76cd9a25694a79115c8295dfc330d8f6d603bca72b7a1726",
+      "physicalPage": 509,
+      "printedPage": 507,
+      "subject": "PORTUGUES",
+      "tokenCount": 41
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP07",
+      "lexicalHash": "291dcfa9e807c5aced047617e605d80bff2d2ce0ce5890a8292cb2c84eff066a",
+      "physicalPage": 509,
+      "printedPage": 507,
+      "subject": "PORTUGUES",
+      "tokenCount": 92
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP08",
+      "lexicalHash": "48ac7363b705b1da9af2ecf1b98ddd3158c45ec2b0606b4eb1519a1d919aa66a",
+      "physicalPage": 509,
+      "printedPage": 507,
+      "subject": "PORTUGUES",
+      "tokenCount": 69
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP09",
+      "lexicalHash": "2ae26714187bc293ffbd6c95a6ca834f7b8dc59c6c4da2240f9160f3285d79ef",
+      "physicalPage": 509,
+      "printedPage": 507,
+      "subject": "PORTUGUES",
+      "tokenCount": 47
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP10",
+      "lexicalHash": "e76f0ce21b1b5187b831e539c44e55ea8fbc2d6060bbbaf3e33de9b09e8354f9",
+      "physicalPage": 510,
+      "printedPage": 508,
+      "subject": "PORTUGUES",
+      "tokenCount": 72
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP11",
+      "lexicalHash": "a5e8140bacfc21661b830a44e70cc01ea47816753097a31e9838d694a43ee4fe",
+      "physicalPage": 510,
+      "printedPage": 508,
+      "subject": "PORTUGUES",
+      "tokenCount": 12
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP12",
+      "lexicalHash": "290f973bd9f7f8efcfa8cf729af5058a1495ff8f220fcc3b70ddf91cc2ce71a3",
+      "physicalPage": 510,
+      "printedPage": 508,
+      "subject": "PORTUGUES",
+      "tokenCount": 42
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP13",
+      "lexicalHash": "f8f2fafd7faadec1652fd0f698e41ae99f3b254748430c4f053c2bb6fa75e81d",
+      "physicalPage": 510,
+      "printedPage": 508,
+      "subject": "PORTUGUES",
+      "tokenCount": 53
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP14",
+      "lexicalHash": "9827032af68351f03918e42dbdee5bdf6bf1866a85dbd93ebac0f45864cb94f5",
+      "physicalPage": 510,
+      "printedPage": 508,
+      "subject": "PORTUGUES",
+      "tokenCount": 92
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP15",
+      "lexicalHash": "59f28e097217249d50f7a6f847c2b55072a4f31703a7040ed1daa48cade8aa84",
+      "physicalPage": 511,
+      "printedPage": 509,
+      "subject": "PORTUGUES",
+      "tokenCount": 108
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP16",
+      "lexicalHash": "5e9ae8c404712e68ee27e9a491f16f82bb43fdd18643205737f463cd20674604",
+      "physicalPage": 511,
+      "printedPage": 509,
+      "subject": "PORTUGUES",
+      "tokenCount": 66
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP17",
+      "lexicalHash": "b5a55a749b6af2b6e4618c83499be095dfd1d8a4016c811da92a843f8388c838",
+      "physicalPage": 511,
+      "printedPage": 509,
+      "subject": "PORTUGUES",
+      "tokenCount": 39
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP18",
+      "lexicalHash": "11eb91ca721460cd23f60b7e5016d92f45c9580b1c85f3f0b922a117e8f9a607",
+      "physicalPage": 511,
+      "printedPage": 509,
+      "subject": "PORTUGUES",
+      "tokenCount": 49
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP19",
+      "lexicalHash": "56a26be9e7e05198c078b40ad61c2a0f37dbccd412cf88e2e160b62cd6844a51",
+      "physicalPage": 513,
+      "printedPage": 511,
+      "subject": "PORTUGUES",
+      "tokenCount": 40
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP20",
+      "lexicalHash": "104335d47917013357b8f1a48548f8ff03387d77c3510c1e75b119859be7bcee",
+      "physicalPage": 513,
+      "printedPage": 511,
+      "subject": "PORTUGUES",
+      "tokenCount": 39
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP21",
+      "lexicalHash": "249dd7ad13f565c0bc0319230e6d99dff7faace96cc26e94b075b6b149539423",
+      "physicalPage": 513,
+      "printedPage": 511,
+      "subject": "PORTUGUES",
+      "tokenCount": 49
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP22",
+      "lexicalHash": "a236a9f67724f5040ee37984e4ae579a51ef1e351a61caf7d81fc0859fff400a",
+      "physicalPage": 513,
+      "printedPage": 511,
+      "subject": "PORTUGUES",
+      "tokenCount": 38
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP23",
+      "lexicalHash": "80a1d3213fdf57a72206a3e2e35ff522679762cfba48ace5a52081fe52b4bdd9",
+      "physicalPage": 516,
+      "printedPage": 514,
+      "subject": "PORTUGUES",
+      "tokenCount": 32
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP24",
+      "lexicalHash": "47e7610c0334d4abac20616cd02a27b39708dcfb745f705b2268b3cf1f412e1c",
+      "physicalPage": 516,
+      "printedPage": 514,
+      "subject": "PORTUGUES",
+      "tokenCount": 44
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP25",
+      "lexicalHash": "93c05f9b84f0eb2bc2527059b704246542ab0f8ef32502da849fa0a4ec333290",
+      "physicalPage": 516,
+      "printedPage": 514,
+      "subject": "PORTUGUES",
+      "tokenCount": 115
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP26",
+      "lexicalHash": "a4303e9272bc2ac439073ed9b8d017e787ca7bd33d225c2739f21a385f9d991b",
+      "physicalPage": 516,
+      "printedPage": 514,
+      "subject": "PORTUGUES",
+      "tokenCount": 52
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP27",
+      "lexicalHash": "debb460abd15f9f59de563c09dbbe7c7ca1d009f1061db0cb4b573b998527824",
+      "physicalPage": 516,
+      "printedPage": 514,
+      "subject": "PORTUGUES",
+      "tokenCount": 55
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP28",
+      "lexicalHash": "296ad1e5f6825ff0942bd444a783c2eafe45479c4ad72103d3987fdba7c46312",
+      "physicalPage": 519,
+      "printedPage": 517,
+      "subject": "PORTUGUES",
+      "tokenCount": 21
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP29",
+      "lexicalHash": "f7a7f65d32a3804fd6443b7df036176369bd796447d92b6e191751f917c375fa",
+      "physicalPage": 519,
+      "printedPage": 517,
+      "subject": "PORTUGUES",
+      "tokenCount": 28
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP30",
+      "lexicalHash": "01a4ea1b49d8259a01f3dcb963359cbfd22ef359da262d0314f0ca1b257d6b50",
+      "physicalPage": 519,
+      "printedPage": 517,
+      "subject": "PORTUGUES",
+      "tokenCount": 63
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP31",
+      "lexicalHash": "2e45cd8a5c6148d26b8806bb671fa241d17109546e18459192c48c03539284c4",
+      "physicalPage": 519,
+      "printedPage": 517,
+      "subject": "PORTUGUES",
+      "tokenCount": 36
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP32",
+      "lexicalHash": "2a66207cb7c38b32bc6b6301866f5895228050b3347a0f461fc2cfe81276ac5b",
+      "physicalPage": 519,
+      "printedPage": 517,
+      "subject": "PORTUGUES",
+      "tokenCount": 63
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP33",
+      "lexicalHash": "ad45f5f2be8cc81955b12588175b83cd0f7a4fffebfa430c6244319e85b9acac",
+      "physicalPage": 520,
+      "printedPage": 518,
+      "subject": "PORTUGUES",
+      "tokenCount": 31
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP34",
+      "lexicalHash": "fe00bfa9feb2e3f3355ca139d1864c26b633f888f46356c00206c2597f67d9fb",
+      "physicalPage": 520,
+      "printedPage": 518,
+      "subject": "PORTUGUES",
+      "tokenCount": 84
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP35",
+      "lexicalHash": "aff53139036500c9611c04bb3ce8ff1256b006441b0a8c61d064d90eda23605c",
+      "physicalPage": 520,
+      "printedPage": 518,
+      "subject": "PORTUGUES",
+      "tokenCount": 67
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP36",
+      "lexicalHash": "045faaee19d5f434b10ec98646fadce16ecc438eee98afcdd9eb2604308ac88d",
+      "physicalPage": 523,
+      "printedPage": 521,
+      "subject": "PORTUGUES",
+      "tokenCount": 54
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP37",
+      "lexicalHash": "62fc1cf2a9da4d403c99905e17a18012da98c9af8e519e38df2bbf1dee85a436",
+      "physicalPage": 523,
+      "printedPage": 521,
+      "subject": "PORTUGUES",
+      "tokenCount": 38
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP38",
+      "lexicalHash": "1b21ab9930e092eb8b487e4f320c594ec8d14e608c0178fd97c0fd250f257689",
+      "physicalPage": 523,
+      "printedPage": 521,
+      "subject": "PORTUGUES",
+      "tokenCount": 61
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP39",
+      "lexicalHash": "3bdabb94945faeef12c735842bf1b81bad7a3cb52200c59943f3acc8a227dd85",
+      "physicalPage": 523,
+      "printedPage": 521,
+      "subject": "PORTUGUES",
+      "tokenCount": 42
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP40",
+      "lexicalHash": "57f84844d1212b4badb540a755dfec217f59d1fd936539dbb0f232920717f97b",
+      "physicalPage": 523,
+      "printedPage": 521,
+      "subject": "PORTUGUES",
+      "tokenCount": 60
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP41",
+      "lexicalHash": "e7f2821c6a8d23811e0f57a55c1da01001015eb1d4e33d356f91fe6b7ae0dc84",
+      "physicalPage": 523,
+      "printedPage": 521,
+      "subject": "PORTUGUES",
+      "tokenCount": 56
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP42",
+      "lexicalHash": "3f528717c64923f3bf30b6b7a43809037bc3f36847d56f9651c1a8bd4b2b4c52",
+      "physicalPage": 524,
+      "printedPage": 522,
+      "subject": "PORTUGUES",
+      "tokenCount": 84
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP43",
+      "lexicalHash": "c07f29bca9a9aaa0b6751a6b71cf73f5fd6dcbc2b2532b8fd16822a8269c5450",
+      "physicalPage": 524,
+      "printedPage": 522,
+      "subject": "PORTUGUES",
+      "tokenCount": 31
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP44",
+      "lexicalHash": "0c8dbc8da38529b07d8f082350d05453903c51ae4a59edf6e7f9abba7fa9ee9f",
+      "physicalPage": 524,
+      "printedPage": 522,
+      "subject": "PORTUGUES",
+      "tokenCount": 86
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP45",
+      "lexicalHash": "415291b6ba643e52e1b22aa26233d246fafdb08ad473bc84cc5965141b4d874e",
+      "physicalPage": 524,
+      "printedPage": 522,
+      "subject": "PORTUGUES",
+      "tokenCount": 84
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP46",
+      "lexicalHash": "7c2db9afb383f2a44b872a3092ea08273bd4fcb356628f36c237441329b3966b",
+      "physicalPage": 527,
+      "printedPage": 525,
+      "subject": "PORTUGUES",
+      "tokenCount": 35
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP47",
+      "lexicalHash": "9bfb07e11cbe22088482f6faaf4a87cb4962686c442af92f254c1ef455817641",
+      "physicalPage": 527,
+      "printedPage": 525,
+      "subject": "PORTUGUES",
+      "tokenCount": 60
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP48",
+      "lexicalHash": "d66d3b545e9beb2770caf02e2b225021e0962fe83541b72bd5c0d61e04c5a9bf",
+      "physicalPage": 527,
+      "printedPage": 525,
+      "subject": "PORTUGUES",
+      "tokenCount": 44
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP49",
+      "lexicalHash": "62709cb4609eec0d88ca907099ede3ff4ea8aa47e810d779ce474f808c21b814",
+      "physicalPage": 527,
+      "printedPage": 525,
+      "subject": "PORTUGUES",
+      "tokenCount": 68
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP50",
+      "lexicalHash": "f9b94a0a2c9ebcc7570d9924005d9f223999e4d9583eb4d5f02ef9f4988fce0d",
+      "physicalPage": 527,
+      "printedPage": 525,
+      "subject": "PORTUGUES",
+      "tokenCount": 40
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP51",
+      "lexicalHash": "4d30bb610cb029b5093069792fd7c2a6177bd23caadc9147685a2daab0b9eb32",
+      "physicalPage": 527,
+      "printedPage": 525,
+      "subject": "PORTUGUES",
+      "tokenCount": 35
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP52",
+      "lexicalHash": "cbe734b27d1ddcefbc7859ceddc3209c0c5d7e767b2469b26c105c6693d1aa33",
+      "physicalPage": 528,
+      "printedPage": 526,
+      "subject": "PORTUGUES",
+      "tokenCount": 72
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP53",
+      "lexicalHash": "768454b414589ed081d8f5146db45188f697a4115b6444c2cfc989891b235d00",
+      "physicalPage": 528,
+      "printedPage": 526,
+      "subject": "PORTUGUES",
+      "tokenCount": 32
+    },
+    {
+      "area": "LINGUAGENS",
+      "code": "EM13LP54",
+      "lexicalHash": "86a62130cab0c629ed5da80065691ca8f19d65d504de5df071ba1a96ccf3f108",
+      "physicalPage": 528,
+      "printedPage": 526,
+      "subject": "PORTUGUES",
+      "tokenCount": 41
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT101",
+      "lexicalHash": "008ac02421877b5ed2f1636a3033fbb7823273b1368c8aa8cc024799ff9ebd52",
+      "physicalPage": 535,
+      "printedPage": 533,
+      "subject": null,
+      "tokenCount": 37
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT102",
+      "lexicalHash": "24aa7bcfaab1d35dc501b7e8c3ad9cb13c05e70baa5d9db86d33e73c08de9946",
+      "physicalPage": 535,
+      "printedPage": 533,
+      "subject": null,
+      "tokenCount": 36
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT103",
+      "lexicalHash": "3730e2d16c544b11226b842e84690178f582644c49ba1e60a8f43850c79f7e75",
+      "physicalPage": 535,
+      "printedPage": 533,
+      "subject": null,
+      "tokenCount": 44
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT104",
+      "lexicalHash": "446e1bb1382efd99869774a57499b133bb712b756d3d59e77905c928336790b4",
+      "physicalPage": 535,
+      "printedPage": 533,
+      "subject": null,
+      "tokenCount": 31
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT105",
+      "lexicalHash": "fc7761f87893c45068d15f50dc2c3ff8b0e35cc0e0d949146cc5a5f607d8184b",
+      "physicalPage": 535,
+      "printedPage": 533,
+      "subject": null,
+      "tokenCount": 35
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT106",
+      "lexicalHash": "e72eed5c58205761000332e1a753035245d609df53794d36d5c84355e4f5fab3",
+      "physicalPage": 535,
+      "printedPage": 533,
+      "subject": null,
+      "tokenCount": 34
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT201",
+      "lexicalHash": "8775577737075fc34cdb9a9c096e5b08492ec4bebb4570d76d362a1c183e590b",
+      "physicalPage": 536,
+      "printedPage": 534,
+      "subject": null,
+      "tokenCount": 29
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT202",
+      "lexicalHash": "e246cdd9ca5f0ebb8b05b5d24075dba35a1f14d82665089538e29f36dcf46aca",
+      "physicalPage": 536,
+      "printedPage": 534,
+      "subject": null,
+      "tokenCount": 47
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT203",
+      "lexicalHash": "c65bd2da8848d65539eafb9ebb52ab8960ab1eec2df9bdabe7744d10c0a8cbf6",
+      "physicalPage": 536,
+      "printedPage": 534,
+      "subject": null,
+      "tokenCount": 41
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT301",
+      "lexicalHash": "7e5df06880ed0c6321d634785b73da7016fd21d3f8f1681cab7e9d5e21f08bea",
+      "physicalPage": 538,
+      "printedPage": 536,
+      "subject": null,
+      "tokenCount": 31
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT302",
+      "lexicalHash": "ae90a8605d57b57f69798e1e4e16d7986f45c56cc2fc7b43c4d4e421b308d6b4",
+      "physicalPage": 538,
+      "printedPage": 536,
+      "subject": null,
+      "tokenCount": 24
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT303",
+      "lexicalHash": "d4bc912be7971416a85aa2678d9c8edb7406dc75ae07df279b1ac337bc85458d",
+      "physicalPage": 538,
+      "printedPage": 536,
+      "subject": null,
+      "tokenCount": 32
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT304",
+      "lexicalHash": "dabbd11e4dc12436ca4d276a9dd16b921e93bd401f6232c67bf3a5cb164020ae",
+      "physicalPage": 538,
+      "printedPage": 536,
+      "subject": null,
+      "tokenCount": 28
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT305",
+      "lexicalHash": "b35e5a69c2f1ace83119e35043c6635639e1f89f42e4e3aa146e34b4394fa770",
+      "physicalPage": 538,
+      "printedPage": 536,
+      "subject": null,
+      "tokenCount": 32
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT306",
+      "lexicalHash": "592c1615cbd2bc0b3840c753df92e0db51a9da918f2f85106a4e84589e1d16dd",
+      "physicalPage": 538,
+      "printedPage": 536,
+      "subject": null,
+      "tokenCount": 43
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT307",
+      "lexicalHash": "5fcd6cafc9a73d6567e2835ae49bc49e4a973cc02b7a2fdeca36f52a7cc256df",
+      "physicalPage": 538,
+      "printedPage": 536,
+      "subject": null,
+      "tokenCount": 46
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT308",
+      "lexicalHash": "9e00d21e2a0821ca050a6d1b024cdf462118b1984daf33c2b65bead230114689",
+      "physicalPage": 538,
+      "printedPage": 536,
+      "subject": null,
+      "tokenCount": 30
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT309",
+      "lexicalHash": "ae1d79bedcfdcdc6501e750900ac3e6d217fb08b57432ccbb9a639ac36be0bb8",
+      "physicalPage": 539,
+      "printedPage": 537,
+      "subject": null,
+      "tokenCount": 50
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT310",
+      "lexicalHash": "ab24269f9f5cf4d74d33a5a33024873c81da72db9b6e7c9c4a67d08e1b56f0c2",
+      "physicalPage": 539,
+      "printedPage": 537,
+      "subject": null,
+      "tokenCount": 29
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT311",
+      "lexicalHash": "29c886cdb581f59ccd7d3bb27176a2feea97c99d32a6937121b647d1903dcbce",
+      "physicalPage": 539,
+      "printedPage": 537,
+      "subject": null,
+      "tokenCount": 24
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT312",
+      "lexicalHash": "d9cd1e9cd961beb37e078b84796a22e50f7e81ea7c4e9ad75f956f87b30088a6",
+      "physicalPage": 539,
+      "printedPage": 537,
+      "subject": null,
+      "tokenCount": 16
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT313",
+      "lexicalHash": "9cbf75d4382ea5beedb7ec8ed381303ef782d453d9ba4027cb2df51560e66b8f",
+      "physicalPage": 539,
+      "printedPage": 537,
+      "subject": null,
+      "tokenCount": 29
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT314",
+      "lexicalHash": "b49b8c55d43c4547665fba12fed082febf5396543654658de54a3521f0573e22",
+      "physicalPage": 539,
+      "printedPage": 537,
+      "subject": null,
+      "tokenCount": 21
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT315",
+      "lexicalHash": "0abdc633f4ba2fe8b01f276f06b16168da837c08b8a634b83bd20c17be6def6c",
+      "physicalPage": 539,
+      "printedPage": 537,
+      "subject": null,
+      "tokenCount": 16
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT316",
+      "lexicalHash": "aa649d034bb006b1a5e3611f2eccabb64a3417f14e502bc663485c7876797a51",
+      "physicalPage": 539,
+      "printedPage": 537,
+      "subject": null,
+      "tokenCount": 30
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT401",
+      "lexicalHash": "9aca8c2011a91deecf25b2ad8f142d536769ae9d990928f754aface6d266f982",
+      "physicalPage": 541,
+      "printedPage": 539,
+      "subject": null,
+      "tokenCount": 36
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT402",
+      "lexicalHash": "2c2b866427da4f07a6033ea81fbda5630438218b72c47fea4695511c94409f06",
+      "physicalPage": 541,
+      "printedPage": 539,
+      "subject": null,
+      "tokenCount": 44
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT403",
+      "lexicalHash": "c23a9826978c8811b0a9090762fd2ed3221235c6899a92d0533f8faffd5f13f0",
+      "physicalPage": 541,
+      "printedPage": 539,
+      "subject": null,
+      "tokenCount": 37
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT404",
+      "lexicalHash": "06169aade85adf4b5ee9b264b5dffe498dcef69e6847a60b7d77e8b2a0338e13",
+      "physicalPage": 541,
+      "printedPage": 539,
+      "subject": null,
+      "tokenCount": 48
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT405",
+      "lexicalHash": "5af315e428fc1752f327389943fb95ea21f5d8ee57ddb2c1e1e16abeb354c700",
+      "physicalPage": 541,
+      "printedPage": 539,
+      "subject": null,
+      "tokenCount": 19
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT406",
+      "lexicalHash": "1da59dd4e0749a536659a171032ae3bb397523372ea809cfaf24893665184107",
+      "physicalPage": 541,
+      "printedPage": 539,
+      "subject": null,
+      "tokenCount": 32
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT407",
+      "lexicalHash": "6a26cecc7e4562e75ff7b5fe4b19f865ad9c907a9378302bd801b00286360be0",
+      "physicalPage": 541,
+      "printedPage": 539,
+      "subject": null,
+      "tokenCount": 32
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT501",
+      "lexicalHash": "083cf3b56a05a9598dabf807c0a4c4ef6f8fdb197d6e887bdd595f7138798dac",
+      "physicalPage": 543,
+      "printedPage": 541,
+      "subject": null,
+      "tokenCount": 36
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT502",
+      "lexicalHash": "de1b85584d3d078deac7459f44e96e335ba2cf97323562e4a80c8261d43e6f68",
+      "physicalPage": 543,
+      "printedPage": 541,
+      "subject": null,
+      "tokenCount": 40
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT503",
+      "lexicalHash": "aff95df72bca25b33ca3ae165c3e334700d21f6c5a295166d9f4d29d511dfc09",
+      "physicalPage": 543,
+      "printedPage": 541,
+      "subject": null,
+      "tokenCount": 25
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT504",
+      "lexicalHash": "a9ef7937cb20d14d6b21e93ef1c05facefe70552eb9966a450a704d061505e47",
+      "physicalPage": 543,
+      "printedPage": 541,
+      "subject": null,
+      "tokenCount": 32
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT505",
+      "lexicalHash": "56fb2992dcd1da37902d83c044212d2d5b6a6b4cf1aa3f7c8336dd9aff0eaf0d",
+      "physicalPage": 543,
+      "printedPage": 541,
+      "subject": null,
+      "tokenCount": 34
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT506",
+      "lexicalHash": "60c6267c45b973efb32cfc64ddc2b77c66f1576f1f6039c368a8cea94eed5ee0",
+      "physicalPage": 543,
+      "printedPage": 541,
+      "subject": null,
+      "tokenCount": 26
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT507",
+      "lexicalHash": "5773c2583bfda8e2c3eabccc40f523d778038955351d4af5ddfa540d6f354993",
+      "physicalPage": 543,
+      "printedPage": 541,
+      "subject": null,
+      "tokenCount": 24
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT508",
+      "lexicalHash": "6fb755036fd67e51a0ee7aecd4f7e71ed853a2a9d3ef9427bcfa2ef188dac2c4",
+      "physicalPage": 543,
+      "printedPage": 541,
+      "subject": null,
+      "tokenCount": 24
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT509",
+      "lexicalHash": "9472dc213b170d059f55dfd218daf63c8f97dcf81ac1ffbcfcce696dc6e205c7",
+      "physicalPage": 543,
+      "printedPage": 541,
+      "subject": null,
+      "tokenCount": 27
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT510",
+      "lexicalHash": "53dc7a9c8dc1e9ebbab3c8883aed88dfbc50128cdc3984c233df4fff3b4dbf4a",
+      "physicalPage": 543,
+      "printedPage": 541,
+      "subject": null,
+      "tokenCount": 34
+    },
+    {
+      "area": "MATEMATICA",
+      "code": "EM13MAT511",
+      "lexicalHash": "59471fab9f4930cebdd9459da39f29a33f721a627f406e45596d967b1c6477bc",
+      "physicalPage": 543,
+      "printedPage": 541,
+      "subject": null,
+      "tokenCount": 25
+    }
+  ],
+  "source": {
+    "canonicalUrl": "https://basenacionalcomum.mec.gov.br/images/BNCC_EI_EF_110518_versaofinal_site.pdf",
+    "pageCount": 600,
+    "publisher": "Ministério da Educação (MEC)",
+    "sha256": "ad623d7b33986a4e87e1441a4e675064cd30db3650b86a75caefa476e802272b",
+    "title": "Base Nacional Comum Curricular - Ensino Médio"
+  },
+  "verification": {
+    "expectedSkillCount": 183,
+    "extractionEngine": "PyMuPDF layout-aware",
+    "normalization": "NFKC + soft-hyphen removal + line-wrap dehyphenation + lowercase alphanumeric lexical tokens; Portuguese skill column isolated geometrically from the Competências específicas column",
+    "purpose": "Independent textual fingerprint manifest"
+  }
+}

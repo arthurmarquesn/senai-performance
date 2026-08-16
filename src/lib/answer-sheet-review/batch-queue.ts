@@ -4,10 +4,12 @@ import {
   AnswerSheetStatus,
   AnswerSheetScanStatus,
   DetectedAnswerStatus,
+  type Alternative,
   type ScanBatchStatus,
 } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { isReviewRecommended } from "@/lib/answer-sheet-effective-answer";
 
 export type ReviewQueueFilter =
   | "all"
@@ -83,6 +85,8 @@ const problemStatuses = new Set<AnswerSheetScanStatus>([
 function countByStatus(
   answers: Array<{
     detectionStatus: DetectedAnswerStatus;
+    detectedAnswer: Alternative | null;
+    finalAnswer: Alternative | null;
     reviewed: boolean;
   }>,
   status: DetectedAnswerStatus,
@@ -250,6 +254,8 @@ export async function getAnswerSheetBatchReviewQueue({
           answers: {
             select: {
               detectionStatus: true,
+              detectedAnswer: true,
+              finalAnswer: true,
               reviewed: true,
             },
           },
@@ -267,6 +273,7 @@ export async function getAnswerSheetBatchReviewQueue({
     const hasNormalizedImage = Boolean(scan.normalizedImageKey);
     const totalAnswers = scan.answers.length;
     const reviewed = scan.answers.filter((answer) => answer.reviewed).length;
+    const pending = scan.answers.filter(isReviewRecommended).length;
     const problem =
       problemStatuses.has(scan.status) || !hasAnswerSheet || !hasNormalizedImage
         ? problemForScan({
@@ -307,7 +314,7 @@ export async function getAnswerSheetBatchReviewQueue({
         false
       ),
       reviewed,
-      pending: Math.max(totalAnswers - reviewed, 0),
+      pending,
       totalAnswers,
       problem,
     };
@@ -347,8 +354,6 @@ export async function getAnswerSheetBatchReviewQueue({
     ).length,
     reviewRequiredPages:
       groups.attention.length +
-      groups.blank.length +
-      groups.partial.length +
       groups.problems.length,
     confirmedPages: groups.confirmed.length,
     failedPages: rows.filter((row) => row.status === AnswerSheetScanStatus.FAILED)
@@ -402,9 +407,7 @@ export async function getNextReviewQueueTarget({
   return (
     [
       ...queue.groups.attention,
-      ...queue.groups.blank,
       ...queue.groups.partial,
-      ...queue.groups.waiting,
     ].find((row) => row.scanId !== scanId) ?? null
   );
 }

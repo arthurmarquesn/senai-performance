@@ -1,7 +1,10 @@
 "use server";
 
+import { Alternative } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+
+const alternatives = new Set<string>(Object.values(Alternative));
 
 export async function saveStudentAnswer(formData: FormData) {
   const examId = formData.get("examId") as string;
@@ -9,7 +12,10 @@ export async function saveStudentAnswer(formData: FormData) {
   const question = Number(formData.get("question"));
   const answerValue = formData.get("answer") as string;
 
-  const answer = answerValue ? answerValue : null;
+  const answer =
+    answerValue && alternatives.has(answerValue)
+      ? Alternative[answerValue as keyof typeof Alternative]
+      : null;
 
   if (!examId || !studentId || !question) {
     throw new Error("Dados inválidos.");
@@ -37,12 +43,12 @@ export async function saveStudentAnswer(formData: FormData) {
       },
     },
     update: {
-      answer: answer as any,
+      answer,
     },
     create: {
       examResultId: result.id,
       question,
-      answer: answer as any,
+      answer,
     },
   });
 

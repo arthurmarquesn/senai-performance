@@ -1,6 +1,9 @@
 import "server-only";
 
-import { AnswerSheetStatus, ScanBatchStatus } from "@prisma/client";
+import {
+  AnswerSheetScanStatus,
+  AnswerSheetStatus,
+} from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import {
@@ -62,6 +65,12 @@ function classifyCorrectionError(message: string): BatchScanCorrectionKind {
 
   return "FAILED";
 }
+
+const correctionCandidateStatuses = new Set<AnswerSheetScanStatus>([
+  AnswerSheetScanStatus.PROCESSED,
+  AnswerSheetScanStatus.REVIEW_REQUIRED,
+  AnswerSheetScanStatus.CONFIRMED,
+]);
 
 async function loadBatchForCorrection({
   examId,
@@ -147,12 +156,6 @@ export async function correctAnswerSheetScanBatch({
     fail("Lote de leitura nao encontrado para este simulado.");
   }
 
-  if (batch.status !== ScanBatchStatus.CONFIRMED) {
-    fail(
-      `O lote esta com status ${batch.status}. Apenas lotes CONFIRMED podem ser corrigidos.`
-    );
-  }
-
   const exam = batch.examApplication.exam;
 
   try {
@@ -221,7 +224,12 @@ export async function correctAnswerSheetScanBatch({
     batchId: batch.id,
     examId,
     totalScans: batch.scans.length,
-    eligible: batch.scans.length,
+    eligible: batch.scans.filter(
+      (scan) =>
+        Boolean(scan.answerSheet) &&
+        Boolean(scan.normalizedImageKey) &&
+        correctionCandidateStatuses.has(scan.status)
+    ).length,
     corrected,
     alreadyCorrected,
     protectedExistingResult,

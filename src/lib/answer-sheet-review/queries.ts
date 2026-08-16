@@ -9,6 +9,7 @@ import {
 } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { isReviewRecommended } from "@/lib/answer-sheet-effective-answer";
 
 export type ReviewAnswer = {
   id: string;
@@ -108,6 +109,7 @@ export async function getAnswerSheetScanReview({
     (answer) => answer.detectionStatus === DetectedAnswerStatus.UNCERTAIN
   ).length;
   const reviewed = answers.filter((answer) => answer.reviewed).length;
+  const pending = answers.filter(isReviewRecommended).length;
   const exam = scan.answerSheet.examApplication.exam;
 
   return {
@@ -133,7 +135,7 @@ export async function getAnswerSheetScanReview({
       multiple,
       uncertain,
       reviewed,
-      pending: answers.length - reviewed,
+      pending,
     },
     answers,
   };

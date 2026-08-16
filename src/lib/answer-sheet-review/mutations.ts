@@ -3,19 +3,18 @@ import "server-only";
 import {
   Alternative,
   AnswerSheetScanStatus,
-  DetectedAnswerStatus,
   ScanBatchStatus,
   type Prisma,
 } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
-
-const CURRENTLY_VALIDATED_TOTAL_QUESTIONS = 60;
+import { isReviewRecommended } from "@/lib/answer-sheet-effective-answer";
+import { assertSupportedOpticalTotalQuestions } from "@/lib/answer-sheet-total-questions";
 
 export class IncompleteScanReviewError extends Error {
   constructor(public readonly pendingCount: number) {
     super(
-      `Ainda faltam ${pendingCount} questao(oes) para concluir a revisao da folha.`
+      `Ha ${pendingCount} questao(oes) com revisao recomendada nesta folha.`
     );
   }
 }
@@ -62,12 +61,9 @@ async function requireScanForExam(
     throw new Error("Folha digitalizada nao encontrada para este simulado.");
   }
 
-  if (
-    scan.answerSheet.examApplication.exam.totalQuestions !==
-    CURRENTLY_VALIDATED_TOTAL_QUESTIONS
-  ) {
-    throw new Error("A revisao atual esta validada apenas para 60 questoes.");
-  }
+  assertSupportedOpticalTotalQuestions(
+    scan.answerSheet.examApplication.exam.totalQuestions
+  );
 
   return {
     id: scan.id,
@@ -87,6 +83,14 @@ async function updateBatchReviewCounters(
     select: {
       answerSheetId: true,
       status: true,
+      answers: {
+        select: {
+          reviewed: true,
+          finalAnswer: true,
+          detectionStatus: true,
+          detectedAnswer: true,
+        },
+      },
     },
   });
   const identifiedPages = scans.filter((scan) => scan.answerSheetId).length;
@@ -95,9 +99,9 @@ async function updateBatchReviewCounters(
   ).length;
   const reviewRequiredPages = scans.filter(
     (scan) =>
-      scan.status === AnswerSheetScanStatus.REVIEW_REQUIRED ||
       scan.status === AnswerSheetScanStatus.DUPLICATE ||
-      scan.status === AnswerSheetScanStatus.FAILED
+      scan.status === AnswerSheetScanStatus.FAILED ||
+      scan.answers.some(isReviewRecommended)
   ).length;
 
   await tx.answerSheetScanBatch.update({
@@ -116,62 +120,6 @@ async function updateBatchReviewCounters(
   });
 }
 
-export async function confirmClearDetectedAnswers({
-  examId,
-  scanId,
-}: {
-  examId: string;
-  scanId: string;
-}) {
-  return prisma.$transaction(async (tx) => {
-    const scan = await requireScanForExam(tx, {
-      examId,
-      scanId,
-    });
-    const answers = await tx.detectedAnswer.findMany({
-      where: {
-        answerSheetScanId: scan.id,
-        detectionStatus: DetectedAnswerStatus.DETECTED,
-        reviewed: false,
-      },
-      select: {
-        id: true,
-        detectedAnswer: true,
-      },
-    });
-    const now = new Date();
-
-    for (const answer of answers) {
-      if (!answer.detectedAnswer) {
-        throw new Error("Leitura DETECTED sem alternativa automatica.");
-      }
-
-      await tx.detectedAnswer.update({
-        where: {
-          id: answer.id,
-        },
-        data: {
-          finalAnswer: answer.detectedAnswer,
-          reviewed: true,
-          reviewedAt: now,
-        },
-      });
-    }
-
-    const pending = await tx.detectedAnswer.count({
-      where: {
-        answerSheetScanId: scan.id,
-        reviewed: false,
-      },
-    });
-
-    return {
-      updated: answers.length,
-      pending,
-    };
-  });
-}
-
 export async function reviewAnswerQuestion({
   examId,
   scanId,
@@ -183,7 +131,7 @@ export async function reviewAnswerQuestion({
   question: number;
   finalAnswer: Alternative | null;
 }) {
-  if (!Number.isInteger(question) || question < 1 || question > 60) {
+  if (!Number.isInteger(question) || question < 1) {
     throw new Error("Questao invalida.");
   }
 
@@ -192,6 +140,11 @@ export async function reviewAnswerQuestion({
       examId,
       scanId,
     });
+
+    if (question > scan.totalQuestions) {
+      throw new Error("Questao invalida.");
+    }
+
     const answer = await tx.detectedAnswer.findUnique({
       where: {
         answerSheetScanId_question: {
@@ -207,6 +160,7 @@ export async function reviewAnswerQuestion({
         fillD: true,
         fillE: true,
         detectedAnswer: true,
+        detectionStatus: true,
       },
     });
 
@@ -235,6 +189,7 @@ export async function reviewAnswerQuestion({
         fillD: answer.fillD,
         fillE: answer.fillE,
         detectedAnswer: answer.detectedAnswer,
+        detectionStatus: answer.detectionStatus,
       },
     };
   });
@@ -252,28 +207,23 @@ export async function completeAnswerSheetScanReview({
       examId,
       scanId,
     });
-    const [totalAnswers, pending] = await Promise.all([
-      tx.detectedAnswer.count({
-        where: {
-          answerSheetScanId: scan.id,
-        },
-      }),
-      tx.detectedAnswer.count({
-        where: {
-          answerSheetScanId: scan.id,
-          reviewed: false,
-        },
-      }),
-    ]);
+    const answers = await tx.detectedAnswer.findMany({
+      where: {
+        answerSheetScanId: scan.id,
+      },
+      select: {
+        reviewed: true,
+        finalAnswer: true,
+        detectionStatus: true,
+        detectedAnswer: true,
+      },
+    });
+    const totalAnswers = answers.length;
 
     if (totalAnswers !== scan.totalQuestions) {
       throw new Error(
         `A folha possui ${totalAnswers} resposta(s) detectada(s), mas o esperado e ${scan.totalQuestions}.`
       );
-    }
-
-    if (pending > 0) {
-      throw new IncompleteScanReviewError(pending);
     }
 
     await tx.answerSheetScan.update({

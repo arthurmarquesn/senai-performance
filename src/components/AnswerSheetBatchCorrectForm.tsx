@@ -54,7 +54,7 @@ export function AnswerSheetBatchCorrectForm({
       onSubmit={(event) => {
         if (
           !window.confirm(
-            "Todas as respostas deste lote ja foram confirmadas.\n\nA correcao criara os resultados oficiais dos alunos com base no gabarito cadastrado.\n\nDeseja continuar?"
+            "A correcao criara os resultados oficiais usando a resposta efetiva de cada questao e o gabarito cadastrado.\n\nDeseja continuar?"
           )
         ) {
           event.preventDefault();
@@ -76,7 +76,7 @@ export function AnswerSheetBatchCorrectForm({
 
       {!canCorrect && (
         <p className="text-xs font-medium text-amber-700">
-          A correcao em lote exige leitura do lote CONFIRMED.
+          A correcao em lote exige ao menos uma folha processada.
         </p>
       )}
 

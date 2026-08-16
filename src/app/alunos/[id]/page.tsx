@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { AppLayout } from "@/components/AppLayout";
 import { StudentCharts } from "@/components/StudentCharts";
 import { EssayStudentCharts } from "@/components/redacoes/EssayStudentCharts";
@@ -352,59 +353,64 @@ export default async function AlunoPage({
 
   return (
     <AppLayout>
+      <AppBreadcrumb
+        items={[
+          {
+            label: "Alunos",
+            href: "/alunos",
+          },
+          {
+            label: aluno.name,
+          },
+        ]}
+      />
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-zinc-900">{aluno.name}</h1>
+          <h1 className="text-3xl font-semibold text-zinc-900">{aluno.name}</h1>
 
           <p className="mt-2 text-sm text-zinc-500">
             {aluno.classRoom.name} • Nº {aluno.number ?? "-"}
           </p>
 
-         <Link
-  href={`/alunos/${aluno.id}/leituras`}
-  className="rounded-xl border border-zinc-300 px-5 py-3 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100"
->
-  Recomendações de leitura
-</Link>
         </div>
 
         <Link
           href={`/alunos/${aluno.id}/relatorio`}
-          className="rounded-xl bg-red-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-red-700"
+          className="performance-primary-action rounded-lg px-5 py-3 text-sm font-semibold text-white"
         >
           Gerar PDF
         </Link>
       </div>
 
       <section className="mb-8 grid gap-6 md:grid-cols-4">
-        <div className="rounded-2xl bg-white p-6 shadow-sm">
+        <div className="performance-panel p-5">
           <p className="text-sm text-zinc-500">Média geral</p>
 
-          <p className="mt-2 text-3xl font-bold text-red-600">
+          <p className="mt-2 text-3xl font-semibold text-red-600">
             {mediaGeral}%
           </p>
         </div>
 
-        <div className="rounded-2xl bg-white p-6 shadow-sm">
+        <div className="performance-panel p-5">
           <p className="text-sm text-zinc-500">Simulados feitos</p>
 
-          <p className="mt-2 text-3xl font-bold text-zinc-900">
+          <p className="mt-2 text-3xl font-semibold text-zinc-900">
             {historico.length}
           </p>
         </div>
 
-        <div className="rounded-2xl bg-white p-6 shadow-sm">
+        <div className="performance-panel p-5">
           <p className="text-sm text-zinc-500">Melhor desempenho</p>
 
-          <p className="mt-2 text-3xl font-bold text-zinc-900">
+          <p className="mt-2 text-3xl font-semibold text-zinc-900">
             {melhorDesempenho}%
           </p>
         </div>
 
-        <div className="rounded-2xl bg-white p-6 shadow-sm">
+        <div className="performance-panel p-5">
           <p className="text-sm text-zinc-500">Turma</p>
 
-          <p className="mt-2 text-3xl font-bold text-zinc-900">
+          <p className="mt-2 text-3xl font-semibold text-zinc-900">
             {aluno.classRoom.name}
           </p>
         </div>
@@ -418,7 +424,7 @@ export default async function AlunoPage({
         />
       </section>
 
-      <section className="mb-8 performance-card rounded-[28px] border p-6">
+      <section className="mb-8 performance-card border p-5">
         <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="text-xl font-bold text-zinc-900">Redações</h2>
@@ -452,7 +458,7 @@ export default async function AlunoPage({
               {essayCorrections.map((redacao) => (
                 <div
                   key={redacao.id}
-                  className="rounded-2xl border border-zinc-200 p-5"
+                  className="rounded-lg border border-zinc-200 bg-white p-5"
                 >
                   <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div>
@@ -467,12 +473,12 @@ export default async function AlunoPage({
                       </p>
                     </div>
 
-                    <div className="rounded-2xl bg-red-50 px-5 py-4 text-center">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-red-700">
+                    <div className="rounded-lg bg-red-50 px-5 py-4 text-center">
+                      <p className="text-xs font-semibold uppercase text-red-700">
                         Nota ENEM
                       </p>
 
-                      <p className="mt-1 text-3xl font-bold text-red-600">
+                      <p className="mt-1 text-3xl font-semibold text-red-600">
                         {redacao.totalScore}
                       </p>
                     </div>
@@ -534,7 +540,7 @@ export default async function AlunoPage({
         )}
       </section>
 
-      <section className="rounded-2xl bg-white p-6 shadow-sm">
+      <section className="performance-panel p-5">
         <h2 className="mb-4 text-xl font-semibold text-zinc-900">
           Histórico de simulados
         </h2>
@@ -563,7 +569,7 @@ export default async function AlunoPage({
 
                   <Link
                     href={`/simulados/${item.examId}/resultados`}
-                    className="rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700"
+                    className="performance-secondary-action rounded-lg px-4 py-2 text-sm font-semibold"
                   >
                     Ver simulado
                   </Link>

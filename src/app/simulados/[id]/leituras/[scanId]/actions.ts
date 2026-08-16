@@ -6,7 +6,6 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import {
   completeAnswerSheetScanReview,
-  confirmClearDetectedAnswers,
   IncompleteScanReviewError,
   reviewAnswerQuestion,
 } from "@/lib/answer-sheet-review/mutations";
@@ -21,15 +20,6 @@ const blankValue = "__BLANK__";
 export type ReviewQuestionState = {
   status: "idle" | "success" | "error";
   message?: string;
-};
-
-export type ConfirmClearReadingsState = {
-  status: "idle" | "success" | "error";
-  message?: string;
-  summary?: {
-    updated: number;
-    pending: number;
-  };
 };
 
 export type CompleteScanReviewState = {
@@ -107,8 +97,6 @@ export async function reviewQuestionAction(
       finalAnswer,
     });
 
-    revalidatePath(`/simulados/${examId}/leituras/${scanId}`);
-
     return {
       status: "success",
       message:
@@ -121,46 +109,6 @@ export async function reviewQuestionAction(
       status: "error",
       message:
         error instanceof Error ? error.message : "Nao foi possivel revisar a questao.",
-    };
-  }
-}
-
-export async function confirmClearReadingsAction(
-  _previousState: ConfirmClearReadingsState,
-  formData: FormData
-): Promise<ConfirmClearReadingsState> {
-  try {
-    await requireUser();
-
-    const examId = getRequiredString(formData, "examId");
-    const scanId = getRequiredString(formData, "scanId");
-
-    if (!examId || !scanId) {
-      return {
-        status: "error",
-        message: "Folha invalida.",
-      };
-    }
-
-    const summary = await confirmClearDetectedAnswers({
-      examId,
-      scanId,
-    });
-
-    revalidatePath(`/simulados/${examId}/leituras/${scanId}`);
-
-    return {
-      status: "success",
-      message: `${summary.updated} leitura(s) clara(s) confirmada(s).`,
-      summary,
-    };
-  } catch (error) {
-    return {
-      status: "error",
-      message:
-        error instanceof Error
-          ? error.message
-          : "Nao foi possivel confirmar leituras claras.",
     };
   }
 }
@@ -192,7 +140,7 @@ export async function completeScanReviewAction(
 
     return {
       status: "success",
-      message: "Revisao da folha concluida.",
+      message: "Leitura da folha concluida.",
       summary,
     };
   } catch (error) {

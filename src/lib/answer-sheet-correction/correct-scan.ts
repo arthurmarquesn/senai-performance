@@ -9,6 +9,10 @@ import {
 } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import {
+  resolveEffectiveDetectedAnswer,
+  type EffectiveAnswerInput,
+} from "@/lib/answer-sheet-effective-answer";
 
 export class AnswerSheetCorrectionError extends Error {
   constructor(message: string) {
@@ -31,8 +35,8 @@ export type CorrectConfirmedAnswerSheetScanSummary = {
   alreadyCorrected: boolean;
   answerSheetStatus: "CORRECTED";
   answerSheetCorrectedAt: Date | null;
-  scanStatus: "CONFIRMED";
-  batchStatus: "CONFIRMED";
+  scanStatus: AnswerSheetScanStatus;
+  batchStatus: ScanBatchStatus;
 };
 
 type LoadedScan = NonNullable<Awaited<ReturnType<typeof loadScanForCorrection>>>;
@@ -48,6 +52,12 @@ type FinalAnswer = {
 function fail(message: string): never {
   throw new AnswerSheetCorrectionError(message);
 }
+
+const correctableScanStatuses = new Set<AnswerSheetScanStatus>([
+  AnswerSheetScanStatus.PROCESSED,
+  AnswerSheetScanStatus.REVIEW_REQUIRED,
+  AnswerSheetScanStatus.CONFIRMED,
+]);
 
 export function validateCompleteAnswerKey<TAnswerKey extends { question: number }>({
   totalQuestions,
@@ -125,16 +135,18 @@ function assertScanReady(scan: LoadedScan | null, examId: string): asserts scan 
     fail("Folha digitalizada nao encontrada.");
   }
 
-  if (scan.status !== AnswerSheetScanStatus.CONFIRMED) {
-    fail(`A folha esta com status ${scan.status}. Apenas folhas CONFIRMED podem ser corrigidas.`);
-  }
-
-  if (!scan.confirmedAt) {
-    fail("A folha esta CONFIRMED, mas nao possui confirmedAt.");
+  if (!correctableScanStatuses.has(scan.status)) {
+    fail(
+      `A folha esta com status ${scan.status}. Apenas folhas processadas podem ser corrigidas.`
+    );
   }
 
   if (!scan.answerSheetId || !scan.answerSheet) {
     fail("A folha digitalizada nao possui AnswerSheet associado.");
+  }
+
+  if (!scan.normalizedImageKey) {
+    fail("A folha digitalizada nao possui imagem normalizada.");
   }
 
   const answerSheetApplicationId = scan.answerSheet.examApplicationId;
@@ -149,10 +161,6 @@ function assertScanReady(scan: LoadedScan | null, examId: string): asserts scan 
 
   if (scan.scanBatch.examApplication.examId !== examId) {
     fail("O lote da digitalizacao nao pertence ao simulado esperado.");
-  }
-
-  if (scan.scanBatch.status !== ScanBatchStatus.CONFIRMED) {
-    fail(`O lote esta com status ${scan.scanBatch.status}. Apenas lotes CONFIRMED podem gerar correcao oficial.`);
   }
 }
 
@@ -184,9 +192,7 @@ function getFinalAnswers(scan: ReadyScan): FinalAnswer[] {
       fail(`A folha nao possui resposta detectada para a questao ${question}.`);
     }
 
-    if (!answer.reviewed) {
-      fail(`A questao ${question} ainda nao foi revisada.`);
-    }
+    resolveEffectiveDetectedAnswer(answer satisfies EffectiveAnswerInput);
   }
 
   return Array.from({ length: totalQuestions }, (_, index) => {
@@ -197,9 +203,13 @@ function getFinalAnswers(scan: ReadyScan): FinalAnswer[] {
       fail(`A folha nao possui resposta detectada para a questao ${question}.`);
     }
 
+    const resolution = resolveEffectiveDetectedAnswer(
+      answer satisfies EffectiveAnswerInput
+    );
+
     return {
       question,
-      answer: answer.finalAnswer,
+      answer: resolution.answer,
     };
   });
 }
@@ -284,8 +294,8 @@ function summarize({
     alreadyCorrected,
     answerSheetStatus: "CORRECTED",
     answerSheetCorrectedAt: correctedAt,
-    scanStatus: "CONFIRMED",
-    batchStatus: "CONFIRMED",
+    scanStatus: scan.status,
+    batchStatus: scan.scanBatch.status,
   };
 }
 
@@ -358,7 +368,7 @@ export async function correctConfirmedAnswerSheetScan({
 
       if (scan.answerSheet.status === AnswerSheetStatus.CORRECTED) {
         fail(
-          "Resultado oficial divergente das respostas confirmadas desta folha. A correcao optica nao sobrescreve respostas existentes."
+          "Resultado oficial divergente das respostas efetivas desta folha. A correcao optica nao sobrescreve respostas existentes."
         );
       }
 

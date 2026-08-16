@@ -4,10 +4,10 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, ClipboardCheck } from "lucide-react";
 import { DetectedAnswerStatus } from "@prisma/client";
 
+import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import {
   CompleteScanReviewForm,
   CorrectConfirmedScanForm,
-  ConfirmClearReadingsForm,
   ReviewQuestionForm,
 } from "@/components/AnswerSheetReviewForms";
 import { AppLayout } from "@/components/AppLayout";
@@ -26,6 +26,10 @@ import {
   type ReviewAnswer,
 } from "@/lib/answer-sheet-review/queries";
 import { getNextReviewQueueTarget } from "@/lib/answer-sheet-review/batch-queue";
+import {
+  isReviewRecommended,
+  resolveEffectiveDetectedAnswer,
+} from "@/lib/answer-sheet-effective-answer";
 
 const alternatives = ["A", "B", "C", "D", "E"] as const;
 
@@ -46,11 +50,19 @@ function statusTone(status: ReviewAnswer["detectionStatus"]) {
 }
 
 function finalAnswerLabel(answer: ReviewAnswer) {
-  if (!answer.reviewed) {
-    return "Pendente";
+  if (answer.reviewed) {
+    return answer.finalAnswer ?? "Override: branco";
   }
 
-  return answer.finalAnswer ?? "Em branco";
+  if (answer.detectedAnswer) {
+    return `Automatica: ${answer.detectedAnswer}`;
+  }
+
+  if (answer.detectionStatus === DetectedAnswerStatus.BLANK) {
+    return "Branco automatico";
+  }
+
+  return "Automatica: branco";
 }
 
 function answerScore(answer: ReviewAnswer, alternative: string) {
@@ -60,6 +72,12 @@ function answerScore(answer: ReviewAnswer, alternative: string) {
   if (alternative === "D") return answer.fillD;
 
   return answer.fillE;
+}
+
+function answerSelection(answer: ReviewAnswer) {
+  const resolution = resolveEffectiveDetectedAnswer(answer);
+
+  return resolution.answer;
 }
 
 function QuestionReviewCard({
@@ -142,7 +160,7 @@ function QuestionReviewCard({
         examId={examId}
         scanId={scanId}
         question={answer.question}
-        currentFinalAnswer={answer.reviewed ? answer.finalAnswer : undefined}
+        currentFinalAnswer={answerSelection(answer)}
       />
     </article>
   );
@@ -210,10 +228,8 @@ export default async function AnswerSheetScanReviewPage({
     notFound();
   }
 
-  const attention = review.answers.filter(
-    (answer) =>
-      answer.detectionStatus === DetectedAnswerStatus.MULTIPLE ||
-      answer.detectionStatus === DetectedAnswerStatus.UNCERTAIN
+  const attention = review.answers.filter((answer) =>
+    isReviewRecommended(answer)
   );
   const blanks = review.answers.filter(
     (answer) => answer.detectionStatus === DetectedAnswerStatus.BLANK
@@ -226,13 +242,38 @@ export default async function AnswerSheetScanReviewPage({
     scanId,
   });
   const canCorrectOfficially =
-    review.status === "CONFIRMED" && review.batchStatus === "CONFIRMED";
+    (review.status === "PROCESSED" ||
+      review.status === "REVIEW_REQUIRED" ||
+      review.status === "CONFIRMED") &&
+    review.summary.total === review.totalQuestions;
   const alreadyCorrected = review.answerSheetStatus === "CORRECTED";
 
   return (
     <AppLayout>
+      <AppBreadcrumb
+        items={[
+          {
+            label: "Simulados",
+            href: "/simulados",
+          },
+          {
+            label: review.examTitle,
+            href: `/simulados/${review.examId}`,
+          },
+          {
+            label: "Digitalizacao",
+          },
+          {
+            label: "Lote",
+            href: `/simulados/${review.examId}/leituras/lotes/${review.batchId}`,
+          },
+          {
+            label: `Pagina ${review.pageNumber}`,
+          },
+        ]}
+      />
       <PageHeader
-        eyebrow="Revisao humana"
+        eyebrow="Revisao optica"
         title={`Folha ${review.code}`}
         description={`${review.studentName} - ${review.classRoomName} - pagina ${review.pageNumber} - ${review.examTitle}`}
         icon={<ClipboardCheck size={24} />}
@@ -263,8 +304,8 @@ export default async function AnswerSheetScanReviewPage({
             <MetricCell label="MULTIPLE" value={review.summary.multiple} />
             <MetricCell label="UNCERTAIN" value={review.summary.uncertain} />
             <MetricCell
-              label="Revisadas"
-              value={`${review.summary.reviewed}/${review.summary.total}`}
+              label="Revisao recomendada"
+              value={review.summary.pending}
               tone={review.summary.pending === 0 ? "brand" : "default"}
             />
           </MetricStrip>
@@ -275,19 +316,12 @@ export default async function AnswerSheetScanReviewPage({
         <Panel>
           <SectionHeader
             title="Acoes da folha"
-            description="Confirme automaticamente apenas leituras DETECTED ainda nao revisadas ou conclua quando todas estiverem revisadas."
+            description="A leitura automatica ja pode seguir para correcao. A revisao humana e opcional para baixa confianca, ambiguidades ou ajustes manuais."
           />
-          <div className="grid gap-3 md:grid-cols-[1fr_1fr]">
+          <div className="grid gap-3">
             <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
               <p className="mb-3 text-sm text-zinc-600">
-                BLANK, MULTIPLE e UNCERTAIN continuam exigindo decisao humana.
-              </p>
-              <ConfirmClearReadingsForm examId={id} scanId={scanId} />
-            </div>
-            <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
-              <p className="mb-3 text-sm text-zinc-600">
-                A conclusao so funciona quando todas as 60 questoes estiverem
-                revisadas.
+                A conclusao formal confere somente se a folha possui {review.totalQuestions} respostas detectadas. MULTIPLE/UNCERTAIN continuam como revisao recomendada.
               </p>
               <CompleteScanReviewForm examId={id} scanId={scanId} />
             </div>
@@ -297,11 +331,11 @@ export default async function AnswerSheetScanReviewPage({
         <Panel>
           <SectionHeader
             title="Correcao oficial"
-            description="Esta acao transforma as respostas confirmadas desta folha em resultado oficial do simulado."
+            description="Esta acao usa a resposta efetiva: override humano quando existir; caso contrario, a leitura automatica."
           />
           <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
             <p className="mb-3 text-sm text-zinc-600">
-              Use somente depois da revisao da folha e da conclusao formal do lote.
+              Depois de criado o resultado oficial, alteracoes academicas devem ser feitas no editor manual de respostas do aluno.
             </p>
             <CorrectConfirmedScanForm
               examId={id}
@@ -318,8 +352,8 @@ export default async function AnswerSheetScanReviewPage({
         </Panel>
 
         <QuestionSection
-          title="Requerem atencao"
-          description="MULTIPLE e UNCERTAIN aparecem primeiro para evitar revisar leituras claras antes das excecoes."
+          title="Revisao recomendada"
+          description="MULTIPLE e UNCERTAIN aparecem primeiro como alerta, mas nao bloqueiam correcao."
           emptyText="Nenhuma questao MULTIPLE ou UNCERTAIN nesta folha."
           answers={attention}
           examId={id}
@@ -328,7 +362,7 @@ export default async function AnswerSheetScanReviewPage({
 
         <QuestionSection
           title="Em branco"
-          description="BLANK fica separado para confirmacao humana explicita."
+          description="BLANK automatico vale como resposta em branco, mas continua disponivel para auditoria e override."
           emptyText="Nenhuma questao BLANK nesta folha."
           answers={blanks}
           examId={id}
@@ -337,7 +371,7 @@ export default async function AnswerSheetScanReviewPage({
 
         <QuestionSection
           title="Leituras detectadas"
-          description="Estas podem ser confirmadas em grupo, mas continuam editaveis individualmente."
+          description="DETECTED claro vale automaticamente se nao houver override humano."
           emptyText="Nenhuma questao DETECTED nesta folha."
           answers={detected}
           examId={id}

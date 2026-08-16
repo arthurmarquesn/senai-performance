@@ -1,8 +1,14 @@
 import { createCanvas, type ImageData } from "@napi-rs/canvas";
-import { AnswerSheetScanStatus, ScanBatchStatus } from "@prisma/client";
+import {
+  AnswerSheetScanStatus,
+  ScanBatchStatus,
+} from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
-import { computeHomography, warpPerspective } from "@/lib/answer-sheet-scans/homography";
+import {
+  computeHomography,
+  warpPerspective,
+} from "@/lib/answer-sheet-scans/homography";
 import {
   InvalidMarkerGeometryError,
   MarkerNotFoundError,
@@ -35,6 +41,11 @@ type ScanNormalizationResult = {
   residualMax: number | null;
 };
 
+type DisposablePdfDocument = {
+  destroy?: () => Promise<void> | void;
+  cleanup?: () => Promise<void> | void;
+};
+
 export type NormalizeScanBatchInput = {
   examId: string;
   examApplicationId: string;
@@ -57,13 +68,25 @@ function pngFromImageData(imageData: {
   width: number;
   height: number;
 }) {
-  const canvas = createCanvas(imageData.width, imageData.height);
+  const canvas = createCanvas(
+    imageData.width,
+    imageData.height
+  );
+
   const context = canvas.getContext("2d");
-  const output = context.createImageData(imageData.width, imageData.height);
+
+  const output = context.createImageData(
+    imageData.width,
+    imageData.height
+  );
+
   output.data.set(imageData.data);
+
   context.putImageData(output, 0, 0);
 
-  return new Uint8Array(canvas.encodeSync("png"));
+  return new Uint8Array(
+    canvas.encodeSync("png")
+  );
 }
 
 async function normalizeScanPage({
@@ -72,51 +95,83 @@ async function normalizeScanPage({
   imageData,
 }: {
   batchId: string;
-  scan: { id: string; pageNumber: number };
+  scan: {
+    id: string;
+    pageNumber: number;
+  };
   imageData: ImageData;
 }): Promise<ScanNormalizationResult> {
   try {
-    const detection = detectRegistrationMarkers(imageData);
+    const detection =
+      detectRegistrationMarkers(imageData);
+
     const alreadyCanonical =
-      imageData.width === NORMALIZED_PAGE_WIDTH &&
-      imageData.height === NORMALIZED_PAGE_HEIGHT &&
-      detection.residualMax <= MARKER_RESIDUAL_TOLERANCE_PX;
+      imageData.width ===
+        NORMALIZED_PAGE_WIDTH &&
+      imageData.height ===
+        NORMALIZED_PAGE_HEIGHT &&
+      detection.residualMax <=
+        MARKER_RESIDUAL_TOLERANCE_PX;
+
     const normalized = alreadyCanonical
       ? imageData
       : warpPerspective({
           source: imageData,
-          destinationToSource: computeHomography(
-            markerArray(CANONICAL_MARKERS),
-            markerArray(detection.markers)
-          ),
+          destinationToSource:
+            computeHomography(
+              markerArray(CANONICAL_MARKERS),
+              markerArray(
+                detection.markers
+              )
+            ),
         });
-    const normalizedDetection = alreadyCanonical
-      ? detection
-      : detectRegistrationMarkers(normalized as ImageData);
 
-    if (normalizedDetection.residualMax > MARKER_RESIDUAL_TOLERANCE_PX) {
+    const normalizedDetection =
+      alreadyCanonical
+        ? detection
+        : detectRegistrationMarkers(
+            normalized as ImageData
+          );
+
+    if (
+      normalizedDetection.residualMax >
+      MARKER_RESIDUAL_TOLERANCE_PX
+    ) {
       throw new InvalidMarkerGeometryError(
-        "Normalizacao geometrica fora da tolerancia."
+        "Preparacao geometrica fora da tolerancia."
       );
     }
 
-    const pngBytes = pngFromImageData(normalized);
-    const stored = await saveNormalizedScanImage({
-      batchId,
-      pageNumber: scan.pageNumber,
-      bytes: pngBytes,
-    });
-    const rotationDegrees = estimateRotationDegrees(detection.markers);
+    const pngBytes =
+      pngFromImageData(normalized);
+
+    const stored =
+      await saveNormalizedScanImage({
+        batchId,
+        pageNumber: scan.pageNumber,
+        bytes: pngBytes,
+      });
+
+    const rotationDegrees =
+      estimateRotationDegrees(
+        detection.markers
+      );
 
     await prisma.answerSheetScan.update({
       where: {
         id: scan.id,
       },
       data: {
-        status: AnswerSheetScanStatus.IDENTIFIED,
-        normalizedImageKey: stored.normalizedImageKey,
+        status:
+          AnswerSheetScanStatus.IDENTIFIED,
+
+        normalizedImageKey:
+          stored.normalizedImageKey,
+
         sourceImageKey: null,
+
         alignmentConfidence: null,
+
         rotationDegrees,
       },
     });
@@ -124,21 +179,40 @@ async function normalizeScanPage({
     return {
       scanId: scan.id,
       pageNumber: scan.pageNumber,
-      status: AnswerSheetScanStatus.IDENTIFIED,
-      normalizedImageKey: stored.normalizedImageKey,
+      status:
+        AnswerSheetScanStatus.IDENTIFIED,
+      normalizedImageKey:
+        stored.normalizedImageKey,
       rotationDegrees,
-      residualAverage: normalizedDetection.residualAverage,
-      residualMax: normalizedDetection.residualMax,
+      residualAverage:
+        normalizedDetection.residualAverage,
+      residualMax:
+        normalizedDetection.residualMax,
     };
   } catch (error) {
+    /*
+     * REVIEW_REQUIRED permanece apenas como um status técnico
+     * legado.
+     *
+     * No novo fluxo ele NÃO significa que o professor precisa
+     * revisar antes que o restante do lote continue.
+     *
+     * A página vira uma ocorrência e as demais seguem normalmente.
+     */
     const status =
       error instanceof MarkerNotFoundError ||
       error instanceof InvalidMarkerGeometryError
         ? AnswerSheetScanStatus.REVIEW_REQUIRED
         : AnswerSheetScanStatus.FAILED;
 
-    if (status === AnswerSheetScanStatus.FAILED) {
-      console.error(`Erro ao normalizar página ${scan.pageNumber}:`, error);
+    if (
+      status ===
+      AnswerSheetScanStatus.FAILED
+    ) {
+      console.error(
+        `Erro ao preparar página ${scan.pageNumber}:`,
+        error
+      );
     }
 
     await prisma.answerSheetScan.update({
@@ -150,6 +224,7 @@ async function normalizeScanPage({
         normalizedImageKey: null,
         alignmentConfidence: null,
         rotationDegrees: null,
+        processedAt: new Date(),
       },
     });
 
@@ -165,29 +240,92 @@ async function normalizeScanPage({
   }
 }
 
-async function updateBatchAfterNormalization(batchId: string) {
-  const scans = await prisma.answerSheetScan.findMany({
+async function persistRenderFailure({
+  scanId,
+  pageNumber,
+  error,
+}: {
+  scanId: string;
+  pageNumber: number;
+  error: unknown;
+}): Promise<ScanNormalizationResult> {
+  console.error(
+    `Erro ao renderizar página ${pageNumber} para leitura:`,
+    error
+  );
+
+  await prisma.answerSheetScan.update({
     where: {
-      scanBatchId: batchId,
+      id: scanId,
     },
-    select: {
-      status: true,
+    data: {
+      status:
+        AnswerSheetScanStatus.FAILED,
+      normalizedImageKey: null,
+      alignmentConfidence: null,
+      rotationDegrees: null,
+      processedAt: new Date(),
     },
   });
-  const identifiedPages = scans.filter(
-    (scan) => scan.status === AnswerSheetScanStatus.IDENTIFIED
-  ).length;
-  const reviewRequiredPages = scans.filter(
-    (scan) =>
-      scan.status === AnswerSheetScanStatus.REVIEW_REQUIRED ||
-      scan.status === AnswerSheetScanStatus.DUPLICATE ||
-      scan.status === AnswerSheetScanStatus.FAILED
-  ).length;
-  const status =
-    reviewRequiredPages > 0
-      ? ScanBatchStatus.REVIEW_REQUIRED
-      : ScanBatchStatus.PROCESSING;
 
+  return {
+    scanId,
+    pageNumber,
+    status:
+      AnswerSheetScanStatus.FAILED,
+    normalizedImageKey: null,
+    rotationDegrees: null,
+    residualAverage: null,
+    residualMax: null,
+  };
+}
+
+async function updateBatchAfterPreparation(
+  batchId: string
+) {
+  const scans =
+    await prisma.answerSheetScan.findMany({
+      where: {
+        scanBatchId: batchId,
+      },
+      select: {
+        answerSheetId: true,
+        status: true,
+      },
+    });
+
+  /*
+   * Uma página continua identificada mesmo que posteriormente
+   * ocorra algum problema técnico na preparação da imagem.
+   */
+  const identifiedPages =
+    scans.filter(
+      (scan) =>
+        Boolean(scan.answerSheetId)
+    ).length;
+
+  /*
+   * Este campo possui nome legado.
+   *
+   * Aqui ele representa ocorrências técnicas, e não uma etapa
+   * obrigatória de revisão humana.
+   */
+  const reviewRequiredPages =
+    scans.filter(
+      (scan) =>
+        scan.status ===
+          AnswerSheetScanStatus.REVIEW_REQUIRED ||
+        scan.status ===
+          AnswerSheetScanStatus.DUPLICATE ||
+        scan.status ===
+          AnswerSheetScanStatus.FAILED
+    ).length;
+
+  /*
+   * A preparação da imagem é uma operação interna.
+   *
+   * O processamento do lote ainda não terminou nesse ponto.
+   */
   await prisma.answerSheetScanBatch.update({
     where: {
       id: batchId,
@@ -195,96 +333,224 @@ async function updateBatchAfterNormalization(batchId: string) {
     data: {
       identifiedPages,
       reviewRequiredPages,
-      confirmedPages: 0,
-      status,
-      completedAt: new Date(),
+      status:
+        ScanBatchStatus.PROCESSING,
+      completedAt: null,
     },
   });
+}
+
+async function releasePdfDocument(
+  pdf: unknown
+) {
+  /*
+   * Dependendo da build/tipagem usada pelo pdfjs-dist, o objeto
+   * retornado pode disponibilizar destroy() ou cleanup() sem que
+   * isso esteja declarado na interface TypeScript exposta pelo
+   * projeto.
+   *
+   * Fazemos feature detection em runtime sem acoplar o restante
+   * da aplicação a essa diferença de tipagem.
+   */
+  const disposable =
+    pdf as DisposablePdfDocument;
+
+  if (
+    typeof disposable.destroy === "function"
+  ) {
+    await disposable.destroy();
+    return;
+  }
+
+  if (
+    typeof disposable.cleanup === "function"
+  ) {
+    await disposable.cleanup();
+  }
 }
 
 export async function normalizeScanBatch(
   input: NormalizeScanBatchInput
 ): Promise<NormalizeScanBatchSummary> {
-  const batch = await prisma.answerSheetScanBatch.findFirst({
-    where: {
-      id: input.batchId,
-      examApplicationId: input.examApplicationId,
-      examApplication: {
-        examId: input.examId,
+  const batch =
+    await prisma.answerSheetScanBatch.findFirst({
+      where: {
+        id: input.batchId,
+        examApplicationId:
+          input.examApplicationId,
+        examApplication: {
+          examId: input.examId,
+        },
       },
-    },
-    include: {
-      scans: {
-        where: {
-          status: AnswerSheetScanStatus.IDENTIFIED,
-          answerSheetId: {
-            not: null,
+      include: {
+        scans: {
+          /*
+           * Somente páginas cujo QR já permitiu identificar
+           * AnswerSheet/aluno seguem para a preparação técnica.
+           */
+          where: {
+            status:
+              AnswerSheetScanStatus.IDENTIFIED,
+            answerSheetId: {
+              not: null,
+            },
+          },
+          select: {
+            id: true,
+            pageNumber: true,
+          },
+          orderBy: {
+            pageNumber: "asc",
           },
         },
-        select: {
-          id: true,
-          pageNumber: true,
-        },
-        orderBy: {
-          pageNumber: "asc",
-        },
       },
-    },
-  });
+    });
 
   if (!batch) {
-    throw new Error("Lote de digitalização não encontrado.");
+    throw new Error(
+      "Lote de digitalizacao nao encontrado."
+    );
   }
 
   if (!batch.sourceFileKey) {
-    throw new Error("O PDF original deste lote não está disponível.");
+    throw new Error(
+      "O PDF original deste lote nao esta disponivel."
+    );
   }
 
-  const pdfBytes = await readOriginalScanPdf(batch.sourceFileKey);
-  const pdf = await loadScanPdfDocument(new Uint8Array(pdfBytes));
-  const results: ScanNormalizationResult[] = [];
+  const pdfBytes =
+    await readOriginalScanPdf(
+      batch.sourceFileKey
+    );
 
-  for (const scan of batch.scans) {
-    const imageData = await renderScanPdfPage(pdf, scan.pageNumber);
-    const result = await normalizeScanPage({
-      batchId: batch.id,
-      scan,
-      imageData,
-    });
-    results.push(result);
+  const pdf =
+    await loadScanPdfDocument(
+      new Uint8Array(pdfBytes)
+    );
+
+  const results:
+    ScanNormalizationResult[] = [];
+
+  try {
+    /*
+     * Cada página é independente.
+     *
+     * Uma falha em uma página NÃO encerra o processamento das
+     * páginas seguintes.
+     */
+    for (const scan of batch.scans) {
+      try {
+        const imageData =
+          await renderScanPdfPage(
+            pdf,
+            scan.pageNumber
+          );
+
+        const result =
+          await normalizeScanPage({
+            batchId: batch.id,
+            scan,
+            imageData,
+          });
+
+        results.push(result);
+      } catch (error) {
+        /*
+         * Um erro de rasterização também vira apenas uma ocorrência
+         * daquela página.
+         */
+        const result =
+          await persistRenderFailure({
+            scanId: scan.id,
+            pageNumber:
+              scan.pageNumber,
+            error,
+          });
+
+        results.push(result);
+      }
+    }
+  } finally {
+    /*
+     * A liberação é feita por feature detection porque a tipagem
+     * atual do PDFDocumentProxy no projeto não expõe destroy().
+     */
+    await releasePdfDocument(pdf);
   }
 
-  await updateBatchAfterNormalization(batch.id);
-
-  const normalizedResults = results.filter(
-    (result) => result.status === AnswerSheetScanStatus.IDENTIFIED
+  await updateBatchAfterPreparation(
+    batch.id
   );
-  const residuals = normalizedResults
-    .map((result) => result.residualAverage)
-    .filter((value): value is number => value !== null);
+
+  const normalizedResults =
+    results.filter(
+      (result) =>
+        result.status ===
+          AnswerSheetScanStatus.IDENTIFIED &&
+        result.normalizedImageKey !== null
+    );
+
+  const residuals =
+    normalizedResults
+      .map(
+        (result) =>
+          result.residualAverage
+      )
+      .filter(
+        (value): value is number =>
+          value !== null
+      );
+
+  const residualMaxValues =
+    normalizedResults
+      .map(
+        (result) =>
+          result.residualMax
+      )
+      .filter(
+        (value): value is number =>
+          value !== null
+      );
 
   return {
     batchId: batch.id,
-    identifiedPages: batch.scans.length,
-    normalizedPages: normalizedResults.length,
-    reviewRequiredPages: results.filter(
-      (result) => result.status === AnswerSheetScanStatus.REVIEW_REQUIRED
-    ).length,
-    failedPages: results.filter(
-      (result) => result.status === AnswerSheetScanStatus.FAILED
-    ).length,
+
+    identifiedPages:
+      batch.scans.length,
+
+    normalizedPages:
+      normalizedResults.length,
+
+    reviewRequiredPages:
+      results.filter(
+        (result) =>
+          result.status ===
+          AnswerSheetScanStatus.REVIEW_REQUIRED
+      ).length,
+
+    failedPages:
+      results.filter(
+        (result) =>
+          result.status ===
+          AnswerSheetScanStatus.FAILED
+      ).length,
+
     residualAverage:
       residuals.length > 0
-        ? residuals.reduce((sum, residual) => sum + residual, 0) / residuals.length
+        ? residuals.reduce(
+            (sum, residual) =>
+              sum + residual,
+            0
+          ) / residuals.length
         : null,
+
     residualMax:
-      normalizedResults.length > 0
+      residualMaxValues.length > 0
         ? Math.max(
-            ...normalizedResults
-              .map((result) => result.residualMax)
-              .filter((value): value is number => value !== null)
+            ...residualMaxValues
           )
         : null,
+
     results,
   };
 }

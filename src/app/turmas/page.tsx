@@ -19,7 +19,6 @@ export default async function TurmasPage() {
     include: {
       students: {
         include: {
-          bookProgresses: true,
           results: true,
         },
       },
@@ -52,16 +51,6 @@ export default async function TurmasPage() {
     0
   );
 
-  const totalLeituras = turmas.reduce(
-    (acc, turma) =>
-      acc +
-      turma.students.reduce(
-        (studentAcc, student) => studentAcc + student.bookProgresses.length,
-        0
-      ),
-    0
-  );
-
   const totalResultados = turmas.reduce(
     (acc, turma) =>
       acc +
@@ -86,9 +75,9 @@ export default async function TurmasPage() {
   return (
     <AppLayout>
       <PageHeader
-        eyebrow="Núcleo acadêmico"
+        eyebrow="Nucleo academico"
         title="Turmas"
-        description="Estrutura institucional das turmas, com vínculo de estudantes, simulados por série e sinais de acompanhamento pedagógico."
+        description="Estrutura institucional das turmas, com vinculo de estudantes, simulados por serie e sinais de acompanhamento pedagogico."
         icon={<Users size={24} />}
         actions={
           <Link
@@ -104,19 +93,19 @@ export default async function TurmasPage() {
             <MetricCell
               label="Turmas"
               value={turmas.length}
-              detail="unidades acadêmicas"
+              detail="unidades academicas"
               tone="brand"
             />
             <MetricCell label="Alunos" value={totalAlunos} detail="vinculados" />
             <MetricCell
               label="Simulados"
               value={totalSimuladosSeries}
-              detail="disponíveis por série"
+              detail="disponiveis por serie"
             />
             <MetricCell
-              label="Leituras"
-              value={totalLeituras}
-              detail={`${totalResultados} resultado(s)`}
+              label="Resultados"
+              value={totalResultados}
+              detail="registros oficiais"
             />
           </MetricStrip>
         }
@@ -127,7 +116,7 @@ export default async function TurmasPage() {
           <SectionHeader
             eyebrow="Mapa das turmas"
             title="Turmas cadastradas"
-            description={`${turmas.length} turma(s) organizadas por série, com dados de alunos, simulados, resultados e leitura.`}
+            description={`${turmas.length} turma(s) organizadas por serie, com dados de alunos, simulados e resultados.`}
             action={
               <Badge tone="brand">
                 {totalSimuladosSeries} simulado(s) na matriz
@@ -138,7 +127,7 @@ export default async function TurmasPage() {
           {turmas.length === 0 ? (
             <EmptyState
               title="Nenhuma turma cadastrada"
-              description="Crie uma turma para organizar estudantes, simulados, leituras e relatórios acadêmicos."
+              description="Crie uma turma para organizar estudantes, simulados e relatorios academicos."
               action={
                 <Link
                   href="/turmas#cadastro"
@@ -156,14 +145,14 @@ export default async function TurmasPage() {
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-950 text-sm font-semibold text-white">
-                        {grupo.grade}º
+                        {grupo.grade} ano
                       </div>
                       <div>
                         <h3 className="text-sm font-semibold text-zinc-950">
-                          {grupo.grade}º ano
+                          {grupo.grade} ano
                         </h3>
                         <p className="text-xs text-zinc-500">
-                          {grupo.turmas.length} turma(s) · {grupo.simulados} simulado(s)
+                          {grupo.turmas.length} turma(s) - {grupo.simulados} simulado(s)
                         </p>
                       </div>
                     </div>
@@ -172,18 +161,13 @@ export default async function TurmasPage() {
 
                   {grupo.turmas.length === 0 ? (
                     <div className="rounded-2xl border border-dashed border-zinc-300 bg-white/60 px-4 py-5 text-sm text-zinc-500">
-                      Nenhuma turma cadastrada para esta série.
+                      Nenhuma turma cadastrada para esta serie.
                     </div>
                   ) : (
                     <div className="overflow-hidden rounded-3xl border border-zinc-200 bg-white/70">
                       {grupo.turmas.map((turma, index) => {
                         const totalSimuladosDaSerie = getTotalSimuladosDaSerie(
                           turma.grade
-                        );
-
-                        const totalLeiturasDaTurma = turma.students.reduce(
-                          (acc, student) => acc + student.bookProgresses.length,
-                          0
                         );
 
                         const totalResultadosDaTurma = turma.students.reduce(
@@ -208,7 +192,7 @@ export default async function TurmasPage() {
                                   {turma.name}
                                 </h4>
                                 <p className="mt-1 text-xs text-zinc-500">
-                                  Entidade acadêmica · {turma.grade}º ano
+                                  Entidade academica - {turma.grade} ano
                                 </p>
                               </div>
                             </div>
@@ -227,8 +211,8 @@ export default async function TurmasPage() {
                               value={String(totalResultadosDaTurma)}
                             />
                             <DataPoint
-                              label="Leituras"
-                              value={String(totalLeiturasDaTurma)}
+                              label="Serie"
+                              value={`${turma.grade} ano`}
                               brand
                             />
 
@@ -255,7 +239,7 @@ export default async function TurmasPage() {
             <SectionHeader
               eyebrow="Cadastro"
               title="Nova turma"
-              description="Informe o nome da turma e selecione a série correspondente."
+              description="Informe o nome da turma e selecione a serie correspondente."
             />
 
             <form action={createClassRoom} className="grid gap-4">
@@ -272,7 +256,7 @@ export default async function TurmasPage() {
 
               <label className="grid gap-2">
                 <span className="text-sm font-semibold text-zinc-800">
-                  Série
+                  Serie
                 </span>
                 <select
                   name="grade"
@@ -280,12 +264,12 @@ export default async function TurmasPage() {
                   className="performance-field rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
                 >
                   <option value="" disabled>
-                    Selecione a série
+                    Selecione a serie
                   </option>
 
-                  <option value="1">1º ano</option>
-                  <option value="2">2º ano</option>
-                  <option value="3">3º ano</option>
+                  <option value="1">1 ano</option>
+                  <option value="2">2 ano</option>
+                  <option value="3">3 ano</option>
                 </select>
               </label>
 
@@ -301,9 +285,9 @@ export default async function TurmasPage() {
 
           <Panel>
             <SectionHeader
-              eyebrow="Leitura rápida"
-              title="Cobertura acadêmica"
-              description="Resumo operacional para localizar séries sem turmas ou com baixa estrutura de simulado."
+              eyebrow="Leitura rapida"
+              title="Cobertura academica"
+              description="Resumo operacional para localizar series sem turmas ou com baixa estrutura de simulado."
             />
 
             <div className="space-y-3">
@@ -314,7 +298,7 @@ export default async function TurmasPage() {
                 >
                   <div>
                     <p className="text-sm font-semibold text-zinc-950">
-                      {grupo.grade}º ano
+                      {grupo.grade} ano
                     </p>
                     <p className="text-xs text-zinc-500">
                       {grupo.turmas.length} turma(s)

@@ -360,8 +360,568 @@ model User {
   password String
   role     UserRole @default(TEACHER)
 
+  // Perfil pedagógico 1:1.
+  // Apenas usuários com role = TEACHER devem possuir TeacherProfile.
+  teacherProfile TeacherProfile?
+
+  // Jornadas criadas por este usuário.
+  createdJourneys Journey[] @relation("JourneyCreator")
+
+  // Validações pedagógicas realizadas pelo usuário.
+  validatedJourneySuggestions JourneySuggestion[] @relation("JourneySuggestionValidator")
+  validatedJourneyBnccLinks   JourneyBnccLink[]   @relation("JourneyBnccValidator")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ======================================================
+// PERFIL PEDAGÓGICO DO PROFESSOR
+// ======================================================
+//
+// Regra de negócio:
+// - 1 usuário professor possui no máximo 1 perfil;
+// - 1 professor possui exatamente 1 disciplina;
+// - a área é derivada da disciplina pela aplicação e armazenada
+//   para facilitar filtros, IA e cruzamento com a BNCC.
+//
+// Exemplo:
+// HISTORIA -> CIENCIAS_HUMANAS
+// BIOLOGIA -> CIENCIAS_DA_NATUREZA
+// MATEMATICA -> MATEMATICA
+// ======================================================
+
+model TeacherProfile {
+  id String @id @default(cuid())
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Cada professor possui uma única disciplina e uma única área.
+  //
+  // Não existe associação manual professor <-> Jornada.
+  // Todos os professores participam automaticamente de todas as Jornadas.
+  subject Subject
+  area    KnowledgeArea
+
+  // Uma atividade pode possuir um professor responsável.
+  // Isso NÃO representa participação na Jornada.
+  activities JourneyActivity[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([subject])
+  @@index([area])
+}
+
+// ======================================================
+// JORNADAS PEDAGÓGICAS
+// ======================================================
+//
+// Todas as Jornadas pertencem ao ecossistema pedagógico da escola.
+//
+// Não existe relação N:N entre Journey e TeacherProfile.
+// Todos os professores têm acesso a todas as Jornadas.
+//
+// A interdisciplinaridade é representada pelas sugestões,
+// disciplinas, áreas e atividades da Jornada.
+// ======================================================
+
+model Journey {
+  id          String        @id @default(cuid())
+  title       String        @db.VarChar(180)
+  description String?       @db.Text
+  grade       Int
+  status      JourneyStatus @default(DRAFT)
+
+  createdById String?
+  createdBy   User?   @relation("JourneyCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  documents   JourneyDocument[]
+  analyses    JourneyAnalysis[]
+  suggestions JourneySuggestion[]
+  mindMaps    JourneyMindMap[]
+  activities  JourneyActivity[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([grade])
+  @@index([status])
+  @@index([createdById])
+}
+
+// ======================================================
+// DOCUMENTOS / ROTEIROS DA JORNADA
+// ======================================================
+//
+// Pode representar:
+// - PDF;
+// - DOCX;
+// - texto colado;
+// - outro arquivo suportado futuramente.
+//
+// O arquivo original fica fora do MySQL.
+// O banco guarda referência e conteúdo extraído.
+// ======================================================
+
+model JourneyDocument {
+  id String @id @default(cuid())
+
+  journeyId String
+  journey   Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+
+  type JourneyDocumentType @default(FILE)
+
+  fileName   String? @db.VarChar(255)
+  mimeType   String? @db.VarChar(120)
+  storageKey String? @db.VarChar(500)
+
+  // Hash do arquivo/texto original para auditoria e deduplicação.
+  sha256 String? @db.VarChar(64)
+
+  // Texto inserido manualmente.
+  sourceText String? @db.LongText
+
+  // Texto obtido após leitura do documento.
+  extractedText String? @db.LongText
+
+  status       JourneyDocumentStatus @default(PENDING)
+  errorMessage String?               @db.Text
+
+  chunks JourneyDocumentChunk[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([journeyId])
+  @@index([status])
+  @@index([sha256])
+}
+
+// ======================================================
+// FRAGMENTOS DOS DOCUMENTOS DA JORNADA
+// ======================================================
+//
+// Base para RAG e evidências.
+//
+// O texto da Jornada é dividido em fragmentos estáveis
+// e auditáveis.
+// ======================================================
+
+model JourneyDocumentChunk {
+  id String @id @default(cuid())
+
+  documentId String
+  document   JourneyDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  chunkIndex Int
+  pageNumber Int?
+
+  locator String? @db.VarChar(255)
+
+  text     String  @db.LongText
+  textHash String? @db.VarChar(64)
+
+  // Referência opcional para índice vetorial externo.
+  embeddingRef String? @db.VarChar(500)
+
+  suggestionEvidence JourneySuggestion[]
+  bnccEvidence       JourneyBnccLink[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([documentId, chunkIndex])
+  @@index([documentId])
+  @@index([pageNumber])
+  @@index([textHash])
+}
+
+// ======================================================
+// EXECUÇÃO / RESULTADO DE ANÁLISE POR IA
+// ======================================================
+//
+// Cada nova análise gera um registro próprio.
+//
+// Isso preserva:
+// - histórico;
+// - modelo;
+// - versão de prompt;
+// - conjunto de entradas;
+// - saída;
+// - possíveis erros.
+// ======================================================
+
+model JourneyAnalysis {
+  id String @id @default(cuid())
+
+  journeyId String
+  journey   Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+
+  status JourneyAnalysisStatus @default(PENDING)
+
+  provider      String? @db.VarChar(80)
+  modelName     String? @db.VarChar(120)
+  promptVersion String? @db.VarChar(80)
+
+  // Identifica exatamente o conjunto de entradas utilizado.
+  inputHash String? @db.VarChar(64)
+
+  summary String? @db.LongText
+
+  // Saída estruturada da análise.
+  output Json?
+
+  errorMessage String? @db.Text
+
+  suggestions JourneySuggestion[]
+  bnccLinks   JourneyBnccLink[]
+  mindMaps    JourneyMindMap[]
+
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([journeyId])
+  @@index([status])
+  @@index([inputHash])
+}
+
+// ======================================================
+// MAPA MENTAL NAVEGÁVEL DA JORNADA
+// ======================================================
+//
+// O mapa é somente leitura na primeira versão.
+//
+// Sua estrutura fica em JSON porque não haverá edição manual.
+//
+// Regra:
+// - análise gera no mínimo 3 sugestões;
+// - mapa representa sugestões e conteúdos possíveis;
+// - nós podem apontar para suggestionId;
+// - nós podem apontar para JourneyBnccLink.id.
+// ======================================================
+
+model JourneyMindMap {
+  id String @id @default(cuid())
+
+  journeyId String
+  journey   Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+
+  analysisId String?
+  analysis   JourneyAnalysis? @relation(fields: [analysisId], references: [id], onDelete: SetNull)
+
+  title String @db.VarChar(220)
+
+  // Estrutura conceitual:
+  //
+  // Jornada
+  // -> disciplina
+  // -> sugestão
+  // -> conteúdos
+  // -> conexões
+  // -> referências
+  // -> BNCC
+  // -> atividades
+  structure Json
+
+  schemaVersion Int @default(1)
+  version       Int @default(1)
+
+  isCurrent Boolean @default(true)
+
+  generatedByAi Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([journeyId, version])
+  @@index([journeyId])
+  @@index([analysisId])
+  @@index([isCurrent])
+}
+
+// ======================================================
+// SUGESTÕES PEDAGÓGICAS DA IA
+// ======================================================
+//
+// A sugestão NÃO pertence a um professor específico.
+//
+// Ela pertence à Jornada e é classificada por disciplina.
+//
+// Como todos os professores participam de todas as Jornadas,
+// qualquer professor pode acessar a Jornada.
+//
+// Exemplos:
+// - conteúdo;
+// - conexão interdisciplinar;
+// - referência;
+// - repertório sociocultural;
+// - possibilidade em sala;
+// - tema de redação.
+// ======================================================
+
+model JourneySuggestion {
+  id String @id @default(cuid())
+
+  journeyId String
+  journey   Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+
+  analysisId String?
+  analysis   JourneyAnalysis? @relation(fields: [analysisId], references: [id], onDelete: SetNull)
+
+  // Disciplina para a qual a sugestão possui pertinência pedagógica.
+  //
+  // Isso NÃO altera os metadados oficiais da BNCC.
+  subject Subject
+
+  type JourneySuggestionType
+
+  title     String  @db.VarChar(220)
+  objective String? @db.Text
+  content   String  @db.LongText
+  rationale String? @db.LongText
+
+  // Conteúdos, conceitos e possibilidades de abordagem.
+  contentTopics Json?
+
+  // Evidência concreta do roteiro.
+  evidenceChunkId String?
+  evidenceChunk   JourneyDocumentChunk? @relation(fields: [evidenceChunkId], references: [id], onDelete: SetNull)
+
+  evidence String? @db.Text
+
+  status JourneyReviewStatus @default(SUGGESTED)
+
+  validatedById String?
+  validatedBy   User?   @relation("JourneySuggestionValidator", fields: [validatedById], references: [id], onDelete: SetNull)
+
+  validatedAt DateTime?
+
+  bnccLinks JourneyBnccLink[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([journeyId])
+  @@index([analysisId])
+  @@index([subject])
+  @@index([status])
+  @@index([evidenceChunkId])
+}
+
+// ======================================================
+// FONTE OFICIAL DA BNCC
+// ======================================================
+//
+// A base BNCC usada pela IA deve vir exclusivamente de fontes
+// oficiais previamente importadas e verificadas.
+//
+// Nunca salvamos um código inventado pela IA como BnccSkill.
+// ======================================================
+
+model BnccSource {
+  id String @id @default(cuid())
+
+  title     String @db.VarChar(255)
+  publisher String @default("MEC") @db.VarChar(120)
+
+  type   BnccSourceType
+  status BnccSourceStatus @default(IMPORTED)
+
+  officialUrl String  @db.VarChar(500)
+  storageKey  String? @db.VarChar(500)
+
+  versionLabel String?   @db.VarChar(120)
+  publishedAt  DateTime?
+  retrievedAt  DateTime  @default(now())
+  verifiedAt   DateTime?
+
+  // Fingerprint do arquivo oficial importado.
+  sha256 String @unique @db.VarChar(64)
+
+  skills BnccSkill[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([type])
+}
+
+// ======================================================
+// BASE ESTRUTURADA DA BNCC
+// ======================================================
+//
+// A IA NÃO cria códigos BNCC.
+// Ela recebe candidatos existentes nesta tabela e avalia pertinência.
+//
+// O texto oficial deve ser importado de uma fonte controlada.
+// ======================================================
+
+model BnccSkill {
+  id String @id @default(cuid())
+
+  sourceId String
+  source   BnccSource @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+
+  code String @db.VarChar(40)
+
+  stage BnccStage     @default(ENSINO_MEDIO)
+  area  KnowledgeArea
+
+  subject Subject?
+
+  // Texto oficial importado da fonte verificada.
+  description String @db.Text
+
+  competencyCode String? @db.VarChar(40)
+  competencyText String? @db.Text
+
+  // Localização exata na fonte oficial para auditoria.
+  sourcePage    Int?
+  sourceLocator String? @db.VarChar(255)
+
+  // Hash do texto oficial da habilidade.
+  officialTextHash String? @db.VarChar(64)
+
+  // Texto preparado para busca textual/semântica.
+  searchText String? @db.LongText
+
+  // Permite versionar a base sem apagar registros históricos.
+  isCurrent Boolean @default(true)
+
+  journeyLinks  JourneyBnccLink[]
+  activityLinks JourneyActivityBnccSkill[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([sourceId, code])
+  @@index([code])
+  @@index([stage])
+  @@index([area])
+  @@index([subject])
+  @@index([isCurrent])
+}
+
+// ======================================================
+// VÍNCULO JORNADA <-> BNCC
+// ======================================================
+//
+// Representa uma habilidade REAL da BNCC sugerida para a Jornada.
+// A relação pode ser sugerida pela IA e depois validada pelo professor.
+// ======================================================
+
+model JourneyBnccLink {
+  id String @id @default(cuid())
+
+  // Toda associação BNCC nasce vinculada a uma sugestão concreta.
+  suggestionId String
+  suggestion   JourneySuggestion @relation(fields: [suggestionId], references: [id], onDelete: Cascade)
+
+  bnccSkillId String
+  bnccSkill   BnccSkill @relation(fields: [bnccSkillId], references: [id], onDelete: Restrict)
+
+  analysisId String?
+  analysis   JourneyAnalysis? @relation(fields: [analysisId], references: [id], onDelete: SetNull)
+
+  // Evidência da Jornada que sustenta a associação.
+  evidenceChunkId String?
+  evidenceChunk   JourneyDocumentChunk? @relation(fields: [evidenceChunkId], references: [id], onDelete: SetNull)
+
+  evidenceExcerpt String? @db.Text
+
+  // Score da recuperação e score da avaliação da IA são separados.
+  retrievalScore   Float?
+  aiRelevanceScore Float?
+  confidence       BnccLinkConfidence?
+
+  candidateRank Int?
+
+  justification String? @db.LongText
+
+  status JourneyReviewStatus @default(SUGGESTED)
+
+  validatedById String?
+  validatedBy   User?   @relation("JourneyBnccValidator", fields: [validatedById], references: [id], onDelete: SetNull)
+
+  validatedAt    DateTime?
+  validationNote String?   @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([suggestionId, bnccSkillId])
+  @@index([bnccSkillId])
+  @@index([analysisId])
+  @@index([evidenceChunkId])
+  @@index([status])
+  @@index([confidence])
+}
+
+// ======================================================
+// ATIVIDADES GERADAS / CONSTRUÍDAS A PARTIR DA JORNADA
+// ======================================================
+//
+// A atividade pode ser criada pela IA, mas começa como rascunho.
+// O professor valida antes de qualquer publicação externa.
+//
+// teacherProfileId identifica eventual RESPONSÁVEL pela atividade.
+// Não representa participação do professor na Jornada.
+// ======================================================
+
+model JourneyActivity {
+  id String @id @default(cuid())
+
+  journeyId String
+  journey   Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+
+  // Responsável opcional pela atividade.
+  teacherProfileId String?
+  teacherProfile   TeacherProfile? @relation(fields: [teacherProfileId], references: [id], onDelete: SetNull)
+
+  subject Subject
+
+  title        String  @db.VarChar(220)
+  objective    String? @db.Text
+  instructions String? @db.LongText
+
+  // Materiais, links, anexos e configurações futuras.
+  materials Json?
+
+  status        JourneyActivityStatus @default(DRAFT)
+  generatedByAi Boolean               @default(false)
+
+  bnccSkills JourneyActivityBnccSkill[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([journeyId])
+  @@index([teacherProfileId])
+  @@index([subject])
+  @@index([status])
+}
+
+// ======================================================
+// ATIVIDADE <-> HABILIDADES BNCC
+// ======================================================
+
+model JourneyActivityBnccSkill {
+  journeyActivityId String
+  journeyActivity   JourneyActivity @relation(fields: [journeyActivityId], references: [id], onDelete: Cascade)
+
+  bnccSkillId String
+  bnccSkill   BnccSkill @relation(fields: [bnccSkillId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([journeyActivityId, bnccSkillId])
+  @@index([bnccSkillId])
 }
 
 // ======================================================
@@ -611,6 +1171,84 @@ enum Subject {
 enum UserRole {
   ADMIN
   TEACHER
+}
+
+enum KnowledgeArea {
+  LINGUAGENS
+  MATEMATICA
+  CIENCIAS_DA_NATUREZA
+  CIENCIAS_HUMANAS
+}
+
+enum JourneyStatus {
+  DRAFT
+  IN_ANALYSIS
+  ACTIVE
+  ARCHIVED
+}
+
+enum JourneyDocumentType {
+  FILE
+  TEXT
+}
+
+enum JourneyDocumentStatus {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum JourneyAnalysisStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum JourneyReviewStatus {
+  SUGGESTED
+  APPROVED
+  REJECTED
+}
+
+enum JourneySuggestionType {
+  CONTENT
+  INTERDISCIPLINARY_CONNECTION
+  REFERENCE
+  CLASSROOM_POSSIBILITY
+  SOCIOCULTURAL_REPERTOIRE
+  WRITING_THEME
+}
+
+enum JourneyActivityStatus {
+  DRAFT
+  APPROVED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum BnccStage {
+  ENSINO_MEDIO
+}
+
+enum BnccSourceType {
+  OFFICIAL_PDF
+  OFFICIAL_PORTAL
+  OFFICIAL_DATASET
+}
+
+enum BnccSourceStatus {
+  IMPORTED
+  VERIFIED
+  SUPERSEDED
+  REJECTED
+}
+
+enum BnccLinkConfidence {
+  HIGH
+  MEDIUM
+  LOW
 }
 
 enum BookCategory {

@@ -61,23 +61,43 @@ export type BatchCountersSummary = {
   status: ScanBatchStatus;
 };
 
-export type ProcessAnswerSheetScanBatchSummary = BatchCountersSummary & {
-  batchId: string;
-  eligiblePages: number;
-  processedNow: number;
-  reviewRequiredNow: number;
-  previouslyConfirmed: number;
-  protectedPages: number;
-  skippedNotIdentified: number;
-  skippedNotNormalized: number;
-  technicalFailures: number;
-  durationMs: number;
-  results: BatchPageProcessResult[];
-};
+export type ProcessAnswerSheetScanBatchSummary =
+  BatchCountersSummary & {
+    batchId: string;
+    eligiblePages: number;
+    processedNow: number;
 
-function hasHumanDecision(scan: BatchScanCandidate) {
+    /*
+     * Campo mantido temporariamente para compatibilidade com
+     * actions.ts e componentes existentes.
+     *
+     * No novo fluxo, diagnóstico óptico não exige revisão.
+     * Portanto normalmente será zero.
+     */
+    reviewRequiredNow: number;
+
+    /*
+     * Campos legados mantidos enquanto a interface antiga ainda
+     * existe. Eles serão removidos/simplificados quando alterarmos
+     * actions.ts e /simulados/[id].
+     */
+    previouslyConfirmed: number;
+    protectedPages: number;
+    skippedNotIdentified: number;
+    skippedNotNormalized: number;
+
+    technicalFailures: number;
+    durationMs: number;
+    results: BatchPageProcessResult[];
+  };
+
+function hasExistingHumanDecision(
+  scan: BatchScanCandidate
+) {
   return scan.answers.some(
-    (answer) => answer.reviewed || answer.finalAnswer !== null
+    (answer) =>
+      answer.reviewed ||
+      answer.finalAnswer !== null
   );
 }
 
@@ -100,65 +120,118 @@ function summarizeProcessed(
 async function recalculateBatchCounters(
   batchId: string
 ): Promise<BatchCountersSummary> {
-  const batch = await prisma.answerSheetScanBatch.findUnique({
-    where: {
-      id: batchId,
-    },
-    include: {
-      scans: {
-        include: {
-          answers: {
-            select: {
-              reviewed: true,
-              finalAnswer: true,
-              detectionStatus: true,
+  const batch =
+    await prisma.answerSheetScanBatch.findUnique({
+      where: {
+        id: batchId,
+      },
+      include: {
+        examApplication: {
+          select: {
+            exam: {
+              select: {
+                totalQuestions: true,
+              },
+            },
+          },
+        },
+        scans: {
+          include: {
+            answers: {
+              select: {
+                id: true,
+              },
             },
           },
         },
       },
-    },
-  });
+    });
 
   if (!batch) {
-    throw new Error("Lote de digitalizacao nao encontrado.");
+    throw new Error(
+      "Lote de digitalizacao nao encontrado."
+    );
   }
 
-  const identifiedPages = batch.scans.filter((scan) => scan.answerSheetId).length;
-  const confirmedPages = batch.scans.filter(
-    (scan) => scan.status === AnswerSheetScanStatus.CONFIRMED
-  ).length;
-  const processedPages = batch.scans.filter(
-    (scan) =>
-      Boolean(scan.answerSheetId) &&
-      scan.answers.length === 60 &&
-      (scan.status === AnswerSheetScanStatus.PROCESSED ||
-        scan.status === AnswerSheetScanStatus.REVIEW_REQUIRED ||
-        scan.status === AnswerSheetScanStatus.CONFIRMED)
-  ).length;
-  const reviewRequiredPages = batch.scans.filter((scan) => {
-    const humanDecisionPendingConfirmation =
-      scan.status !== AnswerSheetScanStatus.CONFIRMED &&
-      scan.answers.some((answer) => answer.reviewed || answer.finalAnswer !== null);
+  const totalQuestions =
+    batch.examApplication.exam.totalQuestions;
 
-    return (
-      scan.status === AnswerSheetScanStatus.REVIEW_REQUIRED ||
-      scan.status === AnswerSheetScanStatus.DUPLICATE ||
-      scan.status === AnswerSheetScanStatus.FAILED ||
-      humanDecisionPendingConfirmation
+  const identifiedPages =
+    batch.scans.filter(
+      (scan) => Boolean(scan.answerSheetId)
+    ).length;
+
+  /*
+   * Página processada significa:
+   *
+   * - conseguimos associá-la a uma AnswerSheet;
+   * - todas as questões geraram DetectedAnswer;
+   * - o processamento óptico terminou.
+   *
+   * BLANK, MULTIPLE e UNCERTAIN também possuem DetectedAnswer e
+   * não impedem que a página seja considerada processada.
+   */
+  const processedPages =
+    batch.scans.filter(
+      (scan) =>
+        Boolean(scan.answerSheetId) &&
+        scan.answers.length === totalQuestions &&
+        (
+          scan.status ===
+            AnswerSheetScanStatus.PROCESSED ||
+          scan.status ===
+            AnswerSheetScanStatus.CONFIRMED
+        )
+    ).length;
+
+  /*
+   * "reviewRequiredPages" é um nome legado do schema.
+   *
+   * A partir deste fluxo ele não representa mais:
+   *
+   * UNCERTAIN
+   * MULTIPLE
+   * BLANK
+   *
+   * Ele passa, temporariamente, a funcionar como contador de
+   * páginas que NÃO conseguiram concluir tecnicamente.
+   */
+  const reviewRequiredPages =
+    Math.max(
+      0,
+      batch.totalPages - processedPages
     );
-  }).length;
-  const detectedAnswerTotal = batch.scans.reduce(
-    (sum, scan) => sum + scan.answers.length,
-    0
-  );
-  const allPagesReady =
+
+  /*
+   * CONFIRMED é mantido apenas porque o enum existente ainda não
+   * possui um status chamado COMPLETED.
+   *
+   * Na interface, posteriormente, CONFIRMED será apresentado como
+   * "Concluído", sem qualquer conceito de confirmação humana.
+   *
+   * Se existir ao menos uma página que não terminou, usamos
+   * REVIEW_REQUIRED internamente, mas a UI exibirá
+   * "Concluído com ocorrências".
+   */
+  const status =
     batch.totalPages > 0 &&
-    identifiedPages === batch.totalPages &&
-    processedPages === identifiedPages &&
-    reviewRequiredPages === 0;
-  const status = allPagesReady
-    ? ScanBatchStatus.READY_FOR_CONFIRMATION
-    : ScanBatchStatus.REVIEW_REQUIRED;
+    processedPages === batch.totalPages
+      ? ScanBatchStatus.CONFIRMED
+      : ScanBatchStatus.REVIEW_REQUIRED;
+
+  const confirmedPages =
+    batch.scans.filter(
+      (scan) =>
+        scan.status ===
+        AnswerSheetScanStatus.CONFIRMED
+    ).length;
+
+  const detectedAnswerTotal =
+    batch.scans.reduce(
+      (sum, scan) =>
+        sum + scan.answers.length,
+      0
+    );
 
   await prisma.answerSheetScanBatch.update({
     where: {
@@ -195,38 +268,42 @@ export async function processAnswerSheetScanBatch({
   batchId: string;
 }): Promise<ProcessAnswerSheetScanBatchSummary> {
   const startedAt = Date.now();
-  const batch = await prisma.answerSheetScanBatch.findFirst({
-    where: {
-      id: batchId,
-      examApplicationId,
-      examApplication: {
-        examId,
-      },
-    },
-    include: {
-      scans: {
-        orderBy: {
-          pageNumber: "asc",
+
+  const batch =
+    await prisma.answerSheetScanBatch.findFirst({
+      where: {
+        id: batchId,
+        examApplicationId,
+        examApplication: {
+          examId,
         },
-        select: {
-          id: true,
-          pageNumber: true,
-          answerSheetId: true,
-          normalizedImageKey: true,
-          status: true,
-          answers: {
-            select: {
-              reviewed: true,
-              finalAnswer: true,
+      },
+      include: {
+        scans: {
+          orderBy: {
+            pageNumber: "asc",
+          },
+          select: {
+            id: true,
+            pageNumber: true,
+            answerSheetId: true,
+            normalizedImageKey: true,
+            status: true,
+            answers: {
+              select: {
+                reviewed: true,
+                finalAnswer: true,
+              },
             },
           },
         },
       },
-    },
-  });
+    });
 
   if (!batch) {
-    throw new Error("Lote de digitalizacao nao encontrado.");
+    throw new Error(
+      "Lote de digitalizacao nao encontrado."
+    );
   }
 
   await prisma.answerSheetScanBatch.update({
@@ -235,71 +312,176 @@ export async function processAnswerSheetScanBatch({
     },
     data: {
       status: ScanBatchStatus.PROCESSING,
-      startedAt: new Date(),
+      startedAt:
+        batch.startedAt ?? new Date(),
       completedAt: null,
     },
   });
 
   const results: BatchPageProcessResult[] = [];
 
+  /*
+   * ==============================================================
+   * PROCESSAMENTO INDEPENDENTE POR PÁGINA
+   * ==============================================================
+   *
+   * Uma página com problema NÃO interrompe o restante do lote.
+   *
+   * Exemplo:
+   *
+   * 32 páginas
+   * página 17 falha
+   *
+   * → página 18 continua
+   * → página 19 continua
+   * → ...
+   * → 31 resultados podem ficar válidos normalmente.
+   */
   for (const scan of batch.scans) {
-    if (scan.status === AnswerSheetScanStatus.CONFIRMED) {
+    /*
+     * ============================================================
+     * PROTEÇÃO DE DADOS LEGADOS JÁ CONFIRMADOS
+     * ============================================================
+     *
+     * Isto NÃO representa uma etapa obrigatória do novo fluxo.
+     *
+     * Serve somente para não sobrescrever dados antigos que tenham
+     * sido explicitamente confirmados antes desta mudança.
+     */
+    if (
+      scan.status ===
+      AnswerSheetScanStatus.CONFIRMED
+    ) {
       results.push({
         kind: "SKIPPED_CONFIRMED",
         scanId: scan.id,
         pageNumber: scan.pageNumber,
         status: scan.status,
-        reason: "Folha ja confirmada por revisao humana.",
+        reason:
+          "Folha antiga ja consolidada; dados preservados.",
       });
+
       continue;
     }
 
-    if (hasHumanDecision(scan)) {
+    /*
+     * Mesma ideia:
+     *
+     * uma decisão humana preexistente não deve ser destruída por um
+     * reprocessamento automático.
+     *
+     * Em uma importação nova isso não acontece, portanto não cria
+     * qualquer gate no fluxo normal.
+     */
+    if (hasExistingHumanDecision(scan)) {
       results.push({
         kind: "SKIPPED_HUMAN_DECISION",
         scanId: scan.id,
         pageNumber: scan.pageNumber,
         status: scan.status,
-        reason: "Folha possui revisao humana ou resposta final.",
+        reason:
+          "Folha possui decisao humana preexistente e foi preservada.",
       });
+
       continue;
     }
 
+    /*
+     * ============================================================
+     * SEM IDENTIFICAÇÃO
+     * ============================================================
+     *
+     * Aqui existe uma impossibilidade real:
+     *
+     * sem AnswerSheet não sabemos a qual aluno devemos associar
+     * StudentAnswer.
+     *
+     * A página vira ocorrência, mas o lote continua.
+     */
     if (!scan.answerSheetId) {
       results.push({
         kind: "SKIPPED_NOT_IDENTIFIED",
         scanId: scan.id,
         pageNumber: scan.pageNumber,
         status: scan.status,
-        reason: "Pagina sem QR identificado.",
+        reason:
+          "Nao foi possivel identificar o aluno desta pagina.",
       });
+
       continue;
     }
 
+    /*
+     * ============================================================
+     * PREPARAÇÃO TÉCNICA DA IMAGEM
+     * ============================================================
+     *
+     * Isto NÃO será uma etapa para o professor.
+     *
+     * O algoritmo atual ainda depende internamente da imagem
+     * preparada em coordenadas canônicas.
+     *
+     * Quando alterarmos actions.ts, essa preparação será executada
+     * automaticamente antes deste processamento.
+     */
     if (!scan.normalizedImageKey) {
-      results.push({
-        kind: "SKIPPED_NOT_NORMALIZED",
-        scanId: scan.id,
-        pageNumber: scan.pageNumber,
-        status: scan.status,
-        reason: "Pagina identificada sem imagem normalizada.",
-      });
-      continue;
-    }
-
-    try {
-      const pageResult = await processAnswerSheetScan({
-        scanId: scan.id,
-      });
-
-      results.push(summarizeProcessed(pageResult));
-    } catch (error) {
       await prisma.answerSheetScan.update({
         where: {
           id: scan.id,
         },
         data: {
-          status: AnswerSheetScanStatus.FAILED,
+          status:
+            AnswerSheetScanStatus.FAILED,
+          processedAt: new Date(),
+        },
+      });
+
+      results.push({
+        kind: "SKIPPED_NOT_NORMALIZED",
+        scanId: scan.id,
+        pageNumber: scan.pageNumber,
+        status:
+          AnswerSheetScanStatus.FAILED,
+        reason:
+          "A preparacao tecnica da imagem nao foi concluida.",
+      });
+
+      continue;
+    }
+
+    /*
+     * ============================================================
+     * LEITURA + PERSISTÊNCIA
+     * ============================================================
+     *
+     * processAnswerSheetScan agora faz:
+     *
+     * imagem
+     * → DetectedAnswer
+     * → ExamResult
+     * → StudentAnswer
+     * → AnswerSheet CORRECTED
+     */
+    try {
+      const pageResult =
+        await processAnswerSheetScan({
+          scanId: scan.id,
+        });
+
+      results.push(
+        summarizeProcessed(pageResult)
+      );
+    } catch (error) {
+      /*
+       * Uma falha técnica afeta apenas esta página.
+       */
+      await prisma.answerSheetScan.update({
+        where: {
+          id: scan.id,
+        },
+        data: {
+          status:
+            AnswerSheetScanStatus.FAILED,
           processedAt: new Date(),
         },
       });
@@ -316,34 +498,90 @@ export async function processAnswerSheetScanBatch({
     }
   }
 
-  const counters = await recalculateBatchCounters(batch.id);
+  /*
+   * Depois de tentar todas as páginas, consolidamos o lote.
+   */
+  const counters =
+    await recalculateBatchCounters(batch.id);
+
+  const processedNow =
+    results.filter(
+      (result) =>
+        result.kind === "PROCESSED"
+    ).length;
+
+  const previouslyConfirmed =
+    results.filter(
+      (result) =>
+        result.kind ===
+        "SKIPPED_CONFIRMED"
+    ).length;
+
+  const protectedPages =
+    results.filter(
+      (result) =>
+        result.kind ===
+        "SKIPPED_HUMAN_DECISION"
+    ).length;
+
+  const skippedNotIdentified =
+    results.filter(
+      (result) =>
+        result.kind ===
+        "SKIPPED_NOT_IDENTIFIED"
+    ).length;
+
+  const skippedNotNormalized =
+    results.filter(
+      (result) =>
+        result.kind ===
+        "SKIPPED_NOT_NORMALIZED"
+    ).length;
+
+  const technicalFailures =
+    results.filter(
+      (result) =>
+        result.kind === "FAILED" ||
+        result.kind ===
+          "SKIPPED_NOT_NORMALIZED"
+    ).length;
+
+  /*
+   * No novo modelo, MULTIPLE/UNCERTAIN não geram uma necessidade
+   * obrigatória de revisão.
+   *
+   * Mantemos o campo apenas para compatibilidade temporária.
+   */
+  const reviewRequiredNow = 0;
 
   return {
     batchId: batch.id,
+
     ...counters,
-    eligiblePages: batch.scans.filter(
-      (scan) => scan.answerSheetId && scan.normalizedImageKey
-    ).length,
-    processedNow: results.filter((result) => result.kind === "PROCESSED").length,
-    reviewRequiredNow: results.filter(
-      (result) =>
-        result.kind === "PROCESSED" && result.status === "REVIEW_REQUIRED"
-    ).length,
-    previouslyConfirmed: results.filter(
-      (result) => result.kind === "SKIPPED_CONFIRMED"
-    ).length,
-    protectedPages: results.filter(
-      (result) => result.kind === "SKIPPED_HUMAN_DECISION"
-    ).length,
-    skippedNotIdentified: results.filter(
-      (result) => result.kind === "SKIPPED_NOT_IDENTIFIED"
-    ).length,
-    skippedNotNormalized: results.filter(
-      (result) => result.kind === "SKIPPED_NOT_NORMALIZED"
-    ).length,
-    technicalFailures: results.filter((result) => result.kind === "FAILED")
-      .length,
-    durationMs: Date.now() - startedAt,
+
+    eligiblePages:
+      batch.scans.filter(
+        (scan) =>
+          Boolean(scan.answerSheetId)
+      ).length,
+
+    processedNow,
+
+    reviewRequiredNow,
+
+    previouslyConfirmed,
+
+    protectedPages,
+
+    skippedNotIdentified,
+
+    skippedNotNormalized,
+
+    technicalFailures,
+
+    durationMs:
+      Date.now() - startedAt,
+
     results,
   };
 }

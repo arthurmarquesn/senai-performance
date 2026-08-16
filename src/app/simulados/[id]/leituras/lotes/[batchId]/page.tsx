@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, ArrowRight, ListChecks } from "lucide-react";
 
+import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { AppLayout } from "@/components/AppLayout";
 import { AnswerSheetBatchCompleteForm } from "@/components/AnswerSheetBatchCompleteForm";
 import { AnswerSheetBatchCorrectForm } from "@/components/AnswerSheetBatchCorrectForm";
@@ -24,11 +25,11 @@ import {
 
 const filters: Array<{ id: ReviewQueueFilter; label: string }> = [
   { id: "all", label: "Todas" },
-  { id: "attention", label: "Requerem atencao" },
+  { id: "attention", label: "Revisao recomendada" },
   { id: "blank", label: "Em branco" },
   { id: "partial", label: "Em revisao" },
-  { id: "waiting", label: "Aguardando confirmacao" },
-  { id: "confirmed", label: "Confirmadas" },
+  { id: "waiting", label: "Sem alerta" },
+  { id: "confirmed", label: "Concluidas" },
   { id: "problems", label: "Problemas" },
 ];
 
@@ -81,9 +82,15 @@ function ReviewRowCard({
         <p>UNCERTAIN: {row.uncertain}</p>
         <p>BLANK: {row.blank}</p>
         <p>
-          Revisadas: {row.reviewed}/{row.totalAnswers || 60}
+          Revisadas: {row.reviewed}/{row.totalAnswers}
         </p>
       </div>
+
+      {row.pending === 0 && !row.problem && row.status !== "CONFIRMED" && (
+        <p className="text-xs font-medium text-green-700">
+          Sem revisao recomendada; pronta para correcao.
+        </p>
+      )}
 
       {row.status === "CONFIRMED" && (
         <p className="text-xs text-zinc-500">
@@ -102,7 +109,7 @@ function ReviewRowCard({
 
       {row.pending > 0 && !row.problem && row.status !== "CONFIRMED" && (
         <p className="text-xs font-medium text-amber-700">
-          {row.pending} pendente(s) de revisao humana.
+          {row.pending} leitura(s) com revisao recomendada.
         </p>
       )}
     </article>
@@ -169,23 +176,38 @@ export default async function AnswerSheetBatchReviewQueuePage({
   }
 
   const filteredRows = getRowsForFilter(queue, activeFilter);
-  const pendingBatchPages = queue.totalPages - queue.confirmedPages;
+  const structuralProblemPages = queue.groups.problems.length;
+  const incompleteOrProblemPages = queue.totalPages - queue.processedPages;
   const canCompleteBatch =
     queue.totalPages > 0 &&
-    queue.confirmedPages === queue.totalPages &&
-    queue.groups.attention.length === 0 &&
-    queue.groups.blank.length === 0 &&
-    queue.groups.partial.length === 0 &&
-    queue.groups.waiting.length === 0 &&
-    queue.groups.problems.length === 0;
-  const canCorrectBatch = queue.status === "CONFIRMED";
+    queue.processedPages === queue.totalPages &&
+    structuralProblemPages === 0;
+  const canCorrectBatch = queue.processedPages > 0;
 
   return (
     <AppLayout>
+      <AppBreadcrumb
+        items={[
+          {
+            label: "Simulados",
+            href: "/simulados",
+          },
+          {
+            label: queue.examTitle,
+            href: `/simulados/${id}`,
+          },
+          {
+            label: "Digitalizacao",
+          },
+          {
+            label: "Lote",
+          },
+        ]}
+      />
       <PageHeader
-        eyebrow="Fila de revisao"
+        eyebrow="Fila optica"
         title={queue.sourceFileName}
-        description={`${queue.examTitle} | Processamento optico concluido nao significa revisao humana concluida.`}
+        description={`${queue.examTitle} | Revisao humana e opcional; problemas estruturais continuam destacados.`}
         icon={<ListChecks size={24} />}
         actions={
           <Link
@@ -201,8 +223,8 @@ export default async function AnswerSheetBatchReviewQueuePage({
             <MetricCell label="Paginas" value={queue.totalPages} />
             <MetricCell label="Identificadas" value={queue.identifiedPages} />
             <MetricCell label="Processadas" value={queue.processedPages} />
-            <MetricCell label="Revisao" value={queue.reviewRequiredPages} />
-            <MetricCell label="Confirmadas" value={queue.confirmedPages} />
+            <MetricCell label="Revisao recomendada" value={queue.groups.attention.length} />
+            <MetricCell label="Concluidas" value={queue.confirmedPages} />
             <MetricCell label="Falhas" value={queue.failedPages} />
             <MetricCell label="Status lote" value={queue.status} tone="brand" />
           </MetricStrip>
@@ -226,7 +248,7 @@ export default async function AnswerSheetBatchReviewQueuePage({
         <Panel>
           <SectionHeader
             title="Conclusao formal"
-            description="Concluir a leitura do lote nao corrige provas e nao gera notas."
+            description="Concluir a leitura do lote marca folhas processadas como concluidas, sem exigir revisao humana."
           />
           <AnswerSheetBatchCompleteForm
             examId={id}
@@ -235,20 +257,20 @@ export default async function AnswerSheetBatchReviewQueuePage({
             confirmedPages={queue.confirmedPages}
             reviewedAnswers={queue.reviewedAnswers}
             canComplete={canCompleteBatch}
-            pendingCount={pendingBatchPages}
+            pendingCount={incompleteOrProblemPages}
           />
         </Panel>
 
         <Panel>
           <SectionHeader
             title="Correcao das provas"
-            description="Corrigir cria resultados oficiais a partir das respostas confirmadas e do gabarito cadastrado."
+            description="Corrigir cria resultados oficiais a partir da resposta efetiva e do gabarito cadastrado."
           />
           <MetricStrip columns="md:grid-cols-2">
             <MetricCell
               label="Leitura"
-              value={`${queue.confirmedPages}/${queue.totalPages}`}
-              detail="folhas confirmadas"
+              value={`${queue.processedPages}/${queue.totalPages}`}
+              detail="folhas processadas"
             />
             <MetricCell
               label="Correcao"
@@ -295,31 +317,31 @@ export default async function AnswerSheetBatchReviewQueuePage({
           <>
             <QueueSection
               title="Requerem atencao"
-              description="Ordenacao: mais MULTIPLE, depois mais UNCERTAIN, depois menor pagina."
+              description="Baixa confianca e ambiguidades. Sao alertas, nao bloqueios."
               rows={queue.groups.attention}
               examId={id}
             />
             <QueueSection
               title="Em branco pendente"
-              description="BLANK nao e erro optico automatico, mas exige confirmacao humana nesta fase."
+              description="BLANK automatico nao bloqueia; fica disponivel para auditoria e override."
               rows={queue.groups.blank}
               examId={id}
             />
             <QueueSection
               title="Revisao em andamento"
-              description="Folhas com parte das questoes revisada e parte pendente."
+              description="Folhas com algumas decisoes humanas e outras leituras automaticas."
               rows={queue.groups.partial}
               examId={id}
             />
             <QueueSection
-              title="Aguardando confirmacao"
-              description="Folhas processadas que ainda precisam passar pela revisao individual."
+              title="Sem revisao recomendada"
+              description="Folhas processadas que podem seguir direto para correcao."
               rows={queue.groups.waiting}
               examId={id}
             />
             <QueueSection
-              title="Confirmadas"
-              description="Folhas ja confirmadas por humano; nao aparecem como pendencia."
+              title="Concluidas"
+              description="Folhas marcadas como concluidas; revisao posterior continua opcional."
               rows={queue.groups.confirmed}
               examId={id}
             />

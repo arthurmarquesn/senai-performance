@@ -50,6 +50,30 @@ export default async function RedacoesPage() {
             redacoes.length
         )
       : 0;
+  const studentOptions = alunos.map((aluno) => ({
+    id: aluno.id,
+    name: aluno.name,
+    classRoom: {
+      name: aluno.classRoom.name,
+    },
+  }));
+  const examOptions = simulados.map((simulado) => ({
+    id: simulado.id,
+    title: simulado.title,
+    grade: simulado.grade,
+  }));
+  const correctionOptions = redacoes.map((redacao) => ({
+    id: redacao.id,
+    studentId: redacao.studentId,
+    examId: redacao.examId,
+    competency1: redacao.competency1,
+    competency2: redacao.competency2,
+    competency3: redacao.competency3,
+    competency4: redacao.competency4,
+    competency5: redacao.competency5,
+    totalScore: redacao.totalScore,
+    comment: redacao.comment,
+  }));
 
   return (
     <AppLayout>
@@ -75,7 +99,11 @@ export default async function RedacoesPage() {
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(420px,1.05fr)]">
         <div className="space-y-6">
-          <EssayCorrectionForm students={alunos} exams={simulados} />
+          <EssayCorrectionForm
+            students={studentOptions}
+            exams={examOptions}
+            existingCorrections={correctionOptions}
+          />
         </div>
 
         <Panel>

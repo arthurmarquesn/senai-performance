@@ -30,6 +30,12 @@ function fail(message: string): never {
   throw new BatchCompletionValidationError(message);
 }
 
+const completableScanStatuses = new Set<AnswerSheetScanStatus>([
+  AnswerSheetScanStatus.PROCESSED,
+  AnswerSheetScanStatus.REVIEW_REQUIRED,
+  AnswerSheetScanStatus.CONFIRMED,
+]);
+
 async function loadBatchForCompletion(
   tx: Prisma.TransactionClient,
   {
@@ -63,6 +69,9 @@ async function loadBatchForCompletion(
           answers: {
             select: {
               reviewed: true,
+              finalAnswer: true,
+              detectedAnswer: true,
+              detectionStatus: true,
             },
           },
         },
@@ -92,9 +101,9 @@ function validateBatchCanBeCompleted(
   }
 
   for (const scan of batch.scans) {
-    if (scan.status !== AnswerSheetScanStatus.CONFIRMED) {
+    if (!completableScanStatuses.has(scan.status)) {
       fail(
-        `Pagina ${scan.pageNumber} ainda esta com status ${scan.status}. Todas precisam estar CONFIRMED.`
+        `Pagina ${scan.pageNumber} esta com status ${scan.status}. Apenas paginas processadas podem concluir o lote.`
       );
     }
 
@@ -110,12 +119,6 @@ function validateBatchCanBeCompleted(
       fail(
         `Pagina ${scan.pageNumber} possui ${scan.answers.length} resposta(s), mas o esperado e ${totalQuestions}.`
       );
-    }
-
-    const unreviewed = scan.answers.filter((answer) => !answer.reviewed).length;
-
-    if (unreviewed > 0) {
-      fail(`Pagina ${scan.pageNumber} possui ${unreviewed} resposta(s) sem revisao.`);
     }
   }
 }
@@ -169,6 +172,22 @@ export async function completeAnswerSheetScanBatchReview({
     }
 
     const now = new Date();
+
+    await tx.answerSheetScan.updateMany({
+      where: {
+        scanBatchId: batch.id,
+        status: {
+          in: [
+            AnswerSheetScanStatus.PROCESSED,
+            AnswerSheetScanStatus.REVIEW_REQUIRED,
+          ],
+        },
+      },
+      data: {
+        status: AnswerSheetScanStatus.CONFIRMED,
+        confirmedAt: now,
+      },
+    });
 
     await tx.answerSheetScanBatch.update({
       where: {

@@ -1,42 +1,44 @@
 "use client";
 
-import { useActionState } from "react";
-import { useFormStatus } from "react-dom";
-import { Check, CheckCircle2, Loader2 } from "lucide-react";
+import { useActionState, useState, useTransition } from "react";
+import { CheckCircle2 } from "lucide-react";
 
 import {
   completeScanReviewAction,
-  confirmClearReadingsAction,
   correctConfirmedScanAction,
-  reviewQuestionAction,
   type CompleteScanReviewState,
-  type ConfirmClearReadingsState,
   type CorrectConfirmedScanState,
-  type ReviewQuestionState,
 } from "@/app/simulados/[id]/leituras/[scanId]/actions";
 
 const alternatives = ["A", "B", "C", "D", "E"] as const;
-const blankValue = "__BLANK__";
+type ReviewAlternative = (typeof alternatives)[number];
 
-function PendingIcon({ pending }: { pending: boolean }) {
-  return pending ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />;
-}
+type ReviewQuestionState = {
+  status: "idle" | "success" | "error";
+  message?: string;
+};
 
-function ReviewSubmitButtons({ current }: { current: string | null | undefined }) {
-  const { pending } = useFormStatus();
+function ReviewSubmitButtons({
+  current,
+  pending,
+  onSelect,
+}: {
+  current: string | null | undefined;
+  pending: boolean;
+  onSelect: (answer: ReviewAlternative | null) => void;
+}) {
 
   return (
     <div className="flex flex-wrap gap-2">
       {alternatives.map((alternative) => (
         <button
           key={alternative}
-          type="submit"
-          name="finalAnswer"
-          value={alternative}
+          type="button"
+          onClick={() => onSelect(alternative)}
           disabled={pending}
-          className={`inline-flex h-9 min-w-9 items-center justify-center rounded-lg border px-3 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-70 ${
+          className={`inline-flex h-9 min-w-9 items-center justify-center rounded-lg border px-3 text-xs font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-70 ${
             current === alternative
-              ? "border-red-600 bg-red-600 text-white"
+              ? "border-red-700 bg-red-700 text-white ring-2 ring-red-200"
               : "border-zinc-200 bg-white text-zinc-700 hover:border-red-200 hover:bg-red-50 hover:text-red-700"
           }`}
         >
@@ -44,13 +46,12 @@ function ReviewSubmitButtons({ current }: { current: string | null | undefined }
         </button>
       ))}
       <button
-        type="submit"
-        name="finalAnswer"
-        value={blankValue}
+        type="button"
+        onClick={() => onSelect(null)}
         disabled={pending}
-        className={`inline-flex h-9 items-center justify-center rounded-lg border px-3 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-70 ${
+        className={`inline-flex h-9 items-center justify-center rounded-lg border px-3 text-xs font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-70 ${
           current === null
-            ? "border-amber-500 bg-amber-50 text-amber-800"
+            ? "border-amber-600 bg-amber-500 text-white ring-2 ring-amber-200"
             : "border-zinc-200 bg-white text-zinc-700 hover:border-amber-200 hover:bg-amber-50 hover:text-amber-800"
         }`}
       >
@@ -71,18 +72,63 @@ export function ReviewQuestionForm({
   question: number;
   currentFinalAnswer: string | null | undefined;
 }) {
-  const initialState: ReviewQuestionState = {
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null | undefined>(
+    currentFinalAnswer
+  );
+  const [state, setState] = useState<ReviewQuestionState>({
     status: "idle",
-  };
-  const [state, action] = useActionState(reviewQuestionAction, initialState);
+  });
+  const [isPending, startTransition] = useTransition();
+
+  function saveReviewAnswer(finalAnswer: ReviewAlternative | null) {
+    const previousAnswer = selectedAnswer;
+
+    setSelectedAnswer(finalAnswer);
+    startTransition(async () => {
+      setState({
+        status: "idle",
+      });
+
+      const response = await fetch(
+        `/simulados/${examId}/leituras/${scanId}/questoes/${question}/review`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            finalAnswer,
+          }),
+        }
+      );
+      const result = (await response.json().catch(() => null)) as
+        | ReviewQuestionState
+        | null;
+
+      if (!response.ok || result?.status !== "success") {
+        setSelectedAnswer(previousAnswer);
+        setState({
+          status: "error",
+          message: result?.message ?? "Nao foi possivel revisar a questao.",
+        });
+        return;
+      }
+
+      setState(result);
+    });
+  }
 
   return (
-    <form action={action} className="grid gap-2">
-      <input type="hidden" name="examId" value={examId} />
-      <input type="hidden" name="scanId" value={scanId} />
-      <input type="hidden" name="question" value={question} />
+    <div className="grid gap-2">
+      <ReviewSubmitButtons
+        current={selectedAnswer}
+        pending={isPending}
+        onSelect={saveReviewAnswer}
+      />
 
-      <ReviewSubmitButtons current={currentFinalAnswer} />
+      <p className="text-xs text-zinc-500">
+        Opcao atual: {selectedAnswer === undefined ? "pendente" : selectedAnswer ?? "em branco"}
+      </p>
 
       {state.status !== "idle" && (
         <p
@@ -93,55 +139,7 @@ export function ReviewQuestionForm({
           {state.message}
         </p>
       )}
-    </form>
-  );
-}
-
-export function ConfirmClearReadingsForm({
-  examId,
-  scanId,
-}: {
-  examId: string;
-  scanId: string;
-}) {
-  const initialState: ConfirmClearReadingsState = {
-    status: "idle",
-  };
-  const [state, action] = useActionState(confirmClearReadingsAction, initialState);
-
-  return (
-    <form action={action} className="grid gap-2">
-      <input type="hidden" name="examId" value={examId} />
-      <input type="hidden" name="scanId" value={scanId} />
-
-      <ConfirmButton label="Confirmar leituras claras" />
-
-      {state.status !== "idle" && (
-        <p
-          className={`text-xs font-medium ${
-            state.status === "success" ? "text-green-700" : "text-red-700"
-          }`}
-        >
-          {state.message}
-          {state.summary ? ` Pendentes: ${state.summary.pending}.` : ""}
-        </p>
-      )}
-    </form>
-  );
-}
-
-function ConfirmButton({ label }: { label: string }) {
-  const { pending } = useFormStatus();
-
-  return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="inline-flex items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-70"
-    >
-      <PendingIcon pending={pending} />
-      {pending ? "Processando..." : label}
-    </button>
+    </div>
   );
 }
 
@@ -167,7 +165,7 @@ export function CompleteScanReviewForm({
         className="performance-primary-action inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white"
       >
         <CheckCircle2 size={16} />
-        Concluir revisao da folha
+        Concluir leitura da folha
       </button>
 
       {state.status !== "idle" && (
@@ -208,7 +206,7 @@ export function CorrectConfirmedScanForm({
       onSubmit={(event) => {
         if (
           !window.confirm(
-            "Esta acao transformara as respostas confirmadas desta folha em resultado oficial do simulado."
+            "Esta acao criara o resultado oficial com base na resposta efetiva de cada questao."
           )
         ) {
           event.preventDefault();
@@ -229,7 +227,7 @@ export function CorrectConfirmedScanForm({
 
       {!canCorrect && (
         <p className="text-xs font-medium text-amber-700">
-          Corrija apenas folhas CONFIRMED de lotes CONFIRMED.
+          Corrija apenas folhas identificadas, normalizadas e ja lidas pela optica.
         </p>
       )}
 

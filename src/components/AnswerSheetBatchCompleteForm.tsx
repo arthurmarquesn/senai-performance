@@ -62,7 +62,7 @@ export function AnswerSheetBatchCompleteForm({
       onSubmit={(event) => {
         if (
           !window.confirm(
-            `Todas as ${totalPages} folhas foram revisadas e confirmadas. Deseja concluir a leitura deste lote?`
+            `As ${totalPages} folhas processadas serao marcadas como leitura concluida. Deseja continuar?`
           )
         ) {
           event.preventDefault();
@@ -75,16 +75,16 @@ export function AnswerSheetBatchCompleteForm({
       <div>
         <p className="text-sm font-semibold text-zinc-950">Leitura do lote</p>
         <p className="text-sm text-zinc-600">
-          {confirmedPages} / {totalPages} folhas confirmadas
+          {confirmedPages} / {totalPages} folhas concluidas
         </p>
         <p className="text-xs text-zinc-500">
-          {reviewedAnswers} respostas revisadas.
+          {reviewedAnswers} decisao(oes) humana(s) registradas.
         </p>
       </div>
 
       {!canComplete && (
         <p className="text-xs font-medium text-amber-700">
-          Ainda existem {pendingCount} folha(s) pendente(s) ou com problema.
+          Ainda existem {pendingCount} folha(s) com problema estrutural ou leitura incompleta.
         </p>
       )}
 
@@ -103,7 +103,7 @@ export function AnswerSheetBatchCompleteForm({
             <p>
               {state.summary.confirmedPages} folhas confirmadas,{" "}
               {state.summary.reviewedAnswers}/{state.summary.expectedAnswers}{" "}
-              respostas revisadas. Status: {state.summary.status}.
+              decisao(oes) humana(s) registradas. Status: {state.summary.status}.
             </p>
           )}
         </div>

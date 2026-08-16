@@ -8,6 +8,7 @@ import {
   imageDataFromPngBytes,
 } from "@/lib/answer-sheet-scans/bubble-calibration";
 import { readNormalizedScanImage } from "@/lib/answer-sheet-scans/storage";
+import { assertSupportedOpticalTotalQuestions } from "@/lib/answer-sheet-total-questions";
 import { prisma } from "@/lib/prisma";
 
 export async function createQuestionReviewCropPng({
@@ -19,7 +20,7 @@ export async function createQuestionReviewCropPng({
   scanId: string;
   question: number;
 }) {
-  if (!Number.isInteger(question) || question < 1 || question > 60) {
+  if (!Number.isInteger(question) || question < 1) {
     throw new Error("Questao invalida.");
   }
 
@@ -55,6 +56,13 @@ export async function createQuestionReviewCropPng({
   }
 
   const totalQuestions = scan.answerSheet.examApplication.exam.totalQuestions;
+
+  assertSupportedOpticalTotalQuestions(totalQuestions);
+
+  if (question > totalQuestions) {
+    throw new Error("Questao invalida.");
+  }
+
   const bytes = await readNormalizedScanImage(scan.normalizedImageKey);
   const imageData = await imageDataFromPngBytes(new Uint8Array(bytes));
   const bubbles = ANSWER_SHEET_ALTERNATIVES.map((alternative) =>

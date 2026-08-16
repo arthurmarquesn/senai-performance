@@ -8,17 +8,11 @@ import {
   ListChecks,
 } from "lucide-react";
 
-import {
-  createBlock,
-  saveAnswerKey,
-  toggleCanceledQuestion,
-} from "./actions";
+import { createBlock } from "./actions";
+import { AnswerKeyEditor } from "@/components/AnswerKeyEditor";
 import { AnswerSheetGeneratorForm } from "@/components/AnswerSheetGeneratorForm";
-import { AnswerSheetScanIdentifyForm } from "@/components/AnswerSheetScanIdentifyForm";
-import { AnswerSheetScanBatchProcessForm } from "@/components/AnswerSheetScanBatchProcessForm";
 import { AnswerSheetScanImportForm } from "@/components/AnswerSheetScanImportForm";
-import { AnswerSheetScanNormalizeForm } from "@/components/AnswerSheetScanNormalizeForm";
-import { AnswerSheetScanProcessForm } from "@/components/AnswerSheetScanProcessForm";
+import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { AppLayout } from "@/components/AppLayout";
 import {
   Badge,
@@ -30,14 +24,12 @@ import {
 } from "@/components/design-system";
 import { prisma } from "@/lib/prisma";
 
-const alternatives = ["A", "B", "C", "D", "E"];
-
 const scanBatchStatusLabels = {
   UPLOADED: "Recebido",
   PROCESSING: "Processando",
-  REVIEW_REQUIRED: "Revisão necessária",
-  READY_FOR_CONFIRMATION: "Aguardando confirmação",
-  CONFIRMED: "Confirmado",
+  REVIEW_REQUIRED: "Concluído com ocorrências",
+  READY_FOR_CONFIRMATION: "Concluído",
+  CONFIRMED: "Concluído",
   FAILED: "Falhou",
 };
 
@@ -172,14 +164,19 @@ export default async function SimuladoDetalhePage({
     (acc, application) => acc + application._count.answerSheets,
     0
   );
-
-  const questions = Array.from(
-    { length: simulado.totalQuestions },
-    (_, index) => index + 1
-  );
-
   return (
     <AppLayout>
+      <AppBreadcrumb
+        items={[
+          {
+            label: "Simulados",
+            href: "/simulados",
+          },
+          {
+            label: simulado.title,
+          },
+        ]}
+      />
       <PageHeader
         eyebrow="Simulado"
         title={simulado.title}
@@ -233,9 +230,27 @@ export default async function SimuladoDetalhePage({
         }
       />
 
+      <nav className="mb-6 flex gap-1 overflow-x-auto rounded-lg border border-zinc-200 bg-white p-1 print:hidden">
+        {[
+          ["Visao geral", "#visao-geral"],
+          ["Gabarito", "#gabarito"],
+          ["Aplicacoes", "#aplicacoes"],
+          ["Digitalizacao", "#digitalizacao"],
+          ["Resultados", "#resultados"],
+        ].map(([label, href]) => (
+          <a
+            key={href}
+            href={href}
+            className="whitespace-nowrap rounded-md px-3 py-2 text-sm font-semibold text-zinc-600 hover:bg-red-50 hover:text-red-700"
+          >
+            {label}
+          </a>
+        ))}
+      </nav>
+
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
         <div className="space-y-6">
-          <Panel>
+          <Panel id="visao-geral">
             <SectionHeader
               eyebrow="Estrutura"
               title="Adicionar bloco"
@@ -330,7 +345,7 @@ export default async function SimuladoDetalhePage({
             </div>
           </Panel>
 
-          <Panel>
+          <Panel id="gabarito">
             <SectionHeader
               eyebrow="Gabarito"
               title="Gabarito oficial"
@@ -338,66 +353,25 @@ export default async function SimuladoDetalhePage({
             />
 
             <div className="grid gap-3">
-              {questions.map((question) => {
-                const currentAnswer = simulado.answerKey.find(
-                  (item) => item.question === question
-                );
-
-                return (
-                  <form
-                    key={question}
-                    action={saveAnswerKey}
-                    className="flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-white/70 p-4 md:flex-row md:items-center md:justify-between"
-                  >
-                    <input type="hidden" name="examId" value={simulado.id} />
-                    <input type="hidden" name="question" value={question} />
-
-                    <p className="font-semibold text-zinc-900">
-                      Questão {question}
-                    </p>
-
-                    <div className="flex flex-wrap items-center gap-2">
-                      {alternatives.map((alternative) => (
-                        <button
-                          key={alternative}
-                          type="submit"
-                          name="answer"
-                          value={alternative}
-                          className={`rounded-xl border px-3 py-2 text-sm font-semibold ${
-                            currentAnswer?.answer === alternative
-                              ? "border-red-600 bg-red-600 text-white"
-                              : "border-zinc-200 bg-white text-zinc-700 hover:border-red-200 hover:bg-red-50 hover:text-red-700"
-                          }`}
-                        >
-                          {alternative}
-                        </button>
-                      ))}
-
-                      <button
-                        type="submit"
-                        formAction={toggleCanceledQuestion}
-                        className={`ml-1 rounded-xl px-3 py-2 text-sm font-semibold ${
-                          currentAnswer?.canceled
-                            ? "bg-amber-600 text-white"
-                            : "bg-zinc-200 text-zinc-700 hover:bg-amber-100 hover:text-amber-800"
-                        }`}
-                      >
-                        {currentAnswer?.canceled ? "Questão anulada" : "Anular"}
-                      </button>
-                    </div>
-                  </form>
-                );
-              })}
+              <AnswerKeyEditor
+                examId={simulado.id}
+                totalQuestions={simulado.totalQuestions}
+                initialAnswerKey={simulado.answerKey.map((item) => ({
+                  question: item.question,
+                  answer: item.answer,
+                  canceled: item.canceled,
+                }))}
+              />
             </div>
           </Panel>
         </div>
 
         <aside className="space-y-6">
-          <Panel className="xl:sticky xl:top-24">
+          <Panel id="aplicacoes" className="xl:sticky xl:top-24">
             <SectionHeader
               eyebrow="Gabaritos físicos"
               title="Gerar folhas por turma"
-              description="Cria uma aplicação do simulado na turma e prepara uma folha para cada aluno. PDF e leitura óptica ficam para a próxima etapa."
+              description="Cria uma aplicação do simulado na turma e prepara uma folha para cada aluno. Depois, baixe as folhas e importe o PDF preenchido para correção automática."
             />
 
             <AnswerSheetGeneratorForm
@@ -406,11 +380,11 @@ export default async function SimuladoDetalhePage({
             />
           </Panel>
 
-          <Panel>
+          <Panel id="digitalizacao">
             <SectionHeader
-              eyebrow="Aplicações"
-              title="Folhas disponíveis"
-              description="Turmas já preparadas para este simulado."
+              eyebrow="Digitalização"
+              title="Importar folhas preenchidas"
+              description="Selecione o PDF preenchido. A identificação dos alunos, a leitura das marcações e o cadastro das respostas acontecem automaticamente."
             />
 
             <div className="space-y-3">
@@ -427,12 +401,14 @@ export default async function SimuladoDetalhePage({
                       {application.classRoom.grade}º ano
                     </p>
                   </div>
+
                   <div className="text-right">
                     <p className="text-lg font-semibold text-red-600">
                       {application._count.answerSheets}
                     </p>
                     <p className="text-xs text-zinc-500">folhas</p>
                   </div>
+
                   {application._count.answerSheets > 0 && (
                     <Link
                       href={`/simulados/${simulado.id}/gabaritos/${application.id}/pdf`}
@@ -451,125 +427,92 @@ export default async function SimuladoDetalhePage({
 
                     {application.scanBatches.length > 0 && (
                       <div className="space-y-2">
-                        {application.scanBatches.map((batch) => (
-                          <div
-                            key={batch.id}
-                            className="grid gap-1 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs text-zinc-600"
-                          >
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="font-semibold text-zinc-900">
-                                {dateFormatter.format(batch.createdAt)}
-                              </span>
-                              <Badge tone="success">
-                                {scanBatchStatusLabels[batch.status]}
-                              </Badge>
-                            </div>
-                            <p className="truncate">{batch.sourceFileName}</p>
-                            <p>
-                              {batch.totalPages} página(s) ·{" "}
-                              {batch._count.scans} registrada(s)
-                            </p>
-                            <p>
-                              Identificadas: {batch.identifiedPages} · Revisão:{" "}
-                              {batch.reviewRequiredPages}
-                            </p>
-                            <AnswerSheetScanIdentifyForm
-                              examId={simulado.id}
-                              examApplicationId={application.id}
-                              batchId={batch.id}
-                            />
-                            <AnswerSheetScanNormalizeForm
-                              examId={simulado.id}
-                              examApplicationId={application.id}
-                              batchId={batch.id}
-                            />
-                            <AnswerSheetScanBatchProcessForm
-                              examId={simulado.id}
-                              examApplicationId={application.id}
-                              batchId={batch.id}
-                              hasDetectedAnswers={batch.scans.some(
-                                (scan) => scan._count.answers > 0
-                              )}
-                            />
-                            <Link
-                              href={`/simulados/${simulado.id}/leituras/lotes/${batch.id}`}
-                              className="inline-flex items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+                        {application.scanBatches.map((batch) => {
+                          const detectedAnswerTotal = batch.scans.reduce(
+                            (sum, scan) => sum + scan._count.answers,
+                            0
+                          );
+                          const hasOccurrences =
+                            batch.reviewRequiredPages > 0 ||
+                            batch.status === "REVIEW_REQUIRED" ||
+                            batch.status === "FAILED";
+                          const isCompleted =
+                            batch.status === "CONFIRMED" ||
+                            batch.status === "READY_FOR_CONFIRMATION";
+
+                          return (
+                            <div
+                              key={batch.id}
+                              className="grid gap-3 rounded-xl border border-zinc-200 bg-white px-3 py-3 text-xs text-zinc-600"
                             >
-                              Fila de revisao
-                              <ArrowRight size={14} />
-                            </Link>
-
-                            {batch.scans.some(
-                              (scan) => scan.answerSheetId && scan.normalizedImageKey
-                            ) && (
-                              <div className="mt-1 grid gap-2 border-t border-zinc-100 pt-2">
-                                {batch.scans
-                                  .filter(
-                                    (scan) =>
-                                      scan.answerSheetId && scan.normalizedImageKey
-                                  )
-                                  .map((scan) => {
-                                    const detected = scan.answers.filter(
-                                      (answer) =>
-                                        answer.detectionStatus === "DETECTED"
-                                    ).length;
-                                    const blank = scan.answers.filter(
-                                      (answer) =>
-                                        answer.detectionStatus === "BLANK"
-                                    ).length;
-                                    const multiple = scan.answers.filter(
-                                      (answer) =>
-                                        answer.detectionStatus === "MULTIPLE"
-                                    ).length;
-                                    const uncertain = scan.answers.filter(
-                                      (answer) =>
-                                        answer.detectionStatus === "UNCERTAIN"
-                                    ).length;
-
-                                    return (
-                                    <div
-                                      key={scan.id}
-                                      className="grid gap-2 rounded-lg border border-zinc-100 bg-zinc-50 p-2"
-                                    >
-                                      <div className="flex items-center justify-between gap-2">
-                                        <div className="min-w-0">
-                                          <p className="truncate font-semibold text-zinc-900">
-                                            Pagina {scan.pageNumber}
-                                          </p>
-                                          <p className="truncate text-zinc-500">
-                                            {scan.answerSheet?.student.name ??
-                                              "Aluno identificado"}
-                                          </p>
-                                        </div>
-                                        <Badge tone="neutral">
-                                          {scan._count.answers}/60
-                                        </Badge>
-                                      </div>
-                                      <p className="text-[11px] text-zinc-500">
-                                        Status: {scan.status} | DETECTED:{" "}
-                                        {detected} | BLANK: {blank} | MULTIPLE:{" "}
-                                        {multiple} | UNCERTAIN: {uncertain}
-                                      </p>
-                                      <AnswerSheetScanProcessForm
-                                        examId={simulado.id}
-                                        scanId={scan.id}
-                                      />
-                                      {scan._count.answers === 60 && (
-                                        <Link
-                                          href={`/simulados/${simulado.id}/leituras/${scan.id}`}
-                                          className="inline-flex items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
-                                        >
-                                          Revisar leitura
-                                          <ArrowRight size={14} />
-                                        </Link>
-                                      )}
-                                    </div>
-                                    );
-                                  })}
+                              <div className="flex items-center justify-between gap-3">
+                                <span className="font-semibold text-zinc-900">
+                                  {dateFormatter.format(batch.createdAt)}
+                                </span>
+                                <Badge tone={isCompleted ? "success" : "neutral"}>
+                                  {scanBatchStatusLabels[batch.status]}
+                                </Badge>
                               </div>
-                            )}
-                          </div>
-                        ))}
+
+                              <p className="truncate font-medium text-zinc-800">
+                                {batch.sourceFileName}
+                              </p>
+
+                              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                                <div className="rounded-lg bg-zinc-50 px-2.5 py-2">
+                                  <p className="text-sm font-semibold text-zinc-900">
+                                    {batch.totalPages}
+                                  </p>
+                                  <p className="text-[11px] text-zinc-500">folhas</p>
+                                </div>
+                                <div className="rounded-lg bg-zinc-50 px-2.5 py-2">
+                                  <p className="text-sm font-semibold text-zinc-900">
+                                    {batch.identifiedPages}
+                                  </p>
+                                  <p className="text-[11px] text-zinc-500">identificadas</p>
+                                </div>
+                                <div className="rounded-lg bg-zinc-50 px-2.5 py-2">
+                                  <p className="text-sm font-semibold text-zinc-900">
+                                    {batch.processedPages}
+                                  </p>
+                                  <p className="text-[11px] text-zinc-500">processadas</p>
+                                </div>
+                                <div className="rounded-lg bg-zinc-50 px-2.5 py-2">
+                                  <p className="text-sm font-semibold text-zinc-900">
+                                    {detectedAnswerTotal}
+                                  </p>
+                                  <p className="text-[11px] text-zinc-500">respostas</p>
+                                </div>
+                              </div>
+
+                              {hasOccurrences && (
+                                <p className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-zinc-600">
+                                  {batch.reviewRequiredPages} ocorrência(s) de processamento.
+                                </p>
+                              )}
+
+                              <div className="grid gap-2 sm:grid-cols-2">
+                                {hasOccurrences && (
+                                  <Link
+                                    href={`/simulados/${simulado.id}/leituras/lotes/${batch.id}`}
+                                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+                                  >
+                                    Ver ocorrências
+                                    <ArrowRight size={14} />
+                                  </Link>
+                                )}
+
+                                <Link
+                                  href={`/simulados/${simulado.id}/resultados`}
+                                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+                                >
+                                  Ver resultados
+                                  <ArrowRight size={14} />
+                                </Link>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>

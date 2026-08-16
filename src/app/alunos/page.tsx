@@ -30,7 +30,6 @@ export default async function AlunosPage() {
           exam: true,
         },
       },
-      bookProgresses: true,
     },
     orderBy: {
       name: "asc",
@@ -43,11 +42,6 @@ export default async function AlunosPage() {
     },
   });
 
-  const totalLeituras = alunos.reduce(
-    (acc, aluno) => acc + aluno.bookProgresses.length,
-    0
-  );
-
   const totalResultados = alunos.reduce(
     (acc, aluno) => acc + aluno.results.length,
     0
@@ -56,9 +50,9 @@ export default async function AlunosPage() {
   return (
     <AppLayout>
       <PageHeader
-        eyebrow="Perfis acadêmicos"
+        eyebrow="Perfis academicos"
         title="Alunos"
-        description="Base de estudantes vinculados às turmas, com leitura, simulados e sinais individuais de acompanhamento."
+        description="Base de estudantes vinculados as turmas, com simulados e sinais individuais de acompanhamento."
         icon={<GraduationCap size={24} />}
         actions={
           <Link
@@ -84,9 +78,9 @@ export default async function AlunosPage() {
               detail="resultados vinculados"
             />
             <MetricCell
-              label="Leituras"
-              value={totalLeituras}
-              detail="registros de leitura"
+              label="Resultados"
+              value={totalResultados}
+              detail="registros oficiais"
               tone="brand"
             />
           </MetricStrip>
@@ -96,9 +90,9 @@ export default async function AlunosPage() {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
         <Panel>
           <SectionHeader
-            eyebrow="Diretório"
+            eyebrow="Diretorio"
             title="Lista de alunos"
-            description={`${alunos.length} estudante(s) cadastrados e disponíveis para análise individual.`}
+            description={`${alunos.length} estudante(s) cadastrados e disponiveis para analise individual.`}
             action={
               <div className="flex items-center gap-2 rounded-2xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-400">
                 <Search size={16} />
@@ -114,7 +108,7 @@ export default async function AlunosPage() {
           {alunos.length === 0 ? (
             <EmptyState
               title="Nenhum aluno cadastrado"
-              description="Cadastre estudantes para acompanhar desempenho, simulados, leitura e evolução acadêmica."
+              description="Cadastre estudantes para acompanhar desempenho, simulados e evolucao academica."
             />
           ) : (
             <div className="overflow-hidden rounded-3xl border border-zinc-200 bg-white/70">
@@ -127,7 +121,6 @@ export default async function AlunosPage() {
                       .length
                   );
                 }, 0);
-                const totalLeiturasAluno = aluno.bookProgresses.length;
 
                 return (
                   <Link
@@ -152,7 +145,7 @@ export default async function AlunosPage() {
                     </div>
 
                     <DataPoint
-                      label="Número"
+                      label="Numero"
                       value={String(aluno.number ?? "-")}
                     />
                     <DataPoint
@@ -160,15 +153,15 @@ export default async function AlunosPage() {
                       value={String(totalSimulados)}
                       brand
                     />
-                    <DataPoint label="Questões" value={String(totalQuestoes)} />
+                    <DataPoint label="Questoes" value={String(totalQuestoes)} />
                     <DataPoint
-                      label="Leituras"
-                      value={String(totalLeiturasAluno)}
+                      label="Serie"
+                      value={`${aluno.classRoom.grade} ano`}
                       brand
                     />
 
                     <div className="flex items-center justify-between gap-3 md:justify-end">
-                      <Badge tone="neutral">Perfil acadêmico</Badge>
+                      <Badge tone="neutral">Perfil academico</Badge>
                       <ArrowRight
                         size={18}
                         className="text-zinc-400 transition group-hover:translate-x-0.5 group-hover:text-red-600"
@@ -186,7 +179,7 @@ export default async function AlunosPage() {
             <SectionHeader
               eyebrow="Cadastro"
               title="Novo aluno"
-              description="Vincule estudantes às turmas para iniciar o acompanhamento."
+              description="Vincule estudantes as turmas para iniciar o acompanhamento."
             />
 
             <form action={createStudent} className="grid gap-4">
@@ -203,12 +196,12 @@ export default async function AlunosPage() {
 
               <label className="grid gap-2">
                 <span className="text-sm font-semibold text-zinc-800">
-                  Número
+                  Numero
                 </span>
                 <input
                   name="number"
                   type="number"
-                  placeholder="Número"
+                  placeholder="Numero"
                   className="performance-field rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
                 />
               </label>
@@ -246,9 +239,9 @@ export default async function AlunosPage() {
 
           <Panel>
             <SectionHeader
-              eyebrow="Distribuição"
-              title="Turmas disponíveis"
-              description="Referência rápida para vinculação de estudantes."
+              eyebrow="Distribuicao"
+              title="Turmas disponiveis"
+              description="Referencia rapida para vinculacao de estudantes."
             />
             <div className="space-y-3">
               {turmas.map((turma) => (
@@ -260,7 +253,7 @@ export default async function AlunosPage() {
                     <p className="text-sm font-semibold text-zinc-950">
                       {turma.name}
                     </p>
-                    <p className="text-xs text-zinc-500">{turma.grade}º ano</p>
+                    <p className="text-xs text-zinc-500">{turma.grade} ano</p>
                   </div>
                   <Users size={17} className="text-red-600" />
                 </div>

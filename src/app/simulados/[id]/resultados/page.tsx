@@ -1,4 +1,16 @@
 import Link from "next/link";
+import { BarChart3 } from "lucide-react";
+
+import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { AppLayout } from "@/components/AppLayout";
+import {
+  Badge,
+  MetricCell,
+  MetricStrip,
+  PageHeader,
+  Panel,
+  SectionHeader,
+} from "@/components/design-system";
 import { prisma } from "@/lib/prisma";
 
 export default async function ResultadosSimuladoPage({
@@ -33,9 +45,11 @@ export default async function ResultadosSimuladoPage({
 
   if (!simulado) {
     return (
-      <main className="min-h-screen bg-zinc-100 p-8">
-        <p>Simulado não encontrado.</p>
-      </main>
+      <AppLayout>
+        <Panel>
+          <p className="text-sm text-zinc-500">Simulado nao encontrado.</p>
+        </Panel>
+      </AppLayout>
     );
   }
 
@@ -107,98 +121,91 @@ export default async function ResultadosSimuladoPage({
   ).length;
 
   return (
-    <main className="min-h-screen bg-zinc-100 p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-zinc-900">
-          Resultados do Simulado
-        </h1>
+    <AppLayout>
+      <AppBreadcrumb
+        items={[
+          {
+            label: "Simulados",
+            href: "/simulados",
+          },
+          {
+            label: exam.title,
+            href: `/simulados/${exam.id}`,
+          },
+          {
+            label: "Resultados",
+          },
+        ]}
+      />
+      <PageHeader
+        eyebrow="Resultados"
+        title="Resultados do simulado"
+        description={`${exam.title} - ${exam.grade} ano. Visao por aluno com status de lancamento e desempenho.`}
+        icon={<BarChart3 size={24} />}
+        actions={
+          <Link
+            href={`/simulados/${exam.id}/ranking`}
+            className="performance-secondary-action inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold"
+          >
+            Ver analise por ranking
+          </Link>
+        }
+        stats={
+          <MetricStrip columns="md:grid-cols-3">
+            <MetricCell label="Alunos da serie" value={alunosDaSerie.length} />
+            <MetricCell label="Com respostas" value={alunosRespondidos} tone="brand" />
+            <MetricCell label="Questoes validas" value={questoesValidas} />
+          </MetricStrip>
+        }
+      />
 
-        <p className="mt-2 text-sm text-zinc-500">
-          {exam.title} • {exam.grade}º ano
-        </p>
-      </div>
+      <Panel>
+        <SectionHeader
+          title="Desempenho por aluno"
+          description="Acoes levam ao lancamento manual; resultados oficiais permanecem calculados pelas respostas registradas."
+        />
 
-      <section className="mb-8 grid gap-6 md:grid-cols-3">
-        <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <p className="text-sm text-zinc-500">Alunos da série</p>
+        <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white">
+          {alunosDaSerie.map((student, index) => {
+            const resultado = calcularResultado(student.id);
 
-          <p className="mt-2 text-3xl font-bold text-zinc-900">
-            {alunosDaSerie.length}
-          </p>
-        </div>
-
-        <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <p className="text-sm text-zinc-500">Com respostas lançadas</p>
-
-          <p className="mt-2 text-3xl font-bold text-zinc-900">
-            {alunosRespondidos}
-          </p>
-        </div>
-
-        <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <p className="text-sm text-zinc-500">Questões válidas</p>
-
-          <p className="mt-2 text-3xl font-bold text-zinc-900">
-            {questoesValidas}
-          </p>
-        </div>
-      </section>
-
-      <section className="grid gap-4">
-        {alunosDaSerie.map((student) => {
-          const resultado = calcularResultado(student.id);
-
-          return (
-            <div
-              key={student.id}
-              className="rounded-2xl bg-white p-6 shadow-sm"
-            >
-              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            return (
+              <div
+                key={student.id}
+                className={`performance-data-row grid gap-3 px-4 py-3 md:grid-cols-[minmax(220px,1fr)_120px_120px_110px_auto] md:items-center ${
+                  index > 0 ? "border-t border-zinc-200" : ""
+                }`}
+              >
                 <div>
-                  <h2 className="font-semibold text-zinc-800">
-                    {student.name}
-                  </h2>
-
-                  <p className="mt-1 text-sm text-zinc-500">
-                    {student.classRoom.name} • Nº {student.number ?? "-"} •{" "}
-                    {resultado.respostas}/{exam.totalQuestions} respostas
-                    lançadas
+                  <h2 className="font-semibold text-zinc-900">{student.name}</h2>
+                  <p className="mt-1 text-xs text-zinc-500">
+                    {student.classRoom.name} - N. {student.number ?? "-"}
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-medium ${
-                      resultado.respondido
-                        ? "bg-green-100 text-green-700"
-                        : "bg-zinc-100 text-zinc-500"
-                    }`}
-                  >
-                    {resultado.respondido ? "Respondido" : "Pendente"}
-                  </span>
+                <Badge tone={resultado.respondido ? "success" : "neutral"}>
+                  {resultado.respondido ? "Respondido" : "Pendente"}
+                </Badge>
 
-                  <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700">
-                    {resultado.acertos}/{resultado.totalValido}
-                  </span>
+                <p className="text-sm font-semibold text-zinc-700">
+                  {resultado.acertos}/{resultado.totalValido}
+                </p>
 
-                  <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">
-                    {resultado.porcentagem}%
-                  </span>
+                <p className="text-sm font-semibold text-red-700">
+                  {resultado.porcentagem}%
+                </p>
 
-                  <Link
-                    href={`/simulados/${exam.id}/respostas/${student.id}`}
-                    className="rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700"
-                  >
-                    {resultado.respondido
-                      ? "Editar respostas"
-                      : "Lançar respostas"}
-                  </Link>
-                </div>
+                <Link
+                  href={`/simulados/${exam.id}/respostas/${student.id}`}
+                  className="performance-primary-action inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm font-semibold text-white"
+                >
+                  {resultado.respondido ? "Editar" : "Lancar"}
+                </Link>
               </div>
-            </div>
-          );
-        })}
-      </section>
-    </main>
+            );
+          })}
+        </div>
+      </Panel>
+    </AppLayout>
   );
 }

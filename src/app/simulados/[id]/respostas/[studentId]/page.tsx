@@ -1,3 +1,12 @@
+import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { AppLayout } from "@/components/AppLayout";
+import {
+  Badge,
+  MetricCell,
+  MetricStrip,
+  PageHeader,
+  Panel,
+} from "@/components/design-system";
 import { prisma } from "@/lib/prisma";
 import { saveStudentAnswer } from "./actions";
 
@@ -40,17 +49,23 @@ export default async function LancarRespostasPage({
 
   if (!simulado || !student) {
     return (
-      <main className="min-h-screen bg-zinc-100 p-8">
-        <p>Dados não encontrados.</p>
-      </main>
+      <AppLayout>
+        <Panel>
+          <p className="text-sm text-zinc-500">Dados nao encontrados.</p>
+        </Panel>
+      </AppLayout>
     );
   }
 
   if (student.classRoom.grade !== simulado.grade) {
     return (
-      <main className="min-h-screen bg-zinc-100 p-8">
-        <p>Este aluno não pertence à série deste simulado.</p>
-      </main>
+      <AppLayout>
+        <Panel>
+          <p className="text-sm text-zinc-500">
+            Este aluno nao pertence a serie deste simulado.
+          </p>
+        </Panel>
+      </AppLayout>
     );
   }
 
@@ -80,41 +95,44 @@ export default async function LancarRespostasPage({
     totalValido > 0 ? Math.round((acertos / totalValido) * 100) : 0;
 
   return (
-    <main className="min-h-screen bg-zinc-100 p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-zinc-900">
-          {student.name}
-        </h1>
+    <AppLayout>
+      <AppBreadcrumb
+        items={[
+          {
+            label: "Simulados",
+            href: "/simulados",
+          },
+          {
+            label: simulado.title,
+            href: `/simulados/${simulado.id}`,
+          },
+          {
+            label: "Respostas",
+            href: `/simulados/${simulado.id}/respostas`,
+          },
+          {
+            label: student.name,
+          },
+        ]}
+      />
+      <PageHeader
+        eyebrow="Lancamento manual"
+        title={student.name}
+        description={`${simulado.title} - ${simulado.grade} ano - ${student.classRoom.name}`}
+        stats={
+          <MetricStrip columns="md:grid-cols-3">
+            <MetricCell label="Acertos" value={`${acertos}/${totalValido}`} />
+            <MetricCell label="Desempenho" value={`${porcentagem}%`} tone="brand" />
+            <MetricCell
+              label="Respondidas"
+              value={`${result?.answers.length ?? 0}/${simulado.totalQuestions}`}
+            />
+          </MetricStrip>
+        }
+      />
 
-        <p className="mt-2 text-sm text-zinc-500">
-          {simulado.title} • {simulado.grade}º ano • {student.classRoom.name}
-        </p>
-      </div>
-
-      <section className="mb-8 grid gap-6 md:grid-cols-3">
-        <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <p className="text-sm text-zinc-500">Acertos</p>
-          <p className="mt-2 text-3xl font-bold text-zinc-900">
-            {acertos}/{totalValido}
-          </p>
-        </div>
-
-        <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <p className="text-sm text-zinc-500">Desempenho</p>
-          <p className="mt-2 text-3xl font-bold text-zinc-900">
-            {porcentagem}%
-          </p>
-        </div>
-
-        <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <p className="text-sm text-zinc-500">Questões respondidas</p>
-          <p className="mt-2 text-3xl font-bold text-zinc-900">
-            {result?.answers.length ?? 0}/{simulado.totalQuestions}
-          </p>
-        </div>
-      </section>
-
-      <section className="grid gap-3">
+      <Panel>
+        <div className="grid gap-3">
         {questions.map((question) => {
           const currentAnswer = result?.answers.find(
             (answer) => answer.question === question
@@ -140,7 +158,7 @@ export default async function LancarRespostasPage({
             <form
               key={question}
               action={saveStudentAnswer}
-              className="rounded-2xl bg-white p-4 shadow-sm"
+              className="rounded-lg border border-zinc-200 bg-white p-4"
             >
               <input type="hidden" name="examId" value={simulado.id} />
               <input type="hidden" name="studentId" value={student.id} />
@@ -148,21 +166,21 @@ export default async function LancarRespostasPage({
 
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="font-medium text-zinc-800">
-                    Questão {question}
+                  <p className="font-semibold text-zinc-800">
+                    Questao {question}
                   </p>
 
                   {correctAnswer && (
                     <p className="mt-1 text-xs text-zinc-500">
                       Gabarito:{" "}
                       {correctAnswer.canceled
-                        ? "Questão anulada"
+                        ? "Questao anulada"
                         : correctAnswer.answer}
                     </p>
                   )}
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {["A", "B", "C", "D", "E"].map((alternative) => (
                     <button
                       key={alternative}
@@ -172,7 +190,7 @@ export default async function LancarRespostasPage({
                       className={`rounded-lg border px-3 py-2 text-sm ${
                         currentAnswer?.answer === alternative
                           ? "border-red-600 bg-red-600 text-white"
-                          : "border-zinc-200 bg-white text-zinc-700"
+                          : "border-zinc-200 bg-white text-zinc-700 hover:border-red-200 hover:bg-red-50"
                       }`}
                     >
                       {alternative}
@@ -192,33 +210,26 @@ export default async function LancarRespostasPage({
 
               <div className="mt-3">
                 {correctAnswer?.canceled && (
-                  <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700">
-                    Anulada
-                  </span>
+                  <Badge tone="warning">Anulada</Badge>
                 )}
 
                 {isCorrect && (
-                  <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
-                    Correta
-                  </span>
+                  <Badge tone="success">Correta</Badge>
                 )}
 
                 {isWrong && (
-                  <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">
-                    Errada
-                  </span>
+                  <Badge tone="danger">Errada</Badge>
                 )}
 
                 {!currentAnswer?.answer && !correctAnswer?.canceled && (
-                  <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-500">
-                    Sem resposta
-                  </span>
+                  <Badge tone="neutral">Sem resposta</Badge>
                 )}
               </div>
             </form>
           );
         })}
-      </section>
-    </main>
+        </div>
+      </Panel>
+    </AppLayout>
   );
 }

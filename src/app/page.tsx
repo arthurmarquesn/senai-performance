@@ -4,10 +4,8 @@ import {
   ArrowRight,
   BarChart3,
   BookOpen,
-  Brain,
   FileText,
   Plus,
-  TrendingUp,
 } from "lucide-react";
 
 import { AppLayout } from "@/components/AppLayout";
@@ -28,22 +26,13 @@ export default async function HomePage() {
     totalAlunos,
     totalSimulados,
     totalRedacoes,
-    totalObras,
-    totalLeiturasAtivas,
     ultimosSimulados,
     ultimasRedacoes,
-    leiturasRecentes,
   ] = await Promise.all([
     prisma.classRoom.count(),
     prisma.student.count(),
     prisma.exam.count(),
     prisma.essayCorrection.count(),
-    prisma.book.count(),
-    prisma.bookProgress.count({
-      where: {
-        status: "READING",
-      },
-    }),
     prisma.exam.findMany({
       orderBy: {
         createdAt: "desc",
@@ -63,63 +52,30 @@ export default async function HomePage() {
       },
       take: 5,
     }),
-    prisma.bookProgress.findMany({
-      include: {
-        book: true,
-        student: {
-          include: {
-            classRoom: true,
-          },
-        },
-      },
-      orderBy: {
-        updatedAt: "desc",
-      },
-      take: 5,
-    }),
   ]);
-
-  const alunosSemLeitura = Math.max(totalAlunos - totalLeiturasAtivas, 0);
-  const coberturaLeitura =
-    totalAlunos > 0 ? Math.round((totalLeiturasAtivas / totalAlunos) * 100) : 0;
 
   return (
     <AppLayout>
       <PageHeader
-        eyebrow="Visão executiva"
+        eyebrow="Visao executiva"
         title="Dashboard institucional"
-        description="Síntese operacional de turmas, estudantes, simulados, redações e leitura para apoiar decisões pedagógicas."
+        description="Sintese operacional de turmas, estudantes, simulados e redacoes para apoiar decisoes pedagogicas."
         icon={<BarChart3 size={24} />}
         actions={
-          <>
-            <Link
-              href="/simulados"
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-800 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
-            >
-              Ver simulados
-              <ArrowRight size={16} />
-            </Link>
-            <Link
-              href="/assistente"
-              className="performance-primary-action inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold text-white transition active:scale-[0.99]"
-            >
-              Alfred IA
-              <Brain size={16} />
-            </Link>
-          </>
+          <Link
+            href="/simulados"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-800 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+          >
+            Ver simulados
+            <ArrowRight size={16} />
+          </Link>
         }
         stats={
-          <MetricStrip columns="md:grid-cols-3 xl:grid-cols-6">
+          <MetricStrip columns="md:grid-cols-4">
             <MetricCell label="Turmas" value={totalTurmas} />
             <MetricCell label="Alunos" value={totalAlunos} tone="brand" />
             <MetricCell label="Simulados" value={totalSimulados} />
-            <MetricCell label="Redações" value={totalRedacoes} />
-            <MetricCell label="Obras" value={totalObras} />
-            <MetricCell
-              label="Leituras ativas"
-              value={totalLeiturasAtivas}
-              tone="brand"
-            />
+            <MetricCell label="Redacoes" value={totalRedacoes} />
           </MetricStrip>
         }
       />
@@ -127,48 +83,46 @@ export default async function HomePage() {
       <section className="mb-6 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <Panel>
           <SectionHeader
-            eyebrow="Sinais pedagógicos"
+            eyebrow="Sinais pedagogicos"
             title="Prioridades do momento"
-            description="Pontos de atenção calculados com os dados já disponíveis no sistema."
-            action={<Badge tone={alunosSemLeitura > 0 ? "warning" : "success"}>{coberturaLeitura}% leitura ativa</Badge>}
+            description="Pontos de atencao calculados com os dados ja disponiveis no sistema."
+            action={<Badge tone="neutral">R2 navegacao limpa</Badge>}
           />
 
           <div className="grid gap-3 md:grid-cols-3">
             <InsightCard
               icon={<AlertTriangle size={18} />}
-              title="Alunos sem leitura ativa"
-              value={alunosSemLeitura}
-              description="estudante(s) ainda sem leitura em andamento registrada."
-              tone="warning"
+              title="Alunos cadastrados"
+              value={totalAlunos}
+              description="estudante(s) disponiveis para acompanhamento."
             />
             <InsightCard
               icon={<FileText size={18} />}
-              title="Redações corrigidas"
+              title="Redacoes corrigidas"
               value={totalRedacoes}
-              description="registro(s) disponíveis para acompanhamento."
+              description="registro(s) disponiveis para acompanhamento."
             />
             <InsightCard
               icon={<BookOpen size={18} />}
               title="Simulados"
               value={totalSimulados}
-              description="avaliação(ões) na base institucional."
+              description="avaliacao(oes) na base institucional."
             />
           </div>
         </Panel>
 
         <Panel>
           <SectionHeader
-            eyebrow="Acesso rápido"
+            eyebrow="Acesso rapido"
             title="Fluxos operacionais"
             description="Entradas principais para executar as rotinas do sistema."
           />
 
           <div className="grid gap-2">
-            <QuickAction href="/simulados" label="Criar ou acessar simulados" />
-            <QuickAction href="/redacoes" label="Corrigir redações ENEM" />
-            <QuickAction href="/leituras" label="Gerenciar + Leitura" />
-            <QuickAction href="/repertorio" label="Gerar repertório com IA" />
             <QuickAction href="/alunos" label="Acessar perfis dos alunos" />
+            <QuickAction href="/turmas" label="Gerenciar turmas" />
+            <QuickAction href="/simulados" label="Criar ou acessar simulados" />
+            <QuickAction href="/redacoes" label="Corrigir redacoes ENEM" />
           </div>
         </Panel>
       </section>
@@ -176,9 +130,9 @@ export default async function HomePage() {
       <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <Panel>
           <SectionHeader
-            eyebrow="Avaliações"
-            title="Últimos simulados"
-            description="Avaliações cadastradas recentemente."
+            eyebrow="Avaliacoes"
+            title="Ultimos simulados"
+            description="Avaliacoes cadastradas recentemente."
             action={
               <Link
                 href="/simulados"
@@ -206,7 +160,7 @@ export default async function HomePage() {
                       {simulado.title}
                     </h3>
                     <p className="mt-1 text-sm text-zinc-500">
-                      {simulado.grade}º ano · {simulado.totalQuestions} questões
+                      {simulado.grade} ano - {simulado.totalQuestions} questoes
                     </p>
                   </div>
                   <Badge tone="neutral">{simulado.status}</Badge>
@@ -216,29 +170,16 @@ export default async function HomePage() {
           </div>
         </Panel>
 
-        <div className="grid gap-6">
-          <RecentPanel
-            title="Últimas redações"
-            icon={<FileText size={18} />}
-            empty="Nenhuma redação corrigida ainda."
-            items={ultimasRedacoes.map((redacao) => ({
-              id: redacao.id,
-              title: redacao.student.name,
-              detail: `${redacao.student.classRoom.name} · Nota ${redacao.totalScore}`,
-            }))}
-          />
-
-          <RecentPanel
-            title="Leituras recentes"
-            icon={<TrendingUp size={18} />}
-            empty="Nenhuma leitura registrada ainda."
-            items={leiturasRecentes.map((leitura) => ({
-              id: leitura.id,
-              title: leitura.student.name,
-              detail: `${leitura.book.title} · ${leitura.status}`,
-            }))}
-          />
-        </div>
+        <RecentPanel
+          title="Ultimas redacoes"
+          icon={<FileText size={18} />}
+          empty="Nenhuma redacao corrigida ainda."
+          items={ultimasRedacoes.map((redacao) => ({
+            id: redacao.id,
+            title: redacao.student.name,
+            detail: `${redacao.student.classRoom.name} - Nota ${redacao.totalScore}`,
+          }))}
+        />
       </section>
     </AppLayout>
   );
@@ -249,23 +190,15 @@ function InsightCard({
   title,
   value,
   description,
-  tone = "default",
 }: {
   icon: React.ReactNode;
   title: string;
   value: number;
   description: string;
-  tone?: "default" | "warning";
 }) {
   return (
     <div className="rounded-3xl border border-zinc-200 bg-white/70 p-4">
-      <div
-        className={`mb-4 flex h-9 w-9 items-center justify-center rounded-xl ${
-          tone === "warning"
-            ? "bg-amber-50 text-amber-700"
-            : "bg-red-50 text-red-600"
-        }`}
-      >
+      <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-xl bg-red-50 text-red-600">
         {icon}
       </div>
       <p className="text-sm font-semibold text-zinc-950">{title}</p>

@@ -1,0 +1,20 @@
+
+> senai-performance@0.1.0 dev
+> next dev -p 3002
+
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://localhost:3002
+- Network:       http://192.168.18.15:3002
+- Environments: .env
+✓ Ready in 1135ms
+Creating turbopack project {
+  dir: 'C:\\Users\\arthu\\features_simulado\\senai-performance',
+  testMode: true
+}
+- Experiments (use with caution):
+  · serverActions
+
+○ Compiling /_not-found/page ...
+ GET /api/__pdfjs-diagnostic 404 in 4.4s (next.js: 4.0s, application-code: 400ms)
+ GET /api/pdfjs-diagnostic 200 in 2.6s (next.js: 1058ms, application-code: 1584ms)
+[?25h

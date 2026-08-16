@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { AppLayout } from "@/components/AppLayout";
 import { prisma } from "@/lib/prisma";
 
 const subjectLabels: Record<string, string> = {
@@ -63,9 +65,9 @@ export default async function RankingPage({
 
   if (!simulado) {
     return (
-      <main className="min-h-screen bg-zinc-100 p-8">
+      <AppLayout>
         <p>Simulado não encontrado.</p>
-      </main>
+      </AppLayout>
     );
   }
 
@@ -320,7 +322,23 @@ export default async function RankingPage({
   });
 
   return (
-    <main className="min-h-screen bg-zinc-100 p-8">
+    <AppLayout>
+      <AppBreadcrumb
+        items={[
+          {
+            label: "Simulados",
+            href: "/simulados",
+          },
+          {
+            label: simulado.title,
+            href: `/simulados/${simulado.id}`,
+          },
+          {
+            label: "Ranking",
+          },
+        ]}
+      />
+      <div>
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-zinc-900">
@@ -739,6 +757,7 @@ export default async function RankingPage({
           </div>
         )}
       </section>
-    </main>
+      </div>
+    </AppLayout>
   );
 }
