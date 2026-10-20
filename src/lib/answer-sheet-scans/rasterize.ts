@@ -77,12 +77,17 @@ export async function renderScanPdfPage(
 
     return context.getImageData(0, 0, canvas.width, canvas.height);
   } finally {
-    if (typeof page.cleanup === "function") {
-      page.cleanup();
+    const pdfPage = page as typeof page & {
+      cleanup?: () => void;
+      destroy?: () => void;
+    };
+
+    if (typeof pdfPage.cleanup === "function") {
+      pdfPage.cleanup();
     }
 
-    if (typeof page.destroy === "function") {
-      page.destroy();
+    if (typeof pdfPage.destroy === "function") {
+      pdfPage.destroy();
     }
   }
 }
