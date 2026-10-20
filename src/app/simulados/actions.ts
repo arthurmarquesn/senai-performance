@@ -3,8 +3,9 @@
 import { prisma } from "@/lib/prisma";
 import { requireAcademicAccess } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import type { FormState } from "@/lib/form-state";
 
-export async function createExam(formData: FormData) {
+export async function createExam(formData: FormData): Promise<FormState> {
   await requireAcademicAccess();
 
   const titleValue = formData.get("title");
@@ -14,25 +15,31 @@ export async function createExam(formData: FormData) {
   const grade = typeof gradeValue === "string" ? Number(gradeValue) : NaN;
   const totalQuestions = typeof questionsValue === "string" ? Number(questionsValue) : NaN;
 
-  if (!title || !grade || !totalQuestions) {
-    throw new Error("Preencha todos os campos.");
+  if (!title) {
+    return { fieldErrors: { title: "Informe o nome do simulado." } };
   }
 
   if (![1, 2, 3].includes(grade)) {
-    throw new Error("Selecione uma série válida: 1º, 2º ou 3º ano.");
+    return { fieldErrors: { grade: "Selecione o 1º, 2º ou 3º ano." } };
   }
 
   if (!Number.isInteger(totalQuestions) || totalQuestions < 1 || totalQuestions > 2147483647) {
-    throw new Error("A quantidade de questões deve ser um inteiro maior que zero.");
+    return { fieldErrors: { totalQuestions: "Informe uma quantidade inteira maior que zero." } };
   }
 
-  await prisma.exam.create({
-    data: {
-      title,
-      grade,
-      totalQuestions,
-    },
-  });
+  try {
+    await prisma.exam.create({
+      data: {
+        title,
+        grade,
+        totalQuestions,
+      },
+    });
+  } catch (error) {
+    console.error("Falha ao cadastrar simulado", error);
+    return { error: "Não foi possível criar o simulado. Tente novamente em instantes." };
+  }
 
   revalidatePath("/simulados");
+  return { success: "Simulado criado com sucesso." };
 }

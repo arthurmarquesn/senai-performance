@@ -16,6 +16,16 @@ npm run build
 Revise o diff e registre as alterações em um commit antes de transferi-las.
 Não versione `.env`, senhas ou chaves. Configure o ambiente do servidor separadamente.
 
+Para conferir a interface localmente, execute `npm run dev` e entre com um perfil
+de administrador ou professor. Em Alunos, confira a navegação entre páginas e se
+pesquisa, ano e turma são mantidos. Ao trocar os filtros, a listagem começa na
+primeira página. Cada página mostra até 25 alunos.
+
+Nos cadastros de alunos, turmas e simulados, confira as mensagens junto aos
+campos, a indicação de salvamento e a confirmação de sucesso. Uma turma com nome
+repetido deve mostrar um aviso sem apagar os dados preenchidos. Os campos só são
+limpos após o cadastro ser confirmado. Use dados de teste para essas verificações.
+
 ## Publicar no servidor interno
 
 Atualize o checkout do servidor para o commit validado, preservando o `.env`

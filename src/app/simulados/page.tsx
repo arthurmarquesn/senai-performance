@@ -3,19 +3,17 @@ import Link from "next/link";
 import {
   ArrowRight,
   BookOpen,
-  CheckCircle2,
   ChevronDown,
   ClipboardList,
-  FileText,
   GraduationCap,
   Plus,
   Search,
-  UsersRound,
   X,
 } from "lucide-react";
 
 import { createExam } from "./actions";
 import { AppLayout } from "@/components/AppLayout";
+import { CreateRecordForm } from "@/components/CreateRecordForm";
 import { prisma } from "@/lib/prisma";
 
 type SearchParams = {
@@ -130,66 +128,7 @@ export default async function SimuladosPage({
           </summary>
 
           <div className="border-t border-slate-100 p-5 sm:p-6">
-            <form
-              action={createExam}
-              className="grid gap-4 md:grid-cols-[minmax(0,1fr)_160px_180px_auto] md:items-end"
-            >
-              <label className="grid gap-2">
-                <span className="text-sm font-semibold text-slate-700">
-                  Nome do simulado
-                </span>
-
-                <input
-                  name="title"
-                  required
-                  placeholder="Ex.: Simulado 1 - Matemática"
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-500/10"
-                />
-              </label>
-
-              <label className="grid gap-2">
-                <span className="text-sm font-semibold text-slate-700">
-                  Ano
-                </span>
-
-                <select
-                  name="grade"
-                  required
-                  defaultValue=""
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-500/10"
-                >
-                  <option value="" disabled>
-                    Selecione
-                  </option>
-                  <option value="1">1º ano</option>
-                  <option value="2">2º ano</option>
-                  <option value="3">3º ano</option>
-                </select>
-              </label>
-
-              <label className="grid gap-2">
-                <span className="text-sm font-semibold text-slate-700">
-                  Questões
-                </span>
-
-                <input
-                  name="totalQuestions"
-                  type="number"
-                  min="1"
-                  required
-                  placeholder="Quantidade"
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-500/10"
-                />
-              </label>
-
-              <button
-                type="submit"
-                className="inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-[#F97316] px-5 text-sm font-semibold text-white transition hover:bg-[#EA580C]"
-              >
-                <Plus size={17} />
-                Criar
-              </button>
-            </form>
+            <CreateRecordForm action={createExam} kind="exam" />
           </div>
         </details>
 

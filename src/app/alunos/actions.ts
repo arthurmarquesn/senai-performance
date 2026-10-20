@@ -3,8 +3,9 @@
 import { prisma } from "@/lib/prisma";
 import { requireAcademicAccess } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import type { FormState } from "@/lib/form-state";
 
-export async function createStudent(formData: FormData) {
+export async function createStudent(formData: FormData): Promise<FormState> {
   await requireAcademicAccess();
 
   const nameValue = formData.get("name");
@@ -20,20 +21,32 @@ export async function createStudent(formData: FormData) {
     (numberValue !== null && typeof numberValue !== "string") ||
     (number !== null && (!Number.isInteger(number) || number < 0 || number > 2147483647))
   ) {
-    throw new Error("O número do aluno deve ser um inteiro maior ou igual a zero.");
+    return { fieldErrors: { number: "Informe um número inteiro maior ou igual a zero." } };
   }
 
   if (!name || !classRoomId) {
-    throw new Error("Nome e turma são obrigatórios.");
+    return { fieldErrors: {
+      ...(!name ? { name: "Informe o nome do aluno." } : {}),
+      ...(!classRoomId ? { classRoomId: "Selecione uma turma." } : {}),
+    } };
   }
 
-  await prisma.student.create({
-    data: {
-      name,
-      number,
-      classRoomId,
-    },
-  });
+  try {
+    await prisma.student.create({
+      data: {
+        name,
+        number,
+        classRoomId,
+      },
+    });
+  } catch (error) {
+    if (error && typeof error === "object" && "code" in error && error.code === "P2003") {
+      return { fieldErrors: { classRoomId: "A turma não está mais disponível. Atualize a página e selecione outra." } };
+    }
+    console.error("Falha ao cadastrar aluno", error);
+    return { error: "Não foi possível cadastrar o aluno. Tente novamente em instantes." };
+  }
 
   revalidatePath("/alunos");
+  return { success: "Aluno cadastrado com sucesso." };
 }

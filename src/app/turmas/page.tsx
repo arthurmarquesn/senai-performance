@@ -12,6 +12,7 @@ import {
 
 import { createClassRoom } from "./actions";
 import { AppLayout } from "@/components/AppLayout";
+import { CreateRecordForm } from "@/components/CreateRecordForm";
 import { prisma } from "@/lib/prisma";
 
 export default async function TurmasPage() {
@@ -142,52 +143,7 @@ export default async function TurmasPage() {
           </summary>
 
           <div className="border-t border-slate-100 p-5 sm:p-6">
-            <form
-              action={createClassRoom}
-              className="grid gap-4 md:grid-cols-[minmax(0,1fr)_200px_auto] md:items-end"
-            >
-              <label className="grid gap-2">
-                <span className="text-sm font-semibold text-slate-700">
-                  Nome da turma
-                </span>
-
-                <input
-                  name="name"
-                  required
-                  placeholder="Ex.: IDEV-2"
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-500/10"
-                />
-              </label>
-
-              <label className="grid gap-2">
-                <span className="text-sm font-semibold text-slate-700">
-                  Ano
-                </span>
-
-                <select
-                  name="grade"
-                  required
-                  defaultValue=""
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-500/10"
-                >
-                  <option value="" disabled>
-                    Selecione o ano
-                  </option>
-
-                  <option value="1">1º ano</option>
-                  <option value="2">2º ano</option>
-                  <option value="3">3º ano</option>
-                </select>
-              </label>
-
-              <button
-                type="submit"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#F97316] px-6 text-sm font-semibold text-white transition hover:bg-[#EA580C]"
-              >
-                <Plus size={17} />
-                Cadastrar turma
-              </button>
-            </form>
+            <CreateRecordForm action={createClassRoom} kind="classroom" />
           </div>
         </details>
 

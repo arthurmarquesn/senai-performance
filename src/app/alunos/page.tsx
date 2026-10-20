@@ -14,12 +14,16 @@ import {
 
 import { createStudent } from "./actions";
 import { AppLayout } from "@/components/AppLayout";
+import { CreateRecordForm } from "@/components/CreateRecordForm";
 import { prisma } from "@/lib/prisma";
+import { getPagination, studentsPageHref } from "@/lib/pagination";
+import { requireAcademicAccess } from "@/lib/auth";
 
 type SearchParams = {
   q?: string;
   ano?: string;
   turma?: string;
+  pagina?: string;
 };
 
 export default async function AlunosPage({
@@ -27,6 +31,7 @@ export default async function AlunosPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
+  await requireAcademicAccess();
   const params = await searchParams;
 
   const busca = (params.q ?? "").trim();
@@ -61,7 +66,7 @@ export default async function AlunosPage({
           contains: busca,
         },
       },
-      ...(Number.isInteger(numero) && busca !== ""
+      ...(Number.isInteger(numero) && numero >= 0 && numero <= 2147483647 && busca !== ""
         ? [{ number: numero }]
         : []),
     ];
@@ -78,23 +83,28 @@ export default async function AlunosPage({
     };
   }
 
-  const [alunos, totalAlunos] = await Promise.all([
-    prisma.student.findMany({
-      where,
-      include: {
-        classRoom: true,
-        _count: {
-          select: {
-            results: true,
-          },
+  const [totalAlunos, totalFiltrados] = await Promise.all([
+    prisma.student.count(),
+    prisma.student.count({ where }),
+  ]);
+  const { page, pages, skip, take } = getPagination(params.pagina, totalFiltrados);
+  const pageHref = (nextPage: number) => studentsPageHref(nextPage, {
+    q: busca, ano, turma: turmaSelecionada?.id ?? "",
+  });
+  const alunos = await prisma.student.findMany({
+    where,
+    skip,
+    take,
+    include: {
+      classRoom: true,
+      _count: {
+        select: {
+          results: true,
         },
       },
-      orderBy: {
-        name: "asc",
-      },
-    }),
-    prisma.student.count(),
-  ]);
+    },
+    orderBy: [{ name: "asc" }, { id: "asc" }],
+  });
 
   const filtrosAtivos = Boolean(
     busca || ano !== null || turmaId
@@ -233,13 +243,13 @@ export default async function AlunosPage({
                 Lista de alunos
               </h2>
               <p className="mt-1 text-xs text-slate-500">
-                {alunos.length} de {totalAlunos} estudantes
+                {totalFiltrados === 0 ? "0 estudantes" : `${skip + 1}–${skip + alunos.length} de ${totalFiltrados} estudantes`}
               </p>
             </div>
 
             <div className="flex items-center gap-2 text-sm text-slate-500">
               <UsersRound size={17} className="text-[#F97316]" />
-              {alunos.length} encontrados
+              {totalFiltrados} encontrados
             </div>
           </div>
 
@@ -324,6 +334,15 @@ export default async function AlunosPage({
               ))}
             </div>
           )}
+          {pages > 1 && (
+            <nav aria-label="Paginação de alunos" className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-4 sm:px-6">
+              {page > 1 ? <Link href={pageHref(page - 1)} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Anterior</Link>
+                : <span aria-disabled="true" className="rounded-lg border border-slate-100 px-4 py-2 text-sm text-slate-400">Anterior</span>}
+              <span className="text-sm text-slate-600" aria-live="polite">Página {page} de {pages}</span>
+              {page < pages ? <Link href={pageHref(page + 1)} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Próxima</Link>
+                : <span aria-disabled="true" className="rounded-lg border border-slate-100 px-4 py-2 text-sm text-slate-400">Próxima</span>}
+            </nav>
+          )}
         </section>
 
         {/* Cadastro recolhível */}
@@ -354,69 +373,7 @@ export default async function AlunosPage({
           </summary>
 
           <div className="border-t border-slate-100 p-5 sm:p-6">
-            <form
-              action={createStudent}
-              className="grid gap-4 md:grid-cols-[minmax(0,1fr)_140px_minmax(0,1fr)_auto] md:items-end"
-            >
-              <label className="grid gap-2">
-                <span className="text-sm font-semibold text-slate-700">
-                  Nome completo
-                </span>
-
-                <input
-                  name="name"
-                  required
-                  placeholder="Nome do aluno"
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-500/10"
-                />
-              </label>
-
-              <label className="grid gap-2">
-                <span className="text-sm font-semibold text-slate-700">
-                  Número
-                </span>
-
-                <input
-                  name="number"
-                  type="number"
-                  min="0"
-                  placeholder="Número"
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-500/10"
-                />
-              </label>
-
-              <label className="grid gap-2">
-                <span className="text-sm font-semibold text-slate-700">
-                  Turma
-                </span>
-
-                <select
-                  name="classRoomId"
-                  required
-                  defaultValue=""
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-500/10"
-                >
-                  <option value="" disabled>
-                    Selecione a turma
-                  </option>
-
-                  {turmas.map((turma) => (
-                    <option key={turma.id} value={turma.id}>
-                      {turma.name} · {turma.grade}º ano
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <button
-                type="submit"
-                disabled={turmas.length === 0}
-                className="flex h-12 items-center justify-center gap-2 rounded-xl bg-[#F97316] px-5 text-sm font-semibold text-white transition hover:bg-[#EA580C] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <Plus size={17} />
-                Cadastrar
-              </button>
-            </form>
+            <CreateRecordForm action={createStudent} kind="student" classrooms={turmas} />
           </div>
         </details>
       </div>
