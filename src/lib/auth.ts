@@ -2,7 +2,7 @@
 import "server-only";
 
 import { cookies } from "next/headers";
-import { jwtVerify, SignJWT } from "jose";
+import { errors, jwtVerify, SignJWT } from "jose";
 import { redirect } from "next/navigation";
 import { UserRole } from "@prisma/client";
 
@@ -33,7 +33,11 @@ export async function createSession(userId: string) {
 
   cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure:
+      process.env.AUTH_COOKIE_SECURE === "false"
+        ? false
+        : process.env.AUTH_COOKIE_SECURE === "true" ||
+          process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 8,
@@ -51,34 +55,35 @@ export async function getCurrentUser() {
 
   if (!token) return null;
 
+  // Configuration failures must not be treated as an expired session.
+  const secret = getJwtSecret();
+  let userId: unknown;
+
   try {
     const verified = await jwtVerify(
       token,
-      getJwtSecret(),
+      secret,
       { algorithms: ["HS256"] }
     );
 
-    const userId = verified.payload.userId;
-
-    if (
-      !userId ||
-      typeof userId !== "string"
-    ) {
-      return null;
-    }
-
-    return await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-      },
-    });
-  } catch {
-    return null;
+    userId = verified.payload.userId;
+  } catch (error) {
+    if (error instanceof errors.JOSEError) return null;
+    throw error;
   }
+
+  if (!userId || typeof userId !== "string") return null;
+
+  // Database failures must reach error handling instead of redirecting to login.
+  return prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+    },
+  });
 }
 
 export async function requireUser() {

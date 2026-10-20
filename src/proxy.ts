@@ -4,8 +4,6 @@ export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const session = request.cookies.get("alfred_token")?.value;
 
-  console.log("PROXY EXECUTOU:", pathname, "SESSION:", Boolean(session));
-
   if (pathname === "/login") {
     if (session) {
       return NextResponse.redirect(new URL("/", request.url));

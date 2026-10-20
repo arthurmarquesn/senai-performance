@@ -1,5 +1,8 @@
 # SENAI Performance
 
+Procedimento para validar mudanças locais e publicar no servidor interno:
+[Publicação](docs/publicacao.md).
+
 Sistema interno de análise de desempenho acadêmico do SENAI — plataforma para gerenciamento de turmas, alunos, simulados, redações e módulo de leitura.
 
 ---
