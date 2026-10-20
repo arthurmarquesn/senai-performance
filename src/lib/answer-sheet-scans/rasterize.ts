@@ -2,7 +2,12 @@ import "server-only";
 
 import { createCanvas, type ImageData } from "@napi-rs/canvas";
 
-export const SCAN_RENDER_SCALE = 3;
+/*
+ * O processamento das fichas de resposta exige muitos pixels em memória.
+ * Reduzimos a escala de rasterização para o mínimo que ainda mantém a
+ * leitura estável dos marcadores, evitando um pico desnecessário de RAM.
+ */
+export const SCAN_RENDER_SCALE = 1;
 
 type PdfJsModule = Awaited<typeof import("pdfjs-dist/legacy/build/pdf.mjs")>;
 type PdfJsWorkerModule = Awaited<
@@ -53,17 +58,31 @@ export async function renderScanPdfPage(
   pageNumber: number
 ): Promise<ImageData> {
   const page = await pdf.getPage(pageNumber);
-  const viewport = page.getViewport({
-    scale: SCAN_RENDER_SCALE,
-  });
-  const canvas = createCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height));
-  const context = canvas.getContext("2d");
 
-  await page.render({
-    canvas: canvas as unknown as HTMLCanvasElement,
-    canvasContext: context as unknown as CanvasRenderingContext2D,
-    viewport,
-  }).promise;
+  try {
+    const viewport = page.getViewport({
+      scale: SCAN_RENDER_SCALE,
+    });
+    const canvas = createCanvas(
+      Math.ceil(viewport.width),
+      Math.ceil(viewport.height)
+    );
+    const context = canvas.getContext("2d");
 
-  return context.getImageData(0, 0, canvas.width, canvas.height);
+    await page.render({
+      canvas: canvas as unknown as HTMLCanvasElement,
+      canvasContext: context as unknown as CanvasRenderingContext2D,
+      viewport,
+    }).promise;
+
+    return context.getImageData(0, 0, canvas.width, canvas.height);
+  } finally {
+    if (typeof page.cleanup === "function") {
+      page.cleanup();
+    }
+
+    if (typeof page.destroy === "function") {
+      page.destroy();
+    }
+  }
 }

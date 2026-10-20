@@ -104,6 +104,12 @@ export function TeacherAreaNav({
       href: "/professor/faixas",
       icon: SlidersHorizontal,
     },
+
+    {
+      label: "Perfil",
+      href: "/professor/perfil",
+      icon: Users,
+    },
   ];
 
   return (
@@ -112,42 +118,25 @@ export function TeacherAreaNav({
         aria-label="Navegação da Área do Professor"
         className="flex min-w-max gap-1"
       >
-        {items.map(
-          (item) => {
-            const Icon =
-              item.icon;
+        {items.map((item) => {
+          const Icon = item.icon;
+          const active = isActive(pathname, item.href);
 
-            const active =
-              isActive(
-                pathname,
-                item.href,
-              );
-
-            return (
-              <Link
-                key={
-                  item.href
-                }
-                href={
-                  item.href
-                }
-                className={
-                  active
-                    ? "inline-flex h-10 items-center gap-2 rounded-lg bg-red-50 px-3 text-sm font-semibold text-red-800 ring-1 ring-red-200"
-                    : "inline-flex h-10 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-950"
-                }
-              >
-                <Icon
-                  size={16}
-                />
-
-                {
-                  item.label
-                }
-              </Link>
-            );
-          },
-        )}
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={
+                active
+                  ? "inline-flex h-10 items-center gap-2 rounded-lg bg-red-50 px-3 text-sm font-semibold text-red-800 ring-1 ring-red-200"
+                  : "inline-flex h-10 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-950"
+              }
+            >
+              <Icon size={16} />
+              {item.label}
+            </Link>
+          );
+        })}
       </nav>
     </div>
   );
