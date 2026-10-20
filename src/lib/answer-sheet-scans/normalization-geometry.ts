@@ -22,6 +22,7 @@ export const NORMALIZED_PAGE_HEIGHT = Math.ceil(PAGE.height * SCAN_RENDER_SCALE)
 export const NORMALIZED_MARKER_SIZE =
   REGISTRATION_MARKER_SIZE * SCAN_RENDER_SCALE;
 export const MARKER_RESIDUAL_TOLERANCE_PX = 3.5;
+export const NORMALIZED_MARKER_RESIDUAL_TOLERANCE_PX = 6;
 
 function scalePoint(point: Point): Point {
   return {

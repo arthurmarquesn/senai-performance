@@ -131,6 +131,17 @@ export function AnswerKeyEditor({
     (item) => item.canceled
   ).length;
 
+  const answerKeyColumns = useMemo(() => {
+    const columnCount = 2;
+    const rowsPerColumn = Math.ceil(totalQuestions / columnCount);
+
+    return Array.from({ length: columnCount }, (_, columnIndex) => {
+      const start = columnIndex * rowsPerColumn;
+
+      return items.slice(start, start + rowsPerColumn);
+    });
+  }, [items, totalQuestions]);
+
   function clearFeedback() {
     setStatusMessage(null);
     setErrorMessage(null);
@@ -314,69 +325,76 @@ export function AnswerKeyEditor({
         </div>
       </div>
 
-      <div className="grid gap-2 lg:grid-cols-2">
-        {items.map((item) => (
+      <div className="grid gap-3 lg:grid-cols-2">
+        {answerKeyColumns.map((column, columnIndex) => (
           <div
-            key={item.question}
-            className={cx(
-              "grid min-w-0 grid-cols-[78px_1fr_auto] items-center gap-3 rounded-lg border px-3 py-2.5",
-              item.canceled
-                ? "border-amber-200 bg-amber-50"
-                : "border-zinc-200 bg-white"
-            )}
+            key={columnIndex}
+            className="grid content-start gap-2"
           >
-            <p className="whitespace-nowrap text-sm font-semibold text-zinc-900">
-              Q{String(item.question).padStart(2, "0")}
-            </p>
+            {column.map((item) => (
+              <div
+                key={item.question}
+                className={cx(
+                  "grid min-w-0 grid-cols-[58px_minmax(0,1fr)_auto] items-center gap-3 rounded-lg border px-3 py-2.5",
+                  item.canceled
+                    ? "border-amber-200 bg-amber-50"
+                    : "border-zinc-200 bg-white"
+                )}
+              >
+                <p className="whitespace-nowrap text-sm font-semibold text-zinc-900">
+                  Q{String(item.question).padStart(2, "0")}
+                </p>
 
-            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-              {alternatives.map((alternative) => {
-                const selected =
-                  item.answer === alternative;
+                <div className="flex min-w-0 flex-nowrap items-center gap-1.5">
+                  {alternatives.map((alternative) => {
+                    const selected =
+                      item.answer === alternative;
 
-                return (
-                  <button
-                    key={alternative}
-                    type="button"
-                    aria-label={`Questão ${item.question}, alternativa ${alternative}`}
-                    aria-pressed={selected}
-                    onClick={() =>
-                      selectAnswer(
-                        item.question,
-                        alternative
-                      )
-                    }
-                    className={cx(
-                      "flex h-8 min-w-8 items-center justify-center rounded-md border px-2.5 text-xs font-bold transition",
-                      selected
-                        ? "border-red-600 bg-red-600 text-white shadow-sm"
-                        : "border-zinc-200 bg-white text-zinc-700 hover:border-red-300 hover:bg-red-50 hover:text-red-700"
-                    )}
-                  >
-                    {alternative}
-                  </button>
-                );
-              })}
-            </div>
+                    return (
+                      <button
+                        key={alternative}
+                        type="button"
+                        aria-label={`Questão ${item.question}, alternativa ${alternative}`}
+                        aria-pressed={selected}
+                        onClick={() =>
+                          selectAnswer(
+                            item.question,
+                            alternative
+                          )
+                        }
+                        className={cx(
+                          "flex h-8 w-8 shrink-0 items-center justify-center rounded-md border text-xs font-bold transition",
+                          selected
+                            ? "border-red-600 bg-red-600 text-white shadow-sm"
+                            : "border-zinc-200 bg-white text-zinc-700 hover:border-red-300 hover:bg-red-50 hover:text-red-700"
+                        )}
+                      >
+                        {alternative}
+                      </button>
+                    );
+                  })}
+                </div>
 
-            <button
-              type="button"
-              onClick={() =>
-                toggleCanceled(item.question)
-              }
-              disabled={item.answer === null}
-              aria-pressed={item.canceled}
-              className={cx(
-                "inline-flex min-h-8 items-center justify-center rounded-md px-2.5 text-xs font-semibold transition",
-                item.canceled
-                  ? "bg-amber-600 text-white hover:bg-amber-700"
-                  : "border border-zinc-200 bg-zinc-50 text-zinc-600 hover:border-amber-300 hover:bg-amber-50 hover:text-amber-800",
-                item.answer === null &&
-                  "cursor-not-allowed opacity-40"
-              )}
-            >
-              {item.canceled ? "Anulada" : "Anular"}
-            </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    toggleCanceled(item.question)
+                  }
+                  disabled={item.answer === null}
+                  aria-pressed={item.canceled}
+                  className={cx(
+                    "inline-flex min-h-8 items-center justify-center rounded-md px-2.5 text-xs font-semibold transition",
+                    item.canceled
+                      ? "bg-amber-600 text-white hover:bg-amber-700"
+                      : "border border-zinc-200 bg-zinc-50 text-zinc-600 hover:border-amber-300 hover:bg-amber-50 hover:text-amber-800",
+                    item.answer === null &&
+                      "cursor-not-allowed opacity-40"
+                  )}
+                >
+                  {item.canceled ? "Anulada" : "Anular"}
+                </button>
+              </div>
+            ))}
           </div>
         ))}
       </div>

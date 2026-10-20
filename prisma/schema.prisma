@@ -413,22 +413,79 @@ model TeacherProfile {
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Cada professor possui uma única disciplina e uma única área.
-  //
-  // Não existe associação manual professor <-> Jornada.
-  // Todos os professores participam automaticamente de todas as Jornadas.
   subject Subject
   area    KnowledgeArea
 
-  // Uma atividade pode possuir um professor responsável.
-  // Isso NÃO representa participação na Jornada.
-  activities JourneyActivity[]
+  activities       JourneyActivity[]
+  performanceBands TeacherPerformanceBand[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([subject])
   @@index([area])
+}
+
+// ======================================================
+// FAIXAS DE DESEMPENHO DO PROFESSOR
+// ======================================================
+//
+// Cada professor define sua própria régua pedagógica.
+//
+// Regras:
+//
+// - o professor pode não possuir nenhuma faixa;
+// - pode possuir somente uma faixa;
+// - pode criar quantas faixas desejar;
+// - as faixas não precisam cobrir 0% até 100%;
+// - faixas do mesmo professor não podem se sobrepor;
+// - minPercentage e maxPercentage trabalham na escala 0..100;
+// - requiresComplementaryActivity identifica semanticamente
+//   quais alunos devem ser considerados para atividade complementar.
+//
+// A validação de sobreposição é realizada pela aplicação.
+// ======================================================
+
+// ======================================================
+// FAIXAS DE DESEMPENHO DO PROFESSOR
+// ======================================================
+//
+// Cada professor define sua própria régua pedagógica.
+//
+// Regras:
+// - pode não possuir nenhuma faixa;
+// - pode possuir somente uma faixa;
+// - pode criar várias faixas;
+// - as faixas não precisam cobrir 0% até 100%;
+// - faixas do mesmo professor não podem se sobrepor;
+// - minPercentage e maxPercentage trabalham em 0..100;
+// - requiresComplementaryActivity identifica faixas que
+//   exigem atividade complementar.
+//
+// A sobreposição é validada pela aplicação.
+// ======================================================
+
+model TeacherPerformanceBand {
+  id String @id @default(cuid())
+
+  teacherProfileId String
+  teacherProfile   TeacherProfile @relation(fields: [teacherProfileId], references: [id], onDelete: Cascade)
+
+  name String @db.VarChar(100)
+
+  minPercentage Int
+  maxPercentage Int
+
+  requiresComplementaryActivity Boolean @default(false)
+
+  position Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([teacherProfileId])
+  @@index([teacherProfileId, position])
+  @@index([requiresComplementaryActivity])
 }
 
 // ======================================================
@@ -1262,6 +1319,7 @@ enum Subject {
 enum UserRole {
   ADMIN
   TEACHER
+  ESSAY_CORRECTOR
 }
 
 enum KnowledgeArea {

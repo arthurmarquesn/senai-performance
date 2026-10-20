@@ -17,6 +17,7 @@ import {
 import {
   CANONICAL_MARKERS,
   MARKER_RESIDUAL_TOLERANCE_PX,
+  NORMALIZED_MARKER_RESIDUAL_TOLERANCE_PX,
   NORMALIZED_PAGE_HEIGHT,
   NORMALIZED_PAGE_WIDTH,
   estimateRotationDegrees,
@@ -105,6 +106,25 @@ async function normalizeScanPage({
     const detection =
       detectRegistrationMarkers(imageData);
 
+    console.log(
+      `MARCADORES DETECTADOS - página ${scan.pageNumber}`,
+      {
+        imageSize: {
+          width: imageData.width,
+          height: imageData.height,
+        },
+        normalizedExpectedSize: {
+          width: NORMALIZED_PAGE_WIDTH,
+          height: NORMALIZED_PAGE_HEIGHT,
+        },
+        markers: detection.markers,
+        residualAverage: detection.residualAverage,
+        residualMax: detection.residualMax,
+        canonical: CANONICAL_MARKERS,
+        tolerance: MARKER_RESIDUAL_TOLERANCE_PX,
+      }
+    );
+
     const alreadyCanonical =
       imageData.width ===
         NORMALIZED_PAGE_WIDTH &&
@@ -133,14 +153,30 @@ async function normalizeScanPage({
             normalized as ImageData
           );
 
+    console.log(
+  `MARCADORES APÓS NORMALIZAÇÃO - página ${scan.pageNumber}`,
+  {
+    alreadyCanonical,
+    markers: normalizedDetection.markers,
+    residualAverage:
+      normalizedDetection.residualAverage,
+    residualMax:
+      normalizedDetection.residualMax,
+    tolerance:
+      NORMALIZED_MARKER_RESIDUAL_TOLERANCE_PX,
+  }
+);
+
     if (
-      normalizedDetection.residualMax >
-      MARKER_RESIDUAL_TOLERANCE_PX
-    ) {
-      throw new InvalidMarkerGeometryError(
-        "Preparacao geometrica fora da tolerancia."
-      );
-    }
+  normalizedDetection.residualMax >
+  NORMALIZED_MARKER_RESIDUAL_TOLERANCE_PX
+) {
+  throw new InvalidMarkerGeometryError(
+    `Preparacao geometrica fora da tolerancia. Residuo maximo: ${normalizedDetection.residualMax.toFixed(
+      2
+    )} px.`
+  );
+}
 
     const pngBytes =
       pngFromImageData(normalized);
@@ -205,15 +241,24 @@ async function normalizeScanPage({
         ? AnswerSheetScanStatus.REVIEW_REQUIRED
         : AnswerSheetScanStatus.FAILED;
 
-    if (
-      status ===
-      AnswerSheetScanStatus.FAILED
-    ) {
-      console.error(
-        `Erro ao preparar página ${scan.pageNumber}:`,
-        error
-      );
-    }
+    console.error(
+      `ERRO DE NORMALIZAÇÃO - página ${scan.pageNumber}`,
+      {
+        status,
+        errorName:
+          error instanceof Error
+            ? error.name
+            : "UnknownError",
+        errorMessage:
+          error instanceof Error
+            ? error.message
+            : String(error),
+        stack:
+          error instanceof Error
+            ? error.stack
+            : undefined,
+      }
+    );
 
     await prisma.answerSheetScan.update({
       where: {

@@ -1,26 +1,24 @@
+
 import Link from "next/link";
 import {
-  AlertTriangle,
   ArrowRight,
-  BarChart3,
   BookOpen,
+  ChevronRight,
   FileText,
-  Plus,
+  GraduationCap,
+  Layers3,
+  UsersRound,
 } from "lucide-react";
 
 import { AppLayout } from "@/components/AppLayout";
-import {
-  Badge,
-  EmptyState,
-  MetricCell,
-  MetricStrip,
-  PageHeader,
-  Panel,
-  SectionHeader,
-} from "@/components/design-system";
+import { requireAcademicAccess } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export default async function HomePage() {
+  // Bloqueia o acesso de corretores de redação.
+  // A verificação ocorre antes das consultas ao banco.
+  await requireAcademicAccess();
+
   const [
     totalTurmas,
     totalAlunos,
@@ -56,213 +54,239 @@ export default async function HomePage() {
 
   return (
     <AppLayout>
-      <PageHeader
-        eyebrow="Visao executiva"
-        title="Dashboard institucional"
-        description="Sintese operacional de turmas, estudantes, simulados e redacoes para apoiar decisoes pedagogicas."
-        icon={<BarChart3 size={24} />}
-        actions={
+      <div className="mx-auto w-full max-w-[1440px] pb-10">
+        {/* Cabeçalho */}
+        <header className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <div className="mb-3 h-1 w-10 rounded-full bg-[#F97316]" />
+
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-[34px]">
+              Visão geral
+              <span className="text-[#F97316]">.</span>
+            </h1>
+
+            <p className="mt-2 text-sm text-slate-500">
+              Acompanhe sua instituição em um só lugar.
+            </p>
+          </div>
+
           <Link
             href="/simulados"
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-800 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+            className="inline-flex w-fit items-center gap-2 rounded-xl bg-[#F97316] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#EA580C]"
           >
             Ver simulados
-            <ArrowRight size={16} />
+            <ArrowRight size={17} />
           </Link>
-        }
-        stats={
-          <MetricStrip columns="md:grid-cols-4">
-            <MetricCell label="Turmas" value={totalTurmas} />
-            <MetricCell label="Alunos" value={totalAlunos} tone="brand" />
-            <MetricCell label="Simulados" value={totalSimulados} />
-            <MetricCell label="Redacoes" value={totalRedacoes} />
-          </MetricStrip>
-        }
-      />
+        </header>
 
-      <section className="mb-6 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-        <Panel>
-          <SectionHeader
-            eyebrow="Sinais pedagogicos"
-            title="Prioridades do momento"
-            description="Pontos de atencao calculados com os dados ja disponiveis no sistema."
-            action={<Badge tone="neutral">R2 navegacao limpa</Badge>}
+        {/* Indicadores */}
+        <section className="mb-9 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-5">
+          <MetricCard
+            title="Alunos"
+            value={totalAlunos}
+            icon={<UsersRound size={21} />}
+            featured
           />
 
-          <div className="grid gap-3 md:grid-cols-3">
-            <InsightCard
-              icon={<AlertTriangle size={18} />}
-              title="Alunos cadastrados"
-              value={totalAlunos}
-              description="estudante(s) disponiveis para acompanhamento."
-            />
-            <InsightCard
-              icon={<FileText size={18} />}
-              title="Redacoes corrigidas"
-              value={totalRedacoes}
-              description="registro(s) disponiveis para acompanhamento."
-            />
-            <InsightCard
-              icon={<BookOpen size={18} />}
-              title="Simulados"
-              value={totalSimulados}
-              description="avaliacao(oes) na base institucional."
-            />
-          </div>
-        </Panel>
-
-        <Panel>
-          <SectionHeader
-            eyebrow="Acesso rapido"
-            title="Fluxos operacionais"
-            description="Entradas principais para executar as rotinas do sistema."
+          <MetricCard
+            title="Turmas"
+            value={totalTurmas}
+            icon={<Layers3 size={21} />}
           />
 
-          <div className="grid gap-2">
-            <QuickAction href="/alunos" label="Acessar perfis dos alunos" />
-            <QuickAction href="/turmas" label="Gerenciar turmas" />
-            <QuickAction href="/simulados" label="Criar ou acessar simulados" />
-            <QuickAction href="/redacoes" label="Corrigir redacoes ENEM" />
-          </div>
-        </Panel>
-      </section>
+          <MetricCard
+            title="Simulados"
+            value={totalSimulados}
+            icon={<BookOpen size={21} />}
+          />
 
-      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <Panel>
-          <SectionHeader
-            eyebrow="Avaliacoes"
-            title="Ultimos simulados"
-            description="Avaliacoes cadastradas recentemente."
-            action={
+          <MetricCard
+            title="Redações"
+            value={totalRedacoes}
+            icon={<FileText size={21} />}
+          />
+        </section>
+
+        {/* Atividade recente */}
+        <div className="grid items-start gap-6 xl:grid-cols-2">
+          {/* Simulados */}
+          <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-5 sm:px-6">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">
+                  Últimos simulados
+                </h2>
+
+                <p className="mt-1 text-xs text-slate-500">
+                  Avaliações recentes
+                </p>
+              </div>
+
               <Link
                 href="/simulados"
-                className="text-sm font-semibold text-red-600 hover:text-red-700"
+                className="flex items-center gap-1 text-sm font-semibold text-[#EA580C] transition hover:text-[#C2410C]"
               >
                 Ver todos
+                <ChevronRight size={16} />
               </Link>
-            }
-          />
+            </div>
 
-          <div className="overflow-hidden rounded-3xl border border-zinc-200 bg-white/70">
-            {ultimosSimulados.length === 0 ? (
-              <EmptyState title="Nenhum simulado cadastrado ainda." />
-            ) : (
-              ultimosSimulados.map((simulado, index) => (
-                <Link
-                  key={simulado.id}
-                  href={`/simulados/${simulado.id}`}
-                  className={`performance-data-row group flex items-center justify-between gap-4 px-4 py-4 transition ${
-                    index > 0 ? "border-t border-zinc-200" : ""
-                  }`}
-                >
-                  <div>
-                    <h3 className="font-semibold text-zinc-950 group-hover:text-red-700">
-                      {simulado.title}
-                    </h3>
-                    <p className="mt-1 text-sm text-zinc-500">
-                      {simulado.grade} ano - {simulado.totalQuestions} questoes
-                    </p>
+            <div className="divide-y divide-slate-100">
+              {ultimosSimulados.length === 0 ? (
+                <EmptyActivity message="Nenhum simulado cadastrado." />
+              ) : (
+                ultimosSimulados.map((simulado) => (
+                  <Link
+                    key={simulado.id}
+                    href={`/simulados/${simulado.id}`}
+                    className="group flex items-center justify-between gap-4 px-5 py-4 transition hover:bg-orange-50/60 sm:px-6"
+                  >
+                    <div className="min-w-0">
+                      <h3 className="truncate text-sm font-semibold text-slate-900 transition group-hover:text-[#EA580C]">
+                        {simulado.title}
+                      </h3>
+
+                      <p className="mt-1 text-xs text-slate-500">
+                        {simulado.grade}º ano ·{" "}
+                        {simulado.totalQuestions} questões
+                      </p>
+                    </div>
+
+                    <ChevronRight
+                      size={18}
+                      className="shrink-0 text-slate-400 transition group-hover:text-[#F97316]"
+                    />
+                  </Link>
+                ))
+              )}
+            </div>
+          </section>
+
+          {/* Redações */}
+          <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-5 sm:px-6">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">
+                  Últimas redações
+                </h2>
+
+                <p className="mt-1 text-xs text-slate-500">
+                  Correções recentes
+                </p>
+              </div>
+
+              <Link
+                href="/redacoes"
+                className="flex items-center gap-1 text-sm font-semibold text-[#EA580C] transition hover:text-[#C2410C]"
+              >
+                Ver todas
+                <ChevronRight size={16} />
+              </Link>
+            </div>
+
+            <div className="divide-y divide-slate-100">
+              {ultimasRedacoes.length === 0 ? (
+                <EmptyActivity message="Nenhuma redação corrigida." />
+              ) : (
+                ultimasRedacoes.map((redacao) => (
+                  <div
+                    key={redacao.id}
+                    className="flex items-center justify-between gap-4 px-5 py-4 sm:px-6"
+                  >
+                    <div className="min-w-0">
+                      <h3 className="truncate text-sm font-semibold text-slate-900">
+                        {redacao.student.name}
+                      </h3>
+
+                      <p className="mt-1 truncate text-xs text-slate-500">
+                        {redacao.student.classRoom.name}
+                      </p>
+                    </div>
+
+                    <div className="shrink-0 text-right">
+                      <p className="text-lg font-bold tabular-nums text-[#EA580C]">
+                        {redacao.totalScore}
+                      </p>
+
+                      <p className="text-[11px] text-slate-400">
+                        Nota
+                      </p>
+                    </div>
                   </div>
-                  <Badge tone="neutral">{simulado.status}</Badge>
-                </Link>
-              ))
-            )}
-          </div>
-        </Panel>
+                ))
+              )}
+            </div>
+          </section>
+        </div>
 
-        <RecentPanel
-          title="Ultimas redacoes"
-          icon={<FileText size={18} />}
-          empty="Nenhuma redacao corrigida ainda."
-          items={ultimasRedacoes.map((redacao) => ({
-            id: redacao.id,
-            title: redacao.student.name,
-            detail: `${redacao.student.classRoom.name} - Nota ${redacao.totalScore}`,
-          }))}
-        />
-      </section>
+        {/* Rodapé */}
+        <div className="mt-10 flex items-center gap-2 border-t border-slate-200 pt-5 text-xs text-slate-400">
+          <GraduationCap size={15} />
+          PERFORMANCE · Gestão Educacional
+        </div>
+      </div>
     </AppLayout>
   );
 }
 
-function InsightCard({
-  icon,
+function MetricCard({
   title,
   value,
-  description,
+  icon,
+  featured = false,
 }: {
-  icon: React.ReactNode;
   title: string;
   value: number;
-  description: string;
+  icon: React.ReactNode;
+  featured?: boolean;
 }) {
   return (
-    <div className="rounded-3xl border border-zinc-200 bg-white/70 p-4">
-      <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-xl bg-red-50 text-red-600">
-        {icon}
+    <div
+      className={`relative flex min-h-[148px] flex-col justify-between overflow-hidden rounded-2xl p-5 transition-shadow hover:shadow-md sm:p-6 ${
+        featured
+          ? "bg-gradient-to-br from-[#FB923C] to-[#EA580C] text-white shadow-sm"
+          : "border border-slate-200 bg-white text-slate-900 shadow-sm"
+      }`}
+    >
+      {featured && (
+        <div className="pointer-events-none absolute -right-9 -top-14 h-40 w-40 rounded-full border-[22px] border-white/10" />
+      )}
+
+      <div className="relative flex items-center justify-between gap-3">
+        <p
+          className={`text-sm font-medium ${
+            featured ? "text-white/90" : "text-slate-500"
+          }`}
+        >
+          {title}
+        </p>
+
+        <span
+          className={
+            featured
+              ? "text-white/90"
+              : "text-[#F97316]"
+          }
+        >
+          {icon}
+        </span>
       </div>
-      <p className="text-sm font-semibold text-zinc-950">{title}</p>
-      <p className="mt-2 text-3xl font-semibold tracking-tight text-zinc-950">
-        {value}
-      </p>
-      <p className="mt-1 text-xs leading-relaxed text-zinc-500">
-        {description}
+
+      <p className="relative mt-5 text-4xl font-bold tracking-tight tabular-nums">
+        {value.toLocaleString("pt-BR")}
       </p>
     </div>
   );
 }
 
-function QuickAction({ href, label }: { href: string; label: string }) {
-  return (
-    <Link
-      href={href}
-      className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-white/70 px-4 py-3 text-sm font-semibold text-zinc-700 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
-    >
-      <span>{label}</span>
-      <Plus size={16} />
-    </Link>
-  );
-}
-
-function RecentPanel({
-  title,
-  icon,
-  items,
-  empty,
+function EmptyActivity({
+  message,
 }: {
-  title: string;
-  icon: React.ReactNode;
-  items: Array<{ id: string; title: string; detail: string }>;
-  empty: string;
+  message: string;
 }) {
   return (
-    <Panel>
-      <SectionHeader
-        title={title}
-        action={
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-50 text-red-600">
-            {icon}
-          </div>
-        }
-      />
-
-      <div className="space-y-2">
-        {items.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-zinc-300 bg-white/60 p-4 text-sm text-zinc-500">
-            {empty}
-          </p>
-        ) : (
-          items.map((item) => (
-            <div
-              key={item.id}
-              className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3"
-            >
-              <p className="font-semibold text-zinc-950">{item.title}</p>
-              <p className="mt-1 text-sm text-zinc-500">{item.detail}</p>
-            </div>
-          ))
-        )}
-      </div>
-    </Panel>
+    <div className="flex min-h-28 items-center justify-center px-5 py-8 text-center text-sm text-slate-400">
+      {message}
+    </div>
   );
 }

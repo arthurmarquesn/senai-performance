@@ -1,50 +1,41 @@
+
 import Link from "next/link";
-import { ArrowRight, Plus, Users } from "lucide-react";
+import {
+  ArrowRight,
+  BarChart3,
+  BookOpen,
+  ChevronDown,
+  GraduationCap,
+  Plus,
+  UsersRound,
+} from "lucide-react";
 
 import { createClassRoom } from "./actions";
 import { AppLayout } from "@/components/AppLayout";
-import {
-  Badge,
-  EmptyState,
-  MetricCell,
-  MetricStrip,
-  PageHeader,
-  Panel,
-  SectionHeader,
-} from "@/components/design-system";
 import { prisma } from "@/lib/prisma";
 
 export default async function TurmasPage() {
-  const turmas = await prisma.classRoom.findMany({
-    include: {
-      students: {
-        include: {
-          results: true,
+  const [turmas, simuladosPorSerie] = await Promise.all([
+    prisma.classRoom.findMany({
+      include: {
+        students: {
+          include: {
+            results: true,
+          },
         },
       },
-    },
-    orderBy: [
-      {
-        grade: "asc",
+      orderBy: [
+        { grade: "asc" },
+        { name: "asc" },
+      ],
+    }),
+    prisma.exam.groupBy({
+      by: ["grade"],
+      _count: {
+        id: true,
       },
-      {
-        name: "asc",
-      },
-    ],
-  });
-
-  const simuladosPorSerie = await prisma.exam.groupBy({
-    by: ["grade"],
-    _count: {
-      id: true,
-    },
-  });
-
-  function getTotalSimuladosDaSerie(grade: number) {
-    return (
-      simuladosPorSerie.find((item) => item.grade === grade)?._count.id ?? 0
-    );
-  }
+    }),
+  ]);
 
   const totalAlunos = turmas.reduce(
     (acc, turma) => acc + turma.students.length,
@@ -55,172 +46,273 @@ export default async function TurmasPage() {
     (acc, turma) =>
       acc +
       turma.students.reduce(
-        (studentAcc, student) => studentAcc + student.results.length,
+        (studentAcc, student) =>
+          studentAcc + student.results.length,
         0
       ),
     0
   );
 
-  const totalSimuladosSeries = simuladosPorSerie.reduce(
+  const totalSimulados = simuladosPorSerie.reduce(
     (acc, item) => acc + item._count.id,
     0
   );
 
   const turmasPorSerie = [1, 2, 3].map((grade) => ({
     grade,
-    turmas: turmas.filter((turma) => turma.grade === grade),
-    simulados: getTotalSimuladosDaSerie(grade),
+    turmas: turmas.filter(
+      (turma) => turma.grade === grade
+    ),
+    simulados:
+      simuladosPorSerie.find(
+        (item) => item.grade === grade
+      )?._count.id ?? 0,
   }));
 
   return (
     <AppLayout>
-      <PageHeader
-        eyebrow="Nucleo academico"
-        title="Turmas"
-        description="Estrutura institucional das turmas, com vinculo de estudantes, simulados por serie e sinais de acompanhamento pedagogico."
-        icon={<Users size={24} />}
-        actions={
-          <Link
-            href="/turmas#cadastro"
-            className="performance-primary-action inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold text-white transition active:scale-[0.99]"
-          >
-            <Plus size={17} />
-            Nova turma
-          </Link>
-        }
-        stats={
-          <MetricStrip>
-            <MetricCell
-              label="Turmas"
-              value={turmas.length}
-              detail="unidades academicas"
-              tone="brand"
-            />
-            <MetricCell label="Alunos" value={totalAlunos} detail="vinculados" />
-            <MetricCell
-              label="Simulados"
-              value={totalSimuladosSeries}
-              detail="disponiveis por serie"
-            />
-            <MetricCell
-              label="Resultados"
-              value={totalResultados}
-              detail="registros oficiais"
-            />
-          </MetricStrip>
-        }
-      />
+      <div className="mx-auto w-full max-w-[1440px] pb-12">
+        {/* Cabeçalho */}
+        <header className="mb-8">
+          <div className="mb-3 h-1 w-10 rounded-full bg-[#F97316]" />
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-        <Panel className="min-h-[520px]">
-          <SectionHeader
-            eyebrow="Mapa das turmas"
-            title="Turmas cadastradas"
-            description={`${turmas.length} turma(s) organizadas por serie, com dados de alunos, simulados e resultados.`}
-            action={
-              <Badge tone="brand">
-                {totalSimuladosSeries} simulado(s) na matriz
-              </Badge>
-            }
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-[34px]">
+            Turmas
+            <span className="text-[#F97316]">.</span>
+          </h1>
+
+          <p className="mt-2 text-sm text-slate-500">
+            Organização e acompanhamento acadêmico
+          </p>
+        </header>
+
+        {/* Indicadores */}
+        <section className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-5">
+          <MetricCard
+            title="Turmas"
+            value={turmas.length}
+            icon={<GraduationCap size={21} />}
+            featured
           />
 
-          {turmas.length === 0 ? (
-            <EmptyState
-              title="Nenhuma turma cadastrada"
-              description="Crie uma turma para organizar estudantes, simulados e relatorios academicos."
-              action={
-                <Link
-                  href="/turmas#cadastro"
-                  className="performance-primary-action inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold text-white"
-                >
-                  <Plus size={17} />
-                  Criar primeira turma
-                </Link>
-              }
+          <MetricCard
+            title="Alunos"
+            value={totalAlunos}
+            icon={<UsersRound size={21} />}
+          />
+
+          <MetricCard
+            title="Simulados"
+            value={totalSimulados}
+            icon={<BookOpen size={21} />}
+          />
+
+          <MetricCard
+            title="Resultados"
+            value={totalResultados}
+            icon={<BarChart3 size={21} />}
+          />
+        </section>
+
+        {/* Cadastro recolhível */}
+        <details
+          id="cadastro"
+          className="group mb-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+        >
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 marker:hidden sm:px-6 [&::-webkit-details-marker]:hidden">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-[#EA580C]">
+                <Plus size={20} />
+              </div>
+
+              <div>
+                <h2 className="font-semibold text-slate-900">
+                  Nova turma
+                </h2>
+                <p className="mt-1 text-xs text-slate-500">
+                  Cadastrar uma nova turma
+                </p>
+              </div>
+            </div>
+
+            <ChevronDown
+              size={20}
+              className="shrink-0 text-slate-400 transition-transform group-open:rotate-180"
             />
+          </summary>
+
+          <div className="border-t border-slate-100 p-5 sm:p-6">
+            <form
+              action={createClassRoom}
+              className="grid gap-4 md:grid-cols-[minmax(0,1fr)_200px_auto] md:items-end"
+            >
+              <label className="grid gap-2">
+                <span className="text-sm font-semibold text-slate-700">
+                  Nome da turma
+                </span>
+
+                <input
+                  name="name"
+                  required
+                  placeholder="Ex.: IDEV-2"
+                  className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-500/10"
+                />
+              </label>
+
+              <label className="grid gap-2">
+                <span className="text-sm font-semibold text-slate-700">
+                  Ano
+                </span>
+
+                <select
+                  name="grade"
+                  required
+                  defaultValue=""
+                  className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-500/10"
+                >
+                  <option value="" disabled>
+                    Selecione o ano
+                  </option>
+
+                  <option value="1">1º ano</option>
+                  <option value="2">2º ano</option>
+                  <option value="3">3º ano</option>
+                </select>
+              </label>
+
+              <button
+                type="submit"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#F97316] px-6 text-sm font-semibold text-white transition hover:bg-[#EA580C]"
+              >
+                <Plus size={17} />
+                Cadastrar turma
+              </button>
+            </form>
+          </div>
+        </details>
+
+        {/* Listagem */}
+        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
+            <h2 className="text-lg font-bold text-slate-900">
+              Turmas cadastradas
+            </h2>
+
+            <p className="mt-1 text-xs text-slate-500">
+              {turmas.length} turmas organizadas por ano
+            </p>
+          </div>
+
+          {turmas.length === 0 ? (
+            <div className="flex min-h-[240px] flex-col items-center justify-center px-6 py-12 text-center">
+              <GraduationCap
+                size={36}
+                strokeWidth={1.5}
+                className="text-slate-300"
+              />
+
+              <h3 className="mt-4 font-semibold text-slate-800">
+                Nenhuma turma cadastrada
+              </h3>
+
+              <p className="mt-2 text-sm text-slate-500">
+                Cadastre uma turma para começar.
+              </p>
+            </div>
           ) : (
-            <div className="space-y-6">
+            <div className="divide-y divide-slate-100">
               {turmasPorSerie.map((grupo) => (
-                <section key={grupo.grade}>
-                  <div className="mb-3 flex items-center justify-between gap-3">
+                <div key={grupo.grade}>
+                  {/* Identificação do ano */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50/80 px-5 py-4 sm:px-6">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-950 text-sm font-semibold text-white">
-                        {grupo.grade} ano
-                      </div>
+                      <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-100 text-sm font-bold text-[#EA580C]">
+                        {grupo.grade}º
+                      </span>
+
                       <div>
-                        <h3 className="text-sm font-semibold text-zinc-950">
-                          {grupo.grade} ano
+                        <h3 className="text-sm font-bold text-slate-900">
+                          {grupo.grade}º ano
                         </h3>
-                        <p className="text-xs text-zinc-500">
-                          {grupo.turmas.length} turma(s) - {grupo.simulados} simulado(s)
+
+                        <p className="mt-0.5 text-xs text-slate-500">
+                          {grupo.turmas.length}{" "}
+                          {grupo.turmas.length === 1
+                            ? "turma"
+                            : "turmas"}
                         </p>
                       </div>
                     </div>
-                    <div className="hidden h-px flex-1 bg-zinc-200 md:block" />
+
+                    <p className="text-xs text-slate-500">
+                      {grupo.simulados}{" "}
+                      {grupo.simulados === 1
+                        ? "simulado disponível"
+                        : "simulados disponíveis"}
+                    </p>
                   </div>
 
+                  {/* Turmas do ano */}
                   {grupo.turmas.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-zinc-300 bg-white/60 px-4 py-5 text-sm text-zinc-500">
-                      Nenhuma turma cadastrada para esta serie.
+                    <div className="px-6 py-6 text-sm text-slate-400">
+                      Nenhuma turma neste ano.
                     </div>
                   ) : (
-                    <div className="overflow-hidden rounded-3xl border border-zinc-200 bg-white/70">
-                      {grupo.turmas.map((turma, index) => {
-                        const totalSimuladosDaSerie = getTotalSimuladosDaSerie(
-                          turma.grade
-                        );
-
-                        const totalResultadosDaTurma = turma.students.reduce(
-                          (acc, student) => acc + student.results.length,
-                          0
-                        );
+                    <div className="divide-y divide-slate-100">
+                      {grupo.turmas.map((turma) => {
+                        const totalResultadosDaTurma =
+                          turma.students.reduce(
+                            (acc, student) =>
+                              acc + student.results.length,
+                            0
+                          );
 
                         return (
                           <Link
                             key={turma.id}
                             href={`/turmas/${turma.id}`}
-                            className={`performance-data-row group grid gap-4 px-4 py-4 transition md:grid-cols-[minmax(180px,1.2fr)_repeat(4,minmax(72px,0.55fr))_auto] md:items-center ${
-                              index > 0 ? "border-t border-zinc-200" : ""
-                            }`}
+                            className="group flex items-center justify-between gap-4 px-5 py-5 transition hover:bg-orange-50/60 sm:px-6"
                           >
-                            <div className="flex items-center gap-3">
-                              <div className="performance-icon-tile flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-red-50 text-red-600">
-                                <Users size={20} />
+                            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+                              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-[#EA580C] transition group-hover:bg-orange-100">
+                                <UsersRound size={20} />
                               </div>
-                              <div>
-                                <h4 className="font-semibold tracking-tight text-zinc-950 transition group-hover:text-red-700">
+
+                              <div className="min-w-0">
+                                <h4 className="truncate font-semibold text-slate-900 transition group-hover:text-[#EA580C]">
                                   {turma.name}
                                 </h4>
-                                <p className="mt-1 text-xs text-zinc-500">
-                                  Entidade academica - {turma.grade} ano
+
+                                <p className="mt-1 text-xs text-slate-500">
+                                  {turma.grade}º ano
                                 </p>
                               </div>
                             </div>
 
-                            <DataPoint
-                              label="Alunos"
-                              value={String(turma.students.length)}
-                            />
-                            <DataPoint
-                              label="Simulados"
-                              value={String(totalSimuladosDaSerie)}
-                              brand
-                            />
-                            <DataPoint
-                              label="Resultados"
-                              value={String(totalResultadosDaTurma)}
-                            />
-                            <DataPoint
-                              label="Serie"
-                              value={`${turma.grade} ano`}
-                              brand
-                            />
+                            <div className="flex shrink-0 items-center gap-5 sm:gap-8">
+                              <div className="text-right">
+                                <p className="text-base font-bold tabular-nums text-slate-900">
+                                  {turma.students.length}
+                                </p>
 
-                            <div className="flex items-center justify-between gap-3 md:justify-end">
-                              <Badge tone="neutral">Painel da turma</Badge>
+                                <p className="text-xs text-slate-400">
+                                  Alunos
+                                </p>
+                              </div>
+
+                              <div className="hidden text-right sm:block">
+                                <p className="text-base font-bold tabular-nums text-slate-900">
+                                  {totalResultadosDaTurma}
+                                </p>
+
+                                <p className="text-xs text-slate-400">
+                                  Resultados
+                                </p>
+                              </div>
+
                               <ArrowRight
                                 size={18}
-                                className="text-zinc-400 transition group-hover:translate-x-0.5 group-hover:text-red-600"
+                                className="text-slate-400 transition group-hover:translate-x-1 group-hover:text-[#F97316]"
                               />
                             </div>
                           </Link>
@@ -228,118 +320,59 @@ export default async function TurmasPage() {
                       })}
                     </div>
                   )}
-                </section>
-              ))}
-            </div>
-          )}
-        </Panel>
-
-        <aside className="space-y-6">
-          <Panel id="cadastro" className="xl:sticky xl:top-24">
-            <SectionHeader
-              eyebrow="Cadastro"
-              title="Nova turma"
-              description="Informe o nome da turma e selecione a serie correspondente."
-            />
-
-            <form action={createClassRoom} className="grid gap-4">
-              <label className="grid gap-2">
-                <span className="text-sm font-semibold text-zinc-800">
-                  Nome da turma
-                </span>
-                <input
-                  name="name"
-                  placeholder="Ex: IDEV-2"
-                  className="performance-field rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
-                />
-              </label>
-
-              <label className="grid gap-2">
-                <span className="text-sm font-semibold text-zinc-800">
-                  Serie
-                </span>
-                <select
-                  name="grade"
-                  defaultValue=""
-                  className="performance-field rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
-                >
-                  <option value="" disabled>
-                    Selecione a serie
-                  </option>
-
-                  <option value="1">1 ano</option>
-                  <option value="2">2 ano</option>
-                  <option value="3">3 ano</option>
-                </select>
-              </label>
-
-              <button
-                type="submit"
-                className="performance-primary-action inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold text-white transition active:scale-[0.99]"
-              >
-                <Plus size={18} />
-                Cadastrar turma
-              </button>
-            </form>
-          </Panel>
-
-          <Panel>
-            <SectionHeader
-              eyebrow="Leitura rapida"
-              title="Cobertura academica"
-              description="Resumo operacional para localizar series sem turmas ou com baixa estrutura de simulado."
-            />
-
-            <div className="space-y-3">
-              {turmasPorSerie.map((grupo) => (
-                <div
-                  key={grupo.grade}
-                  className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3"
-                >
-                  <div>
-                    <p className="text-sm font-semibold text-zinc-950">
-                      {grupo.grade} ano
-                    </p>
-                    <p className="text-xs text-zinc-500">
-                      {grupo.turmas.length} turma(s)
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-semibold text-red-600">
-                      {grupo.simulados}
-                    </p>
-                    <p className="text-xs text-zinc-500">simulados</p>
-                  </div>
                 </div>
               ))}
             </div>
-          </Panel>
-        </aside>
+          )}
+        </section>
       </div>
     </AppLayout>
   );
 }
 
-function DataPoint({
-  label,
+function MetricCard({
+  title,
   value,
-  brand = false,
+  icon,
+  featured = false,
 }: {
-  label: string;
-  value: string;
-  brand?: boolean;
+  title: string;
+  value: number;
+  icon: React.ReactNode;
+  featured?: boolean;
 }) {
   return (
-    <div>
-      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-zinc-400">
-        {label}
-      </p>
-      <p
-        className={`mt-1 text-xl font-semibold tracking-tight ${
-          brand ? "text-red-600" : "text-zinc-950"
-        }`}
-      >
-        {value}
+    <div
+      className={`relative flex min-h-[148px] flex-col justify-between overflow-hidden rounded-2xl p-5 shadow-sm transition-shadow hover:shadow-md sm:p-6 ${
+        featured
+          ? "bg-gradient-to-br from-[#FB923C] to-[#EA580C] text-white"
+          : "border border-slate-200 bg-white text-slate-900"
+      }`}
+    >
+      {featured && (
+        <div className="pointer-events-none absolute -right-9 -top-14 h-40 w-40 rounded-full border-[22px] border-white/10" />
+      )}
+
+      <div className="relative flex items-center justify-between gap-3">
+        <p
+          className={`text-sm font-medium ${
+            featured ? "text-white/90" : "text-slate-500"
+          }`}
+        >
+          {title}
+        </p>
+
+        <span
+          className={
+            featured ? "text-white/90" : "text-[#F97316]"
+          }
+        >
+          {icon}
+        </span>
+      </div>
+
+      <p className="relative mt-5 text-4xl font-bold tracking-tight tabular-nums">
+        {value.toLocaleString("pt-BR")}
       </p>
     </div>
   );

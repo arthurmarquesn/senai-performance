@@ -28,26 +28,34 @@ const SUBJECT_TO_AREA: Record<
 
   [Subject.FISICA]:
     KnowledgeArea.CIENCIAS_DA_NATUREZA,
+
   [Subject.QUIMICA]:
     KnowledgeArea.CIENCIAS_DA_NATUREZA,
+
   [Subject.BIOLOGIA]:
     KnowledgeArea.CIENCIAS_DA_NATUREZA,
 
   [Subject.PORTUGUES]:
     KnowledgeArea.LINGUAGENS,
+
   [Subject.INGLES]:
     KnowledgeArea.LINGUAGENS,
+
   [Subject.ARTES]:
     KnowledgeArea.LINGUAGENS,
+
   [Subject.EDUCACAO_FISICA]:
     KnowledgeArea.LINGUAGENS,
 
   [Subject.HISTORIA]:
     KnowledgeArea.CIENCIAS_HUMANAS,
+
   [Subject.GEOGRAFIA]:
     KnowledgeArea.CIENCIAS_HUMANAS,
+
   [Subject.SOCIOLOGIA]:
     KnowledgeArea.CIENCIAS_HUMANAS,
+
   [Subject.FILOSOFIA]:
     KnowledgeArea.CIENCIAS_HUMANAS,
 };
@@ -162,7 +170,8 @@ export async function searchVerifiedBnccSkills(
       scoreSkill({
         skill,
         queryTerms,
-        totalDocuments: candidates.length,
+        totalDocuments:
+          candidates.length,
         documentFrequency,
         teacherSubject:
           normalizedInput.teacherSubject,
@@ -174,20 +183,32 @@ export async function searchVerifiedBnccSkills(
         normalizedInput.minScore,
     )
     .sort(compareCandidates)
-    .slice(0, normalizedInput.limit);
+    .slice(
+      0,
+      normalizedInput.limit,
+    );
 
   return scored.map(
-    (candidate, index): BnccSearchResult => ({
+    (
+      candidate,
+      index,
+    ): BnccSearchResult => ({
       ...candidate.skill,
 
       retrieval: {
-        rank: index + 1,
-        score: roundScore(
-          candidate.score,
-        ),
+        rank:
+          index + 1,
+
+        score:
+          roundScore(
+            candidate.score,
+          ),
+
         matchedTerms:
           candidate.matchedTerms,
-        reasons: candidate.reasons,
+
+        reasons:
+          candidate.reasons,
       },
     }),
   );
@@ -198,13 +219,20 @@ function normalizeSearchInput(
 ): Required<
   Pick<
     BnccSearchInput,
-    "area" | "query" | "limit" | "minScore"
+    | "area"
+    | "query"
+    | "limit"
+    | "minScore"
   >
 > & {
-  teacherSubject: Subject | null;
-  keywords: readonly string[];
+  teacherSubject:
+    Subject | null;
+
+  keywords:
+    readonly string[];
 } {
-  const query = input.query.trim();
+  const query =
+    input.query.trim();
 
   if (!query) {
     throw new Error(
@@ -212,39 +240,69 @@ function normalizeSearchInput(
     );
   }
 
-  if (query.length > 800) {
-    throw new Error(
-      "A intenção de busca BNCC excedeu 800 caracteres.",
+  /*
+   * Não existe mais limite artificial de caracteres
+   * para a intenção de busca.
+   *
+   * Antes havia:
+   *
+   * if (query.length > 800) ...
+   *
+   * Esse bloqueio foi removido para preservar
+   * integralmente o contexto produzido pela análise.
+   */
+
+  const limit =
+    clampInteger(
+      input.limit ??
+        DEFAULT_LIMIT,
+      1,
+      MAX_LIMIT,
     );
-  }
 
-  const limit = clampInteger(
-    input.limit ?? DEFAULT_LIMIT,
-    1,
-    MAX_LIMIT,
-  );
+  const minScore =
+    clampNumber(
+      input.minScore ??
+        DEFAULT_MIN_SCORE,
+      0,
+      1,
+    );
 
-  const minScore = clampNumber(
-    input.minScore ??
-      DEFAULT_MIN_SCORE,
-    0,
-    1,
-  );
-
-  const keywords = (
-    input.keywords ?? []
-  )
-    .map((keyword) => keyword.trim())
-    .filter(Boolean)
-    .slice(0, 20);
+  /*
+   * Não limitamos artificialmente a quantidade
+   * de keywords recebidas.
+   *
+   * Antes havia:
+   *
+   * .slice(0, 20)
+   *
+   * Agora todas as keywords válidas são preservadas.
+   */
+  const keywords =
+    (
+      input.keywords ??
+      []
+    )
+      .map(
+        (keyword) =>
+          keyword.trim(),
+      )
+      .filter(Boolean);
 
   return {
-    area: input.area,
+    area:
+      input.area,
+
     teacherSubject:
-      input.teacherSubject ?? null,
+      input.teacherSubject ??
+      null,
+
     query,
+
     keywords,
+
     limit,
+
     minScore,
   };
 }
@@ -258,9 +316,14 @@ function validateSubjectAreaConsistency(
   }
 
   const expectedArea =
-    SUBJECT_TO_AREA[subject];
+    SUBJECT_TO_AREA[
+      subject
+    ];
 
-  if (expectedArea !== area) {
+  if (
+    expectedArea !==
+    area
+  ) {
     throw new Error(
       [
         `Disciplina ${subject}`,
@@ -275,11 +338,16 @@ function buildQueryTerms(
   query: string,
   keywords: readonly string[],
 ): string[] {
-  const mainTerms = tokenize(query);
+  const mainTerms =
+    tokenize(query);
 
-  const keywordTerms = keywords.flatMap(
-    (keyword) => tokenize(keyword),
-  );
+  const keywordTerms =
+    keywords.flatMap(
+      (keyword) =>
+        tokenize(
+          keyword,
+        ),
+    );
 
   const terms = [
     ...new Set([
@@ -293,41 +361,66 @@ function buildQueryTerms(
    * tentamos novamente sem removê-las para não transformar uma
    * entrada válida em uma lista vazia silenciosamente.
    */
-  if (terms.length > 0) {
+  if (
+    terms.length >
+    0
+  ) {
     return terms;
   }
 
   return [
     ...new Set(
-      tokenize(query, {
-        removeStopWords: false,
-      }),
+      tokenize(
+        query,
+        {
+          removeStopWords:
+            false,
+        },
+      ),
     ),
   ];
 }
 
 function calculateDocumentFrequency(
-  candidates: readonly VerifiedBnccSkill[],
-  queryTerms: readonly string[],
+  candidates:
+    readonly VerifiedBnccSkill[],
+  queryTerms:
+    readonly string[],
 ): Map<string, number> {
-  const result = new Map<
-    string,
-    number
-  >();
+  const result =
+    new Map<
+      string,
+      number
+    >();
 
-  for (const term of queryTerms) {
+  for (
+    const term
+    of queryTerms
+  ) {
     let count = 0;
 
-    for (const skill of candidates) {
+    for (
+      const skill
+      of candidates
+    ) {
       const documentTokens =
-        getSkillTokenSet(skill);
+        getSkillTokenSet(
+          skill,
+        );
 
-      if (documentTokens.has(term)) {
+      if (
+        documentTokens.has(
+          term,
+        )
+      ) {
         count++;
       }
     }
 
-    result.set(term, count);
+    result.set(
+      term,
+      count,
+    );
   }
 
   return result;
@@ -340,24 +433,38 @@ function scoreSkill({
   documentFrequency,
   teacherSubject,
 }: {
-  skill: VerifiedBnccSkill;
-  queryTerms: readonly string[];
-  totalDocuments: number;
-  documentFrequency: ReadonlyMap<
-    string,
-    number
-  >;
-  teacherSubject: Subject | null;
+  skill:
+    VerifiedBnccSkill;
+
+  queryTerms:
+    readonly string[];
+
+  totalDocuments:
+    number;
+
+  documentFrequency:
+    ReadonlyMap<
+      string,
+      number
+    >;
+
+  teacherSubject:
+    Subject | null;
 }): ScoredCandidate {
   const codeTokens =
-    new Set(tokenize(skill.code));
+    new Set(
+      tokenize(
+        skill.code,
+      ),
+    );
 
   const descriptionTokens =
     new Set(
       tokenize(
         skill.description,
         {
-          removeStopWords: false,
+          removeStopWords:
+            false,
         },
       ),
     );
@@ -366,81 +473,129 @@ function scoreSkill({
     new Set(
       tokenize(
         [
-          skill.competencyCode ?? "",
-          skill.competencyText ?? "",
+          skill.competencyCode ??
+            "",
+
+          skill.competencyText ??
+            "",
         ].join(" "),
         {
-          removeStopWords: false,
+          removeStopWords:
+            false,
         },
       ),
     );
 
-  const matchedTerms: string[] = [];
+  const matchedTerms:
+    string[] = [];
 
   let matchedIdf = 0;
   let totalIdf = 0;
   let fieldStrength = 0;
 
-  for (const term of queryTerms) {
+  for (
+    const term
+    of queryTerms
+  ) {
     const documentFrequencyForTerm =
-      documentFrequency.get(term) ?? 0;
+      documentFrequency.get(
+        term,
+      ) ?? 0;
 
     const idf =
       Math.log(
-        (totalDocuments + 1) /
-          (documentFrequencyForTerm + 1),
+        (
+          totalDocuments +
+          1
+        ) /
+          (
+            documentFrequencyForTerm +
+            1
+          ),
       ) + 1;
 
-    totalIdf += idf;
+    totalIdf +=
+      idf;
 
-    let termMatched = false;
-    let termFieldStrength = 0;
+    let termMatched =
+      false;
 
-    if (codeTokens.has(term)) {
-      termMatched = true;
-      termFieldStrength = Math.max(
-        termFieldStrength,
-        1,
-      );
+    let termFieldStrength =
+      0;
+
+    if (
+      codeTokens.has(
+        term,
+      )
+    ) {
+      termMatched =
+        true;
+
+      termFieldStrength =
+        Math.max(
+          termFieldStrength,
+          1,
+        );
     }
 
     if (
-      descriptionTokens.has(term)
+      descriptionTokens.has(
+        term,
+      )
     ) {
-      termMatched = true;
-      termFieldStrength = Math.max(
-        termFieldStrength,
-        0.9,
-      );
+      termMatched =
+        true;
+
+      termFieldStrength =
+        Math.max(
+          termFieldStrength,
+          0.9,
+        );
     }
 
     if (
-      competencyTokens.has(term)
+      competencyTokens.has(
+        term,
+      )
     ) {
-      termMatched = true;
-      termFieldStrength = Math.max(
-        termFieldStrength,
-        0.7,
-      );
+      termMatched =
+        true;
+
+      termFieldStrength =
+        Math.max(
+          termFieldStrength,
+          0.7,
+        );
     }
 
-    if (termMatched) {
-      matchedTerms.push(term);
-      matchedIdf += idf;
+    if (
+      termMatched
+    ) {
+      matchedTerms.push(
+        term,
+      );
+
+      matchedIdf +=
+        idf;
 
       fieldStrength +=
-        idf * termFieldStrength;
+        idf *
+        termFieldStrength;
     }
   }
 
   const weightedCoverage =
-    totalIdf > 0
-      ? matchedIdf / totalIdf
+    totalIdf >
+    0
+      ? matchedIdf /
+        totalIdf
       : 0;
 
   const normalizedFieldStrength =
-    totalIdf > 0
-      ? fieldStrength / totalIdf
+    totalIdf >
+    0
+      ? fieldStrength /
+        totalIdf
       : 0;
 
   const phraseScore =
@@ -456,22 +611,28 @@ function scoreSkill({
       ? 0.04
       : 0;
 
-  const score = Math.min(
-    1,
-    weightedCoverage * 0.62 +
-      normalizedFieldStrength * 0.23 +
-      phraseScore * 0.15 +
-      subjectBoost,
-  );
+  const score =
+    Math.min(
+      1,
 
-  const reasons = buildReasons({
-    skill,
-    matchedTerms,
-    queryTerms,
-    weightedCoverage,
-    phraseScore,
-    teacherSubject,
-  });
+      weightedCoverage *
+        0.62 +
+        normalizedFieldStrength *
+          0.23 +
+        phraseScore *
+          0.15 +
+        subjectBoost,
+    );
+
+  const reasons =
+    buildReasons({
+      skill,
+      matchedTerms,
+      queryTerms,
+      weightedCoverage,
+      phraseScore,
+      teacherSubject,
+    });
 
   return {
     skill,
@@ -482,40 +643,62 @@ function scoreSkill({
 }
 
 function calculatePhraseScore(
-  skill: VerifiedBnccSkill,
-  queryTerms: readonly string[],
+  skill:
+    VerifiedBnccSkill,
+
+  queryTerms:
+    readonly string[],
 ): number {
-  if (queryTerms.length < 2) {
+  if (
+    queryTerms.length <
+    2
+  ) {
     return 0;
   }
 
   const description =
-    normalizeText(skill.description);
+    normalizeText(
+      skill.description,
+    );
 
-  const bigrams: string[] = [];
+  const bigrams:
+    string[] = [];
 
   for (
     let index = 0;
-    index < queryTerms.length - 1;
+    index <
+    queryTerms.length -
+      1;
     index++
   ) {
     bigrams.push(
       `${queryTerms[index]} ${
-        queryTerms[index + 1]
+        queryTerms[
+          index + 1
+        ]
       }`,
     );
   }
 
-  const matches = bigrams.filter(
-    (bigram) =>
-      description.includes(bigram),
-  ).length;
+  const matches =
+    bigrams.filter(
+      (bigram) =>
+        description.includes(
+          bigram,
+        ),
+    ).length;
 
-  if (bigrams.length === 0) {
+  if (
+    bigrams.length ===
+    0
+  ) {
     return 0;
   }
 
-  return matches / bigrams.length;
+  return (
+    matches /
+    bigrams.length
+  );
 }
 
 function buildReasons({
@@ -526,16 +709,31 @@ function buildReasons({
   phraseScore,
   teacherSubject,
 }: {
-  skill: VerifiedBnccSkill;
-  matchedTerms: readonly string[];
-  queryTerms: readonly string[];
-  weightedCoverage: number;
-  phraseScore: number;
-  teacherSubject: Subject | null;
-}): string[] {
-  const reasons: string[] = [];
+  skill:
+    VerifiedBnccSkill;
 
-  if (matchedTerms.length > 0) {
+  matchedTerms:
+    readonly string[];
+
+  queryTerms:
+    readonly string[];
+
+  weightedCoverage:
+    number;
+
+  phraseScore:
+    number;
+
+  teacherSubject:
+    Subject | null;
+}): string[] {
+  const reasons:
+    string[] = [];
+
+  if (
+    matchedTerms.length >
+    0
+  ) {
     reasons.push(
       [
         `${matchedTerms.length}`,
@@ -546,13 +744,19 @@ function buildReasons({
     );
   }
 
-  if (weightedCoverage >= 0.6) {
+  if (
+    weightedCoverage >=
+    0.6
+  ) {
     reasons.push(
       "Boa cobertura lexical da intenção de busca.",
     );
   }
 
-  if (phraseScore > 0) {
+  if (
+    phraseScore >
+    0
+  ) {
     reasons.push(
       "Há termos consecutivos da intenção no texto oficial.",
     );
@@ -569,7 +773,8 @@ function buildReasons({
   }
 
   if (
-    skill.officialSubject === null
+    skill.officialSubject ===
+    null
   ) {
     reasons.push(
       "Habilidade oficial de área; não foi atribuída artificialmente a uma disciplina.",
@@ -580,18 +785,25 @@ function buildReasons({
 }
 
 function getSkillTokenSet(
-  skill: VerifiedBnccSkill,
+  skill:
+    VerifiedBnccSkill,
 ): Set<string> {
   return new Set(
     tokenize(
       [
         skill.code,
+
         skill.description,
-        skill.competencyCode ?? "",
-        skill.competencyText ?? "",
+
+        skill.competencyCode ??
+          "",
+
+        skill.competencyText ??
+          "",
       ].join(" "),
       {
-        removeStopWords: false,
+        removeStopWords:
+          false,
       },
     ),
   );
@@ -600,15 +812,19 @@ function getSkillTokenSet(
 function tokenize(
   value: string,
   options?: {
-    removeStopWords?: boolean;
+    removeStopWords?:
+      boolean;
   },
 ): string[] {
   const removeStopWords =
-    options?.removeStopWords ?? true;
+    options
+      ?.removeStopWords ??
+    true;
 
-  const normalized = normalizeText(
-    value,
-  );
+  const normalized =
+    normalizeText(
+      value,
+    );
 
   if (!normalized) {
     return [];
@@ -616,29 +832,45 @@ function tokenize(
 
   return normalized
     .split(" ")
-    .map((token) => token.trim())
+    .map(
+      (token) =>
+        token.trim(),
+    )
     .filter(Boolean)
-    .filter((token) => {
-      /**
-       * Preserva códigos e números, mas descarta
-       * palavras isoladas de 1 caractere.
-       */
-      if (/^\d+$/.test(token)) {
-        return true;
-      }
+    .filter(
+      (token) => {
+        /**
+         * Preserva códigos e números, mas descarta
+         * palavras isoladas de 1 caractere.
+         */
+        if (
+          /^\d+$/.test(
+            token,
+          )
+        ) {
+          return true;
+        }
 
-      if (
-        token.startsWith("em13")
-      ) {
-        return true;
-      }
+        if (
+          token.startsWith(
+            "em13",
+          )
+        ) {
+          return true;
+        }
 
-      return token.length >= 2;
-    })
+        return (
+          token.length >=
+          2
+        );
+      },
+    )
     .filter(
       (token) =>
         !removeStopWords ||
-        !STOP_WORDS.has(token),
+        !STOP_WORDS.has(
+          token,
+        ),
     );
 }
 
@@ -646,23 +878,40 @@ function normalizeText(
   value: string,
 ): string {
   return value
-    .normalize("NFD")
+    .normalize(
+      "NFD",
+    )
     .replace(
       /[\u0300-\u036f]/g,
       "",
     )
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .replace(/\s+/g, " ")
+    .replace(
+      /[^a-z0-9]+/g,
+      " ",
+    )
+    .replace(
+      /\s+/g,
+      " ",
+    )
     .trim();
 }
 
 function compareCandidates(
-  left: ScoredCandidate,
-  right: ScoredCandidate,
+  left:
+    ScoredCandidate,
+
+  right:
+    ScoredCandidate,
 ): number {
-  if (right.score !== left.score) {
-    return right.score - left.score;
+  if (
+    right.score !==
+    left.score
+  ) {
+    return (
+      right.score -
+      left.score
+    );
   }
 
   /**
@@ -676,8 +925,13 @@ function compareCandidates(
 function roundScore(
   value: number,
 ): number {
-  return Math.round(value * 10_000) /
-    10_000;
+  return (
+    Math.round(
+      value *
+        10_000,
+    ) /
+    10_000
+  );
 }
 
 function clampInteger(
@@ -685,15 +939,22 @@ function clampInteger(
   min: number,
   max: number,
 ): number {
-  if (!Number.isFinite(value)) {
+  if (
+    !Number.isFinite(
+      value,
+    )
+  ) {
     return min;
   }
 
   return Math.min(
     max,
+
     Math.max(
       min,
-      Math.trunc(value),
+      Math.trunc(
+        value,
+      ),
     ),
   );
 }
@@ -703,12 +964,19 @@ function clampNumber(
   min: number,
   max: number,
 ): number {
-  if (!Number.isFinite(value)) {
+  if (
+    !Number.isFinite(
+      value,
+    )
+  ) {
     return min;
   }
 
   return Math.min(
     max,
-    Math.max(min, value),
+    Math.max(
+      min,
+      value,
+    ),
   );
 }
